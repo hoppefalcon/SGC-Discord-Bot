@@ -4,11 +4,15 @@ import java.awt.Color;
 
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.interaction.SlashCommandInteraction;
+import org.slf4j.Logger;
 
+import sgc.raid.report.bot.BotApplication;
 import sgc.raid.report.bot.commands.Command;
 import sgc.sherpa.sheets.RaidReportTool;
 
 public class UserRaidReportCommand implements Command {
+
+    private static final Logger LOGGER = BotApplication.getLogger();
 
     @Override
     public void handle(SlashCommandInteraction slashCommandInteraction) {
@@ -21,10 +25,13 @@ public class UserRaidReportCommand implements Command {
             try {
                 String userReport = RaidReportTool.getUserReport(bungieID);
                 if (userReport.isEmpty()) {
-                    interactionOriginalResponseUpdater.addEmbed(new EmbedBuilder().setTitle(bungieID + " Raid Report")
-                            .setDescription("An Error occured Finding this Guardian").setFooter("ERROR")
-                            .setThumbnail(getClass().getClassLoader().getResourceAsStream("thumbnail.jpg"))
-                            .setColor(Color.GREEN)).update();
+                    interactionOriginalResponseUpdater.setContent("")
+                            .addEmbed(new EmbedBuilder().setTitle(bungieID + " Raid Report").setDescription(
+                                    "An Error occured Finding this Guardian. Please make sure to provide the full BungieID (Guardian#0000)")
+                                    .setFooter("ERROR")
+                                    .setThumbnail(getClass().getClassLoader().getResourceAsStream("thumbnail.jpg"))
+                                    .setColor(Color.RED))
+                            .update();
                 } else {
                     interactionOriginalResponseUpdater.addEmbed(new EmbedBuilder().setTitle(bungieID + " Raid Report")
                             .setDescription(userReport).setFooter("Happy Raiding!")
@@ -32,8 +39,14 @@ public class UserRaidReportCommand implements Command {
                             .setColor(Color.GREEN)).update();
                 }
             } catch (Exception e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                LOGGER.error(e.getMessage(), e);
+                interactionOriginalResponseUpdater.setContent("")
+                        .addEmbed(new EmbedBuilder().setTitle(bungieID + " Raid Report").setDescription(
+                                "An Error occured Finding this Guardian. Please make sure to provide the full BungieID (Guardian#0000)")
+                                .setFooter("ERROR")
+                                .setThumbnail(getClass().getClassLoader().getResourceAsStream("thumbnail.jpg"))
+                                .setColor(Color.RED))
+                        .update();
             }
         });
     }

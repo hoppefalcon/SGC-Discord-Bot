@@ -45,10 +45,14 @@ public class ClanRaidReportCommand implements Command {
                         .send(slashCommandInteraction.getChannel().get());
 
             } catch (Exception e) {
-                // TODO Auto-generated catch block
                 LOGGER.error(e.getMessage(), e);
-                interactionOriginalResponseUpdater
-                        .setContent("An error occured while building a Raid Report for " + bungieClanID).update();
+                interactionOriginalResponseUpdater.setContent("")
+                        .addEmbed(new EmbedBuilder().setTitle(bungieClanID + " Raid Report")
+                                .setDescription("An error occured while building a Raid Report for " + bungieClanID)
+                                .setFooter("ERROR")
+                                .setThumbnail(getClass().getClassLoader().getResourceAsStream("thumbnail.jpg"))
+                                .setColor(Color.RED))
+                        .update();
             }
         });
     }
