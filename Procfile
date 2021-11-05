@@ -1,1 +1,1 @@
-worker: java -jar target/*BUNDLE.jar
+worker: java -jar target/*jar-with-dependencies.jar
