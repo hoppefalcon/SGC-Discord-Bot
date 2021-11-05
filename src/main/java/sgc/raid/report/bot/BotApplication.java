@@ -15,10 +15,12 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Controller;
 
 import sgc.raid.report.bot.listeners.interfaces.SlashCommandListener;
 import sgc.sherpa.sheets.RaidReportTool;
 
+@Controller
 @SpringBootApplication
 public class BotApplication {
 	private static final Logger LOGGER = LoggerFactory.getLogger(BotApplication.class);
