@@ -347,7 +347,8 @@ public class RaidReportTool {
         ;
         Member user = null;
 
-        URL url = new URL(String.format("https://www.bungie.net/Platform/User/Search/Prefix/%s/0/", splitBungieId[0]));
+        URL url = new URL(
+                String.format("https://www.bungie.net/Platform/User/Search/Prefix/%s/0/", splitBungieId[0].trim()));
 
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
@@ -397,8 +398,8 @@ public class RaidReportTool {
         }
         conn.disconnect();
         for (Member member : searchResults.values()) {
-            if (member.getBungieGlobalDisplayName().equalsIgnoreCase(splitBungieId[0])
-                    && member.getBungieGlobalDisplayNameCode().equalsIgnoreCase(splitBungieId[1])) {
+            if (member.getBungieGlobalDisplayName().equalsIgnoreCase(splitBungieId[0].trim())
+                    && member.getBungieGlobalDisplayNameCode().equalsIgnoreCase(splitBungieId[1].trim())) {
                 user = member;
             }
         }

@@ -20,10 +20,17 @@ public class UserRaidReportCommand implements Command {
 
             try {
                 String userReport = RaidReportTool.getUserReport(bungieID);
-                interactionOriginalResponseUpdater.addEmbed(new EmbedBuilder().setTitle(bungieID + " Raid Report")
-                        .setDescription(userReport).setFooter("Happy Raiding!")
-                        .setThumbnail(getClass().getClassLoader().getResourceAsStream("thumbnail.jpg"))
-                        .setColor(Color.RED)).update();
+                if (userReport.isEmpty()) {
+                    interactionOriginalResponseUpdater.addEmbed(new EmbedBuilder().setTitle(bungieID + " Raid Report")
+                            .setDescription("An Error occured Finding this Guardian").setFooter("ERROR")
+                            .setThumbnail(getClass().getClassLoader().getResourceAsStream("thumbnail.jpg"))
+                            .setColor(Color.GREEN)).update();
+                } else {
+                    interactionOriginalResponseUpdater.addEmbed(new EmbedBuilder().setTitle(bungieID + " Raid Report")
+                            .setDescription(userReport).setFooter("Happy Raiding!")
+                            .setThumbnail(getClass().getClassLoader().getResourceAsStream("thumbnail.jpg"))
+                            .setColor(Color.GREEN)).update();
+                }
             } catch (Exception e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();

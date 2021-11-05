@@ -51,7 +51,7 @@ public class BotApplication {
 				.setType(SlashCommandOptionType.STRING).setRequired(true).setDescription("Clan for Raid Report");
 
 		RaidReportTool.getClanIdMap().keySet().forEach((name) -> {
-			clanOption.addChoice(name, RaidReportTool.getClanIdMap().get(name));
+			clanOption.addChoice(name.replaceAll("Shrouded", "").trim(), RaidReportTool.getClanIdMap().get(name));
 		});
 
 		api.bulkOverwriteGlobalSlashCommands(Arrays.asList(new SlashCommandBuilder().setName("user-raid-report")
