@@ -384,7 +384,7 @@ public class RaidReportTool {
 
             while (morePages) {
                 URL url = new URL(String.format("https://www.bungie.net/Platform/User/Search/Prefix/%s/%d/",
-                        splitBungieId[0].trim(), page.getAndIncrement()));
+                        splitBungieId[0].trim().replace(" ", "%20"), page.getAndIncrement()));
 
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("GET");
