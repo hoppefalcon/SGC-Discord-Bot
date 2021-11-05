@@ -86,9 +86,11 @@
 						</goals>
 						<configuration>
 							<transformers>
-								<!-- add Main-Class to manifest file -->
 								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass>sgc.raid.report.bot.BotApplication</mainClass>
+									<manifestEntries>
+										<Main-Class>sgc.raid.report.bot.BotApplication</Main-Class>
+										<Build-Number>1.0</Build-Number>
+									</manifestEntries>
 								</transformer>
 							</transformers>
 						</configuration>
