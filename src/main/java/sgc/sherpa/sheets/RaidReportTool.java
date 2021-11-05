@@ -376,7 +376,7 @@ public class RaidReportTool {
         String[] splitBungieId = bungieId.split("#");
         final StringBuilder response = new StringBuilder();
 
-        if (splitBungieId.length != 2) {
+        if (splitBungieId.length == 2) {
             Member user = null;
             AtomicInteger page = new AtomicInteger(0);
             boolean morePages = true;
