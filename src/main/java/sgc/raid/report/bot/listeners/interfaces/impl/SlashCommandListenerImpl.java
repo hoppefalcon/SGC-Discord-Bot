@@ -19,7 +19,15 @@ public class SlashCommandListenerImpl implements SlashCommandListener {
             new UserRaidReportCommand().handle(slashCommandInteraction);
             break;
 
-        case "clan-raid-report":
+        case "pc-clan-raid-report":
+            new ClanRaidReportCommand().handle(slashCommandInteraction);
+            break;
+
+        case "xbox-clan-raid-report":
+            new ClanRaidReportCommand().handle(slashCommandInteraction);
+            break;
+
+        case "psn-clan-raid-report":
             new ClanRaidReportCommand().handle(slashCommandInteraction);
             break;
 

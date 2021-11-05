@@ -47,19 +47,37 @@ public class BotApplication {
 	public DiscordApi discordApi() {
 		DiscordApi api = new DiscordApiBuilder().setToken(BOT_TOKEN).login().join();
 
-		final SlashCommandOptionBuilder clanOption = new SlashCommandOptionBuilder().setName("Clan")
+		final SlashCommandOptionBuilder pcClanOption = new SlashCommandOptionBuilder().setName("Clan")
 				.setType(SlashCommandOptionType.STRING).setRequired(true).setDescription("Clan for Raid Report");
 
-		RaidReportTool.getClanIdMap().keySet().forEach((name) -> {
-			clanOption.addChoice(name.replaceAll("Shrouded", "").trim(), RaidReportTool.getClanIdMap().get(name));
+		RaidReportTool.getPcclanidmap().keySet().forEach((name) -> {
+			pcClanOption.addChoice(name, RaidReportTool.getPcclanidmap().get(name));
+		});
+
+		final SlashCommandOptionBuilder xbClanOption = new SlashCommandOptionBuilder().setName("Clan")
+				.setType(SlashCommandOptionType.STRING).setRequired(true).setDescription("Clan for Raid Report");
+
+		RaidReportTool.getXbclanidmap().keySet().forEach((name) -> {
+			xbClanOption.addChoice(name, RaidReportTool.getXbclanidmap().get(name));
+		});
+
+		final SlashCommandOptionBuilder psClanOption = new SlashCommandOptionBuilder().setName("Clan")
+				.setType(SlashCommandOptionType.STRING).setRequired(true).setDescription("Clan for Raid Report");
+
+		RaidReportTool.getPsclanidmap().keySet().forEach((name) -> {
+			psClanOption.addChoice(name, RaidReportTool.getPsclanidmap().get(name));
 		});
 
 		api.bulkOverwriteGlobalSlashCommands(Arrays.asList(new SlashCommandBuilder().setName("user-raid-report")
 				.setDescription("Pulls the Raid Report of the user. (Requires full Bungie ID Guardian#0000)")
 				.addOption(new SlashCommandOptionBuilder().setName("BungieId").setType(SlashCommandOptionType.STRING)
 						.setRequired(true).setDescription("The Users BungieID with numbers (Guardian#0000)").build()),
-				new SlashCommandBuilder().setName("clan-raid-report").setDescription("Pulls a full clan raid report.")
-						.addOption(clanOption.build())))
+				new SlashCommandBuilder().setName("pc-clan-raid-report")
+						.setDescription("Pulls a full PC clan raid report.").addOption(pcClanOption.build()),
+				new SlashCommandBuilder().setName("xbox-clan-raid-report")
+						.setDescription("Pulls a full Xbox clan raid report.").addOption(xbClanOption.build()),
+				new SlashCommandBuilder().setName("psn-clan-raid-report")
+						.setDescription("Pulls a full Playstation clan raid report.").addOption(psClanOption.build())))
 				.join();
 
 		api.addSlashCommandCreateListener(slashCommandListener);

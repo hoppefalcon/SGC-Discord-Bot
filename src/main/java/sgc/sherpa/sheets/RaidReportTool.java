@@ -39,7 +39,9 @@ public class RaidReportTool {
     private static final Logger LOGGER = BotApplication.getLogger();
     private static String apiKey = "2cb81deccdbf45aabd77e941022c15de";
 
-    private static HashMap<String, String> clanIdMap = new HashMap<>();
+    private static final HashMap<String, String> pcClanIdMap = new HashMap<>();
+    private static final HashMap<String, String> xbClanIdMap = new HashMap<>();
+    private static final HashMap<String, String> psClanIdMap = new HashMap<>();
 
     private static List<String> pcClanIds = Arrays.asList("3087185", "3019103", "3063489", "3007121", "3008645",
             "3076620", "3090996", "3100797", "3095868", "2820714", "2801315", "3915247", "3949151", "3095835",
@@ -65,28 +67,57 @@ public class RaidReportTool {
      */
 
     public static void initializeClanIdMap() {
-        List<String> clanIds = new ArrayList<>();
-        clanIds.addAll(pcClanIds);
-        clanIds.addAll(xbClanIds);
-        clanIds.addAll(psClanIds);
 
-        clanIds.forEach((clanId) -> {
+        pcClanIds.forEach((clanId) -> {
             try {
                 Clan clan = new Clan(clanId);
                 getClanInfo(clan);
-                clanIdMap.put(clan.getName(), clan.getClanId());
+                pcClanIdMap.put(clan.getName(), clan.getClanId());
             } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                LOGGER.error(e.getMessage(), e);
+            }
+        });
+
+        xbClanIds.forEach((clanId) -> {
+            try {
+                Clan clan = new Clan(clanId);
+                getClanInfo(clan);
+                xbClanIdMap.put(clan.getName(), clan.getClanId());
+            } catch (IOException e) {
+                LOGGER.error(e.getMessage(), e);
+            }
+        });
+
+        psClanIds.forEach((clanId) -> {
+            try {
+                Clan clan = new Clan(clanId);
+                getClanInfo(clan);
+                psClanIdMap.put(clan.getName(), clan.getClanId());
+            } catch (IOException e) {
+                LOGGER.error(e.getMessage(), e);
             }
         });
     }
 
     /**
-     * @return the clanIdMap
+     * @return the pcclanidmap
      */
-    public static HashMap<String, String> getClanIdMap() {
-        return clanIdMap;
+    public static HashMap<String, String> getPcclanidmap() {
+        return pcClanIdMap;
+    }
+
+    /**
+     * @return the xbclanidmap
+     */
+    public static HashMap<String, String> getXbclanidmap() {
+        return xbClanIdMap;
+    }
+
+    /**
+     * @return the psclanidmap
+     */
+    public static HashMap<String, String> getPsclanidmap() {
+        return psClanIdMap;
     }
 
     public static Clan getClanInformation(String clanId) throws Exception {
