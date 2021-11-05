@@ -11,7 +11,7 @@
 	</parent>
 	<groupId>sgc.raid.bot</groupId>
 	<artifactId>bot</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0-SNAPSHOT</version>
 	<name>bot</name>
 	<description>Demo project for Spring Boot</description>
 	<properties>
@@ -39,19 +39,14 @@
 			<version>2.8.6</version>
 		</dependency>
 	</dependencies>
+
 	<build>
 		<plugins>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jar-plugin</artifactId>
-				<configuration>
-					<archive>
-						<manifest>
-							<mainClass>sgc.raid.report.bot.BotApplication</mainClass>
-						</manifest>
-					</archive>
-				</configuration>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
 		</plugins>
 	</build>
+
 </project>
