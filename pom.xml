@@ -59,6 +59,11 @@
 				<version>3.1.1</version>
 
 				<configuration>
+					<archive>
+						<manifest>
+							<mainClass>sgc.raid.report.bot.BotApplication</mainClass>
+						</manifest>
+					</archive>
 					<descriptorRefs>
 						<descriptorRef>jar-with-dependencies</descriptorRef>
 					</descriptorRefs>
