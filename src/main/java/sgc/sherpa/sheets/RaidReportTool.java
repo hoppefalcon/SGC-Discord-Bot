@@ -37,7 +37,7 @@ import sgc.raid.report.bot.BotApplication;;
 public class RaidReportTool {
 
     private static final Logger LOGGER = BotApplication.getLogger();
-    private static String apiKey = "2cb81deccdbf45aabd77e941022c15de";
+    private static String apiKey = System.getenv("BUNGIE-TOKEN");
 
     private static final HashMap<String, String> pcClanIdMap = new HashMap<>();
     private static final HashMap<String, String> xbClanIdMap = new HashMap<>();

@@ -35,7 +35,7 @@ public class BotApplication {
 	@Autowired
 	private SlashCommandListener slashCommandListener;
 
-	private static final String BOT_TOKEN = "OTA1ODY5NTI0MjQ5NzM5Mjg0.YYQWvA.jglOKC9aIrFxB_TBEqOIaL52P6M";
+	private static final String BOT_TOKEN = System.getenv("DISCORD-TOKEN");
 
 	public static void main(String[] args) {
 		RaidReportTool.initializeClanIdMap();
