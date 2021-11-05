@@ -41,7 +41,9 @@ public class RaidReportTool {
 
     private static HashMap<String, String> clanIdMap = new HashMap<>();
 
-    private static List<String> pcClanIds = Arrays.asList();
+    private static List<String> pcClanIds = Arrays.asList("3087185", "3019103", "3063489", "3007121", "3008645",
+            "3076620", "3090996", "3100797", "3095868", "2820714", "2801315", "3915247", "3949151", "3095835",
+            "3070603", "3795604");
     private static List<String> xbClanIds = Arrays.asList("4327464", "4327434", "4327418", "4327389", "4418635");
     private static List<String> psClanIds = Arrays.asList("4327587", "4327584", "4327575", "4327536", "4327542");
 
