@@ -375,84 +375,89 @@ public class RaidReportTool {
     public static String getUserReport(String bungieId) throws Exception {
         String[] splitBungieId = bungieId.split("#");
         final StringBuilder response = new StringBuilder();
-        ;
-        Member user = null;
-        AtomicInteger page = new AtomicInteger(0);
-        boolean morePages = true;
-        final HashMap<String, Member> searchResults = new HashMap<>();
 
-        while (morePages) {
-            URL url = new URL(String.format("https://www.bungie.net/Platform/User/Search/Prefix/%s/%d/",
-                    splitBungieId[0].trim(), page.getAndIncrement()));
+        if (splitBungieId.length != 2) {
+            Member user = null;
+            AtomicInteger page = new AtomicInteger(0);
+            boolean morePages = true;
+            final HashMap<String, Member> searchResults = new HashMap<>();
 
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
-            conn.addRequestProperty("X-API-Key", apiKey);
-            conn.addRequestProperty("Accept", "Application/Json");
-            conn.connect();
+            while (morePages) {
+                URL url = new URL(String.format("https://www.bungie.net/Platform/User/Search/Prefix/%s/%d/",
+                        splitBungieId[0].trim(), page.getAndIncrement()));
 
-            // Getting the response code
-            int responsecode = conn.getResponseCode();
-            if (responsecode == 200) {
-                BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                StringBuffer content = new StringBuffer();
-                String inputLine;
-                while ((inputLine = in.readLine()) != null) {
-                    content.append(inputLine);
-                }
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("GET");
+                conn.addRequestProperty("X-API-Key", apiKey);
+                conn.addRequestProperty("Accept", "Application/Json");
+                conn.connect();
 
-                morePages = JsonParser.parseString(content.toString()).getAsJsonObject().getAsJsonObject("Response")
-                        .get("hasMore").getAsBoolean();
-
-                JsonArray results = (JsonArray) JsonParser.parseString(content.toString()).getAsJsonObject()
-                        .getAsJsonObject("Response").get("searchResults");
-
-                results.forEach((entry) -> {
-                    try {
-                        JsonArray userInfo = (JsonArray) entry.getAsJsonObject().get("destinyMemberships");
-                        String membershipType = userInfo.get(0).getAsJsonObject().get("membershipType").getAsString();
-                        String membershipId = userInfo.get(0).getAsJsonObject().get("membershipId").getAsString();
-                        String displayName = userInfo.get(0).getAsJsonObject().get("displayName").getAsString();
-                        String bungieGlobalDisplayName = "";
-                        String bungieGlobalDisplayNameCode = "";
-                        try {
-                            bungieGlobalDisplayName = userInfo.get(0).getAsJsonObject().get("bungieGlobalDisplayName")
-                                    .getAsString();
-                            bungieGlobalDisplayNameCode = userInfo.get(0).getAsJsonObject()
-                                    .get("bungieGlobalDisplayNameCode").getAsString();
-                        } catch (NullPointerException ex) {
-
-                        }
-                        searchResults.put(membershipId, new Member(membershipId, displayName, membershipType,
-                                bungieGlobalDisplayName, bungieGlobalDisplayNameCode));
-
-                    } catch (Exception ex) {
-                        LOGGER.error(ex.getMessage(), ex);
+                // Getting the response code
+                int responsecode = conn.getResponseCode();
+                if (responsecode == 200) {
+                    BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                    StringBuffer content = new StringBuffer();
+                    String inputLine;
+                    while ((inputLine = in.readLine()) != null) {
+                        content.append(inputLine);
                     }
-                });
 
-                in.close();
-            } else {
-                morePages = false;
+                    morePages = JsonParser.parseString(content.toString()).getAsJsonObject().getAsJsonObject("Response")
+                            .get("hasMore").getAsBoolean();
+
+                    JsonArray results = (JsonArray) JsonParser.parseString(content.toString()).getAsJsonObject()
+                            .getAsJsonObject("Response").get("searchResults");
+
+                    results.forEach((entry) -> {
+                        try {
+                            JsonArray userInfo = (JsonArray) entry.getAsJsonObject().get("destinyMemberships");
+                            String membershipType = userInfo.get(0).getAsJsonObject().get("membershipType")
+                                    .getAsString();
+                            String membershipId = userInfo.get(0).getAsJsonObject().get("membershipId").getAsString();
+                            String displayName = userInfo.get(0).getAsJsonObject().get("displayName").getAsString();
+                            String bungieGlobalDisplayName = "";
+                            String bungieGlobalDisplayNameCode = "";
+                            try {
+                                bungieGlobalDisplayName = userInfo.get(0).getAsJsonObject()
+                                        .get("bungieGlobalDisplayName").getAsString();
+                                bungieGlobalDisplayNameCode = userInfo.get(0).getAsJsonObject()
+                                        .get("bungieGlobalDisplayNameCode").getAsString();
+                            } catch (NullPointerException ex) {
+
+                            }
+                            searchResults.put(membershipId, new Member(membershipId, displayName, membershipType,
+                                    bungieGlobalDisplayName, bungieGlobalDisplayNameCode));
+
+                        } catch (Exception ex) {
+                            LOGGER.error(ex.getMessage(), ex);
+                        }
+                    });
+
+                    in.close();
+                } else {
+                    morePages = false;
+                }
+                conn.disconnect();
             }
-            conn.disconnect();
-        }
-        for (Member member : searchResults.values()) {
-            if (member.getBungieGlobalDisplayName().equalsIgnoreCase(splitBungieId[0].trim()) && Integer
-                    .parseInt(member.getBungieGlobalDisplayNameCode()) == Integer.parseInt(splitBungieId[1].trim())) {
-                user = member;
+            for (Member member : searchResults.values()) {
+                if (member.getBungieGlobalDisplayName().equalsIgnoreCase(splitBungieId[0].trim())
+                        && Integer.parseInt(member.getBungieGlobalDisplayNameCode()) == Integer
+                                .parseInt(splitBungieId[1].trim())) {
+                    user = member;
+                }
+            }
+
+            if (user != null) {
+                getMemberCharacters(user);
+                getMemberRaidInfo(user);
+                HashMap<Raid, Integer> raidClears = user.getRaidClears();
+                response.append(String.format(
+                        "Vault of Glass: %d\nDeep Stone Crypt: %d\nGarden of Salvation: %d\nLast Wish: %d",
+                        raidClears.get(Raid.VAULT_OF_GLASS), raidClears.get(Raid.DEEP_STONE_CRYPT),
+                        raidClears.get(Raid.GARDEN_OF_SALVATION), raidClears.get(Raid.LAST_WISH)));
             }
         }
 
-        if (user != null) {
-            getMemberCharacters(user);
-            getMemberRaidInfo(user);
-            HashMap<Raid, Integer> raidClears = user.getRaidClears();
-            response.append(
-                    String.format("Vault of Glass: %d\nDeep Stone Crypt: %d\nGarden of Salvation: %d\nLast Wish: %d",
-                            raidClears.get(Raid.VAULT_OF_GLASS), raidClears.get(Raid.DEEP_STONE_CRYPT),
-                            raidClears.get(Raid.GARDEN_OF_SALVATION), raidClears.get(Raid.LAST_WISH)));
-        }
         return response.toString();
     }
 }
