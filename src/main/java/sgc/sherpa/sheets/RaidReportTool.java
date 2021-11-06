@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -373,11 +375,26 @@ public class RaidReportTool {
     }
 
     public static String getUserReport(String bungieId) throws Exception {
-        String[] splitBungieId = bungieId.split("#");
+        Member user = getMemberInformationWithCharacters(bungieId);
         final StringBuilder response = new StringBuilder();
 
+        if (user != null) {
+            getMemberRaidInfo(user);
+            HashMap<Raid, Integer> raidClears = user.getRaidClears();
+            response.append(String.format(
+                    "Vault of Glass: %d\nDeep Stone Crypt: %d\nGarden of Salvation: %d\nLast Wish: %d\n\nTOTAL: %d",
+                    raidClears.get(Raid.VAULT_OF_GLASS), raidClears.get(Raid.DEEP_STONE_CRYPT),
+                    raidClears.get(Raid.GARDEN_OF_SALVATION), raidClears.get(Raid.LAST_WISH),
+                    user.getTotalRaidClears()));
+        }
+        return response.toString();
+    }
+
+    public static Member getMemberInformationWithCharacters(String bungieId) throws Exception {
+        String[] splitBungieId = bungieId.split("#");
+
+        Member user = null;
         if (splitBungieId.length == 2) {
-            Member user = null;
             AtomicInteger page = new AtomicInteger(0);
             boolean morePages = true;
             final HashMap<String, Member> searchResults = new HashMap<>();
@@ -446,18 +463,94 @@ public class RaidReportTool {
                     user = member;
                 }
             }
-
             if (user != null) {
                 getMemberCharacters(user);
-                getMemberRaidInfo(user);
-                HashMap<Raid, Integer> raidClears = user.getRaidClears();
-                response.append(String.format(
-                        "Vault of Glass: %d\nDeep Stone Crypt: %d\nGarden of Salvation: %d\nLast Wish: %d",
-                        raidClears.get(Raid.VAULT_OF_GLASS), raidClears.get(Raid.DEEP_STONE_CRYPT),
-                        raidClears.get(Raid.GARDEN_OF_SALVATION), raidClears.get(Raid.LAST_WISH)));
             }
         }
+        return user;
+    }
 
+    public static String getUserWeeklyClears(String bungieId, LocalDate startDate, LocalDate endDate) throws Exception {
+        Member user = getMemberInformationWithCharacters(bungieId);
+        final StringBuilder response = new StringBuilder();
+
+        if (user != null) {
+            getUserWeeklyClears(user, startDate, endDate);
+            HashMap<Raid, Integer> raidClears = user.getWeeklyRaidClears();
+            response.append(String.format(
+                    "Vault of Glass: %d\nDeep Stone Crypt: %d\nGarden of Salvation: %d\nLast Wish: %d\n\nTOTAL: %d",
+                    raidClears.get(Raid.VAULT_OF_GLASS), raidClears.get(Raid.DEEP_STONE_CRYPT),
+                    raidClears.get(Raid.GARDEN_OF_SALVATION), raidClears.get(Raid.LAST_WISH),
+                    user.getTotalWeeklyRaidClears()));
+        }
         return response.toString();
+    }
+
+    public static Member getUserWeeklyClears(Member member, LocalDate startDate, LocalDate endDate) {
+        List<String> validRaidHashes = Raid.getAllValidRaidHashes();
+        member.getCharacters().forEach((characterId, character) -> {
+            try {
+                boolean next = false;
+                for (int page = 0; !next; page++) {
+                    URL url = new URL(String.format(
+                            "https://www.bungie.net/Platform/Destiny2/%s/Account/%s/Character/%s/Stats/Activities/?page=%d&mode=4&count=250",
+                            member.getMemberType(), member.getUID(), character.getUID(), page));
+
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.setRequestMethod("GET");
+                    conn.addRequestProperty("X-API-Key", apiKey);
+                    conn.addRequestProperty("Accept", "Application/Json");
+                    conn.connect();
+
+                    // Getting the response code
+                    int responsecode = conn.getResponseCode();
+
+                    if (responsecode == 200) {
+                        BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                        String inputLine;
+                        StringBuffer content = new StringBuffer();
+                        while ((inputLine = in.readLine()) != null) {
+                            content.append(inputLine);
+                        }
+                        JsonArray results = (JsonArray) JsonParser.parseString(content.toString()).getAsJsonObject()
+                                .getAsJsonObject("Response").get("activities");
+                        if (results != null) {
+                            next = results.size() < 250;
+                            List<JsonObject> raids = IntStream.range(0, results.size())
+                                    .mapToObj(index -> (JsonObject) results.get(index)).filter((result) -> {
+                                        return validRaidHashes.contains(result.get("activityDetails").getAsJsonObject()
+                                                .get("directorActivityHash").getAsString());
+                                    }).collect(Collectors.toList());
+                            raids.forEach((entry) -> {
+                                Raid raid = Raid.getRaid(entry.get("activityDetails").getAsJsonObject()
+                                        .get("directorActivityHash").getAsString());
+                                if (raid != null) {
+                                    boolean completed = entry.get("values").getAsJsonObject().get("completed")
+                                            .getAsJsonObject().get("basic").getAsJsonObject().get("displayValue")
+                                            .getAsString().equalsIgnoreCase("Yes");
+                                    if (completed) {
+                                        String dateCompletedStr = entry.getAsJsonPrimitive("period").getAsString();
+                                        LocalDate dateCompleted = LocalDate.parse(dateCompletedStr,
+                                                DateTimeFormatter.ISO_DATE_TIME);
+                                        if ((dateCompleted.isEqual(startDate) || dateCompleted.isAfter(startDate))
+                                                && (dateCompleted.isBefore(endDate)
+                                                        || dateCompleted.isEqual(endDate))) {
+                                            character.getActivities().get(raid).addWeeklyClears(1);
+                                        }
+                                    }
+                                }
+                            });
+                        } else {
+                            next = true;
+                        }
+                        in.close();
+                    }
+                    conn.disconnect();
+                }
+            } catch (Exception ex) {
+                LOGGER.error(ex.getMessage(), ex);
+            }
+        });
+        return member;
     }
 }

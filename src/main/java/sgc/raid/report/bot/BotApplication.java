@@ -68,16 +68,32 @@ public class BotApplication {
 			psClanOption.addChoice(name, RaidReportTool.getPsclanidmap().get(name));
 		});
 
-		api.bulkOverwriteGlobalSlashCommands(Arrays.asList(new SlashCommandBuilder().setName("user-raid-report")
-				.setDescription("Pulls the Raid Report of the user. (Requires full Bungie ID Guardian#0000)")
-				.addOption(new SlashCommandOptionBuilder().setName("BungieId").setType(SlashCommandOptionType.STRING)
-						.setRequired(true).setDescription("The Users BungieID with numbers (Guardian#0000)").build()),
+		final SlashCommandOptionBuilder userWeeklyClearStartOption = new SlashCommandOptionBuilder()
+				.setName("StartDate").setType(SlashCommandOptionType.STRING).setRequired(true)
+				.setDescription("Starting Date for Clear Count (YYYYMMDD)");
+
+		final SlashCommandOptionBuilder userWeeklyClearEndOption = new SlashCommandOptionBuilder().setName("EndDate")
+				.setType(SlashCommandOptionType.STRING).setRequired(true)
+				.setDescription("Ending Date for Clear Count (YYYYMMDD)");
+
+		final SlashCommandOptionBuilder bungieIdOption = new SlashCommandOptionBuilder().setName("BungieId")
+				.setType(SlashCommandOptionType.STRING).setRequired(true)
+				.setDescription("The Users BungieID with numbers (Guardian#0000)");
+
+		api.bulkOverwriteGlobalSlashCommands(Arrays.asList(
+				new SlashCommandBuilder().setName("user-raid-report")
+						.setDescription("Pulls the Raid Report of the user. (Requires full Bungie ID)")
+						.addOption(bungieIdOption.build()),
 				new SlashCommandBuilder().setName("pc-clan-raid-report")
 						.setDescription("Pulls a full PC clan raid report.").addOption(pcClanOption.build()),
 				new SlashCommandBuilder().setName("xbox-clan-raid-report")
 						.setDescription("Pulls a full Xbox clan raid report.").addOption(xbClanOption.build()),
 				new SlashCommandBuilder().setName("psn-clan-raid-report")
-						.setDescription("Pulls a full Playstation clan raid report.").addOption(psClanOption.build())))
+						.setDescription("Pulls a full Playstation clan raid report.").addOption(psClanOption.build()),
+				new SlashCommandBuilder().setName("user-weekly-raid-report").setDescription(
+						"Pulls the Weekly Raid Report of the user. (Requires full Bungie ID, Start Date, and End Date)")
+						.addOption(bungieIdOption.build()).addOption(userWeeklyClearStartOption.build())
+						.addOption(userWeeklyClearEndOption.build())))
 				.join();
 
 		api.addSlashCommandCreateListener(slashCommandListener);

@@ -6,6 +6,7 @@
 package sgc.sherpa.sheets;
 
 import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author chris hoppe
@@ -71,23 +72,49 @@ public class Member {
         return raidClears;
     }
 
-    public HashMap<Raid, Integer> getXlRaidClears() {
-        HashMap<Raid, Integer> raidClears = new HashMap<>();
+    public int getTotalRaidClears() {
+        AtomicInteger totalRaidClears = new AtomicInteger(0);
+        characters.values().forEach((c) -> {
+            for (Raid r : Raid.values()) {
+                Activity activity = c.getActivities().get(r);
+                if (activity != null) {
+                    totalRaidClears.set(totalRaidClears.get() + activity.getTotalClears());
+                }
+            }
+        });
+        return totalRaidClears.get();
+    }
+
+    public HashMap<Raid, Integer> getWeeklyRaidClears() {
+        HashMap<Raid, Integer> raidWeeklyClears = new HashMap<>();
         for (Raid r : Raid.values()) {
-            raidClears.put(r, 0);
+            raidWeeklyClears.put(r, 0);
         }
         characters.values().forEach((c) -> {
             for (Raid r : Raid.values()) {
                 Activity activity = c.getActivities().get(r);
                 if (activity != null) {
                     int total = 0;
-                    total += raidClears.get(r);
-                    total += activity.getXlClears();
-                    raidClears.put(r, total);
+                    total += raidWeeklyClears.get(r);
+                    total += activity.getWeeklyClears();
+                    raidWeeklyClears.put(r, total);
                 }
             }
         });
-        return raidClears;
+        return raidWeeklyClears;
+    }
+
+    public int getTotalWeeklyRaidClears() {
+        AtomicInteger totalWeeklyRaidClears = new AtomicInteger(0);
+        characters.values().forEach((c) -> {
+            for (Raid r : Raid.values()) {
+                Activity activity = c.getActivities().get(r);
+                if (activity != null) {
+                    totalWeeklyRaidClears.set(totalWeeklyRaidClears.get() + activity.getWeeklyClears());
+                }
+            }
+        });
+        return totalWeeklyRaidClears.get();
     }
 
     public String getCombinedungieGlobalDisplayName() {

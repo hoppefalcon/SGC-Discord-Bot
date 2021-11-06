@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import sgc.raid.report.bot.commands.impl.ClanRaidReportCommand;
 import sgc.raid.report.bot.commands.impl.UserRaidReportCommand;
+import sgc.raid.report.bot.commands.impl.UserWeeklyRaidReportCommand;
 import sgc.raid.report.bot.listeners.interfaces.SlashCommandListener;
 
 @Component
@@ -29,6 +30,10 @@ public class SlashCommandListenerImpl implements SlashCommandListener {
 
         case "psn-clan-raid-report":
             new ClanRaidReportCommand().handle(slashCommandInteraction);
+            break;
+
+        case "user-weekly-raid-report":
+            new UserWeeklyRaidReportCommand().handle(slashCommandInteraction);
             break;
 
         default:

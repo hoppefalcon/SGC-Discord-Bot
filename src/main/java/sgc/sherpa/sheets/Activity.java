@@ -12,7 +12,7 @@ public class Activity {
 
     private final Raid raid;
     private int totalClears = 0;
-    private int xlFireteamClears = 0;
+    private int weeklyClears = 0;
 
     public Activity(Raid raid) {
         this.raid = raid;
@@ -26,14 +26,6 @@ public class Activity {
         totalClears += newClears;
     }
 
-    public void addXlFireteamClears(int newClears) {
-        xlFireteamClears += newClears;
-    }
-
-    public void addXlFireteamClears(double newClears) {
-        xlFireteamClears += newClears;
-    }
-
     public Raid getRaid() {
         return raid;
     }
@@ -42,8 +34,19 @@ public class Activity {
         return totalClears;
     }
 
-    public int getXlClears() {
-        return xlFireteamClears;
+    public void addWeeklyClears(int newClears) {
+        weeklyClears += newClears;
+    }
+
+    public void addWeeklyClears(double newClears) {
+        weeklyClears += newClears;
+    }
+
+    /**
+     * @return the weeklyClears
+     */
+    public int getWeeklyClears() {
+        return weeklyClears;
     }
 
 }

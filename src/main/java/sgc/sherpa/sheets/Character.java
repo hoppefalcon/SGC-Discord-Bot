@@ -14,6 +14,7 @@ public class Character {
 
     final String UID;
     private final HashMap<Raid, Activity> activities = new HashMap<>();
+    private final HashMap<Raid, Activity> weeklyActivities = new HashMap<>();
 
     public Character(String UID) {
         this.UID = UID;
@@ -23,12 +24,25 @@ public class Character {
         activities.put(Raid.VAULT_OF_GLASS, new Activity(Raid.VAULT_OF_GLASS));
     }
 
+    /**
+     * @return the uID
+     */
     public String getUID() {
         return UID;
     }
 
+    /**
+     * @return the activities
+     */
     public HashMap<Raid, Activity> getActivities() {
         return activities;
+    }
+
+    /**
+     * @return the weeklyActivities
+     */
+    public HashMap<Raid, Activity> getWeeklyActivities() {
+        return weeklyActivities;
     }
 
 }
