@@ -80,6 +80,9 @@ public class BotApplication {
 				.setType(SlashCommandOptionType.STRING).setRequired(true)
 				.setDescription("The Users BungieID with numbers (Guardian#0000)");
 
+		final SlashCommandOptionBuilder carnageIdOption = new SlashCommandOptionBuilder().setName("ID")
+				.setType(SlashCommandOptionType.STRING).setRequired(true).setDescription("Postgame Carnage Report ID");
+
 		api.bulkOverwriteGlobalSlashCommands(Arrays.asList(
 				new SlashCommandBuilder().setName("user-raid-report")
 						.setDescription("Pulls the Raid Report of the user. (Requires full Bungie ID)")
@@ -93,7 +96,9 @@ public class BotApplication {
 				new SlashCommandBuilder().setName("user-weekly-raid-report").setDescription(
 						"Pulls the Weekly Raid Report of the user. (Requires full Bungie ID, Start Date, and End Date)")
 						.addOption(bungieIdOption.build()).addOption(userWeeklyClearStartOption.build())
-						.addOption(userWeeklyClearEndOption.build())))
+						.addOption(userWeeklyClearEndOption.build()),
+				new SlashCommandBuilder().setName("raid-carnage-report")
+						.setDescription("Pulls a Full Raid Carnage Report.").addOption(carnageIdOption.build())))
 				.join();
 
 		api.addSlashCommandCreateListener(slashCommandListener);

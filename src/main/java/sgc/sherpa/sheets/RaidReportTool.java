@@ -172,19 +172,6 @@ public class RaidReportTool {
             }
         });
         executorService.invokeAll(tasks);
-
-        // clan.getMembers().forEach((memberId, member) -> {
-        // LOGGER.trace("Processing " + member.getDisplayName());
-        // try {
-        // getMemberCharacters(member);
-        // getMemberRaidInfo(member);
-        // } catch (Exception e) {
-        // LOGGER.error(e.getMessage(), e);
-        // }
-        // interactionOriginalResponseUpdater.setContent(String.format("Building a clan
-        // raid report for %s (%d/%d)",
-        // clan.getName(), count.incrementAndGet(), clan.getMembers().size())).update();
-        // });
         return clan;
     }
 
@@ -552,5 +539,72 @@ public class RaidReportTool {
             }
         });
         return member;
+    }
+
+    public static RaidCarnageReport getRaidCarnageReport(String carnageReportId) throws IOException {
+        URL url = new URL(String.format("https://stats.bungie.net/Platform/Destiny2/Stats/PostGameCarnageReport/%s/",
+                carnageReportId));
+
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.addRequestProperty("X-API-Key", apiKey);
+        conn.addRequestProperty("Accept", "Application/Json");
+        conn.connect();
+
+        // Getting the response code
+        int responsecode = conn.getResponseCode();
+        RaidCarnageReport raidCarnageReport = null;
+        if (responsecode == 200) {
+            BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            String inputLine;
+            StringBuffer content = new StringBuffer();
+            while ((inputLine = in.readLine()) != null) {
+                content.append(inputLine);
+            }
+
+            JsonObject response = JsonParser.parseString(content.toString()).getAsJsonObject()
+                    .getAsJsonObject("Response");
+            JsonObject activityDetails = response.getAsJsonObject("activityDetails");
+            JsonArray entries = response.get("entries").getAsJsonArray();
+
+            String dateCompletedStr = response.get("period").getAsString();
+            LocalDate dateCompleted = LocalDate.parse(dateCompletedStr, DateTimeFormatter.ISO_DATE_TIME);
+
+            final RaidCarnageReport tempRaidCarnageReport = new RaidCarnageReport(
+                    Raid.getRaid(activityDetails.get("directorActivityHash").getAsString()), dateCompleted);
+            entries.forEach((entry) -> {
+                boolean completed = entry.getAsJsonObject().get("values").getAsJsonObject().get("completed")
+                        .getAsJsonObject().get("basic").getAsJsonObject().get("value").getAsDouble() == 1.0;
+
+                tempRaidCarnageReport.getPlayers().add(new RaidCarnageReportPlayer(
+                        entry.getAsJsonObject().get("player").getAsJsonObject().get("destinyUserInfo").getAsJsonObject()
+                                .get("bungieGlobalDisplayName").getAsString(),
+                        entry.getAsJsonObject().get("player").getAsJsonObject().get("destinyUserInfo").getAsJsonObject()
+                                .get("bungieGlobalDisplayNameCode").getAsString(),
+                        entry.getAsJsonObject().get("player").getAsJsonObject().get("destinyUserInfo").getAsJsonObject()
+                                .get("membershipType").getAsInt(),
+                        entry.getAsJsonObject().get("player").getAsJsonObject().get("characterClass").getAsString(),
+                        completed,
+                        entry.getAsJsonObject().get("values").getAsJsonObject().get("deaths").getAsJsonObject()
+                                .get("basic").getAsJsonObject().get("value").getAsDouble(),
+                        entry.getAsJsonObject().get("values").getAsJsonObject().get("assists").getAsJsonObject()
+                                .get("basic").getAsJsonObject().get("value").getAsDouble(),
+                        entry.getAsJsonObject().get("values").getAsJsonObject().get("kills").getAsJsonObject()
+                                .get("basic").getAsJsonObject().get("value").getAsDouble(),
+                        entry.getAsJsonObject().get("values").getAsJsonObject().get("opponentsDefeated")
+                                .getAsJsonObject().get("basic").getAsJsonObject().get("value").getAsDouble(),
+                        entry.getAsJsonObject().get("values").getAsJsonObject().get("efficiency").getAsJsonObject()
+                                .get("basic").getAsJsonObject().get("value").getAsDouble(),
+                        entry.getAsJsonObject().get("values").getAsJsonObject().get("killsDeathsAssists")
+                                .getAsJsonObject().get("basic").getAsJsonObject().get("value").getAsDouble(),
+                        entry.getAsJsonObject().get("values").getAsJsonObject().get("activityDurationSeconds")
+                                .getAsJsonObject().get("basic").getAsJsonObject().get("value").getAsDouble()));
+            });
+            in.close();
+            raidCarnageReport = tempRaidCarnageReport;
+        }
+        conn.disconnect();
+        return raidCarnageReport;
+
     }
 }
