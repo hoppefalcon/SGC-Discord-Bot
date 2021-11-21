@@ -500,8 +500,8 @@ public class RaidReportTool {
                     conn.addRequestProperty("X-API-Key", apiKey);
                     conn.addRequestProperty("Accept", "Application/Json");
 
-                    LOGGER.info(String.format("Makking HTTP call #%d for %s", page + 1,
-                            member.getCombinedBungieGlobalDisplayName()));
+                    LOGGER.trace(String.format("Makking HTTP call #%d for %s:%s", page + 1,
+                            member.getCombinedBungieGlobalDisplayName(),character.getUID()));
                     conn.connect();
 
                     // Getting the response code
