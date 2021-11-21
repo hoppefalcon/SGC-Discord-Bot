@@ -117,7 +117,7 @@ public class Member {
         return totalWeeklyRaidClears.get();
     }
 
-    public String getCombinedungieGlobalDisplayName() {
+    public String getCombinedBungieGlobalDisplayName() {
         return String.format("%s#%s", this.getBungieGlobalDisplayName(), this.getBungieGlobalDisplayNameCode());
     }
 }

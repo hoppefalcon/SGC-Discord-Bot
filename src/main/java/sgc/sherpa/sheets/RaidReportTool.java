@@ -132,15 +132,17 @@ public class RaidReportTool {
     }
 
     public static Clan getClanRaidReport(Clan clan) throws Exception {
-        LOGGER.info("Processing " + clan.getName());
+        LOGGER.trace("Processing " + clan.getName());
         clan.getMembers().forEach((memberId, member) -> {
             LOGGER.info("Processing " + member.getDisplayName());
             try {
                 getMemberCharacters(member);
                 getMemberRaidInfo(member);
+                getUserWeeklyClears(member, LocalDate.now().minusDays(6), LocalDate.now());
             } catch (Exception e) {
                 LOGGER.error(e.getMessage(), e);
             }
+            LOGGER.trace("Finished Processing " + member.getDisplayName());
         });
         return clan;
     }
@@ -154,13 +156,8 @@ public class RaidReportTool {
         clan.getMembers().forEach((memberId, member) -> {
             try {
                 tasks.add(() -> {
-                    LOGGER.trace("Processing " + member.getDisplayName());
-                    try {
-                        getMemberCharacters(member);
-                        getMemberRaidInfo(member);
-                    } catch (Exception e) {
-                        LOGGER.error(e.getMessage(), e);
-                    }
+                    getClanMemberRaidReport(memberId, member);
+
                     interactionOriginalResponseUpdater
                             .setContent(String.format("Building a clan raid report for %s (%d/%d)", clan.getName(),
                                     count.incrementAndGet(), clan.getMembers().size()))
@@ -172,7 +169,20 @@ public class RaidReportTool {
             }
         });
         executorService.invokeAll(tasks);
+        LOGGER.trace("Finished Processing " + clan.getName());
         return clan;
+    }
+
+    private static void getClanMemberRaidReport(String memberId, Member member) {
+        LOGGER.trace("Processing " + member.getDisplayName());
+        try {
+            getMemberCharacters(member);
+            getMemberRaidInfo(member);
+            getUserWeeklyClears(member, LocalDate.now().minusDays(6), LocalDate.now());
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+        LOGGER.trace("Finished Processing " + member.getDisplayName());
     }
 
     public static void getClanInfo(Clan clan) throws IOException {
@@ -345,13 +355,14 @@ public class RaidReportTool {
     public static String getClanRaidReportAsCsv(Clan clan) throws IOException {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("Gamertag,").append("BungieDisplayName,").append("Vault of Glass,")
-                .append("Deep Stone Crypt,").append("Garden of Salvation,").append("Last Wish,").append("\n");
+                .append("Deep Stone Crypt,").append("Garden of Salvation,").append("Last Wish,")
+                .append("Clears in the past 7 Days").append("\n");
         clan.getMembers().forEach((id, member) -> {
             HashMap<Raid, Integer> raidClears = member.getRaidClears();
-            stringBuilder.append(String.format("%s,%s,%d,%d,%d,%d,\n", member.getDisplayName(),
-                    member.getCombinedungieGlobalDisplayName(), raidClears.get(Raid.VAULT_OF_GLASS),
+            stringBuilder.append(String.format("%s,%s,%d,%d,%d,%d,%d,\n", member.getDisplayName(),
+                    member.getCombinedBungieGlobalDisplayName(), raidClears.get(Raid.VAULT_OF_GLASS),
                     raidClears.get(Raid.DEEP_STONE_CRYPT), raidClears.get(Raid.GARDEN_OF_SALVATION),
-                    raidClears.get(Raid.LAST_WISH)));
+                    raidClears.get(Raid.LAST_WISH), member.getTotalWeeklyRaidClears()));
 
         });
         return stringBuilder.toString();
@@ -474,6 +485,7 @@ public class RaidReportTool {
     }
 
     public static Member getUserWeeklyClears(Member member, LocalDate startDate, LocalDate endDate) {
+        LOGGER.info("Processing Weekly Clears for " + member.getCombinedBungieGlobalDisplayName());
         List<String> validRaidHashes = Raid.getAllValidRaidHashes();
         member.getCharacters().forEach((characterId, character) -> {
             try {
@@ -487,6 +499,9 @@ public class RaidReportTool {
                     conn.setRequestMethod("GET");
                     conn.addRequestProperty("X-API-Key", apiKey);
                     conn.addRequestProperty("Accept", "Application/Json");
+
+                    LOGGER.info(String.format("Makking HTTP call #%d for %s", page + 1,
+                            member.getCombinedBungieGlobalDisplayName()));
                     conn.connect();
 
                     // Getting the response code
@@ -531,6 +546,8 @@ public class RaidReportTool {
                             next = true;
                         }
                         in.close();
+                    } else {
+                        next = true;
                     }
                     conn.disconnect();
                 }
