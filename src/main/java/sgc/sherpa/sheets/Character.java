@@ -18,10 +18,8 @@ public class Character {
 
     public Character(String UID) {
         this.UID = UID;
-        activities.put(Raid.LAST_WISH, new Activity(Raid.LAST_WISH));
-        activities.put(Raid.GARDEN_OF_SALVATION, new Activity(Raid.GARDEN_OF_SALVATION));
-        activities.put(Raid.DEEP_STONE_CRYPT, new Activity(Raid.DEEP_STONE_CRYPT));
-        activities.put(Raid.VAULT_OF_GLASS, new Activity(Raid.VAULT_OF_GLASS));
+        Raid.getRaidsOrdered().forEach((Raid raid) -> {activities.put(raid, new Activity(raid));
+        });
     }
 
     /**
