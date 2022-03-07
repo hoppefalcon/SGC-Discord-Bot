@@ -353,16 +353,21 @@ public class RaidReportTool {
     }
 
     public static String getClanRaidReportAsCsv(Clan clan) throws IOException {
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("Gamertag,").append("BungieDisplayName,").append("Vault of Glass,")
-                .append("Deep Stone Crypt,").append("Garden of Salvation,").append("Last Wish,")
-                .append("Clears in the past 7 Days").append("\n");
+        final StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("Gamertag,").append("BungieDisplayName,");
+        Raid.getRaidsOrdered().forEach((Raid raid) -> {
+            stringBuilder.append(raid.name).append(",");
+        });
+        stringBuilder.append("Clears in the past 7 Days").append("\n");
+
         clan.getMembers().forEach((id, member) -> {
             HashMap<Raid, Integer> raidClears = member.getRaidClears();
-            stringBuilder.append(String.format("%s,%s,%d,%d,%d,%d,%d,\n", member.getDisplayName(),
-                    member.getCombinedBungieGlobalDisplayName(), raidClears.get(Raid.VAULT_OF_GLASS),
-                    raidClears.get(Raid.DEEP_STONE_CRYPT), raidClears.get(Raid.GARDEN_OF_SALVATION),
-                    raidClears.get(Raid.LAST_WISH), member.getTotalWeeklyRaidClears()));
+            stringBuilder.append(member.getDisplayName()).append(",")
+                    .append(member.getCombinedBungieGlobalDisplayName()).append(",");
+            Raid.getRaidsOrdered().forEach((Raid raid) -> {
+                stringBuilder.append(raidClears.get(raid)).append(",");
+            });
+            stringBuilder.append(member.getTotalWeeklyRaidClears()).append("\n");
 
         });
         return stringBuilder.toString();
@@ -379,11 +384,10 @@ public class RaidReportTool {
         if (user != null) {
             getMemberRaidInfo(user);
             HashMap<Raid, Integer> raidClears = user.getRaidClears();
-            response.append(String.format(
-                    "Vault of Glass: %d\nDeep Stone Crypt: %d\nGarden of Salvation: %d\nLast Wish: %d\n\nTOTAL: %d",
-                    raidClears.get(Raid.VAULT_OF_GLASS), raidClears.get(Raid.DEEP_STONE_CRYPT),
-                    raidClears.get(Raid.GARDEN_OF_SALVATION), raidClears.get(Raid.LAST_WISH),
-                    user.getTotalRaidClears()));
+            Raid.getRaidsOrdered().forEach((Raid raid) -> {
+                response.append(raid.name).append(": ").append(raidClears.get(raid)).append("\n");
+            });
+            response.append("\nTOTAL: ").append(user.getTotalRaidClears());
         }
         return response.toString();
     }
@@ -475,11 +479,10 @@ public class RaidReportTool {
         if (user != null) {
             getUserWeeklyClears(user, startDate, endDate);
             HashMap<Raid, Integer> raidClears = user.getWeeklyRaidClears();
-            response.append(String.format(
-                    "Vault of Glass: %d\nDeep Stone Crypt: %d\nGarden of Salvation: %d\nLast Wish: %d\n\nTOTAL: %d",
-                    raidClears.get(Raid.VAULT_OF_GLASS), raidClears.get(Raid.DEEP_STONE_CRYPT),
-                    raidClears.get(Raid.GARDEN_OF_SALVATION), raidClears.get(Raid.LAST_WISH),
-                    user.getTotalWeeklyRaidClears()));
+            Raid.getRaidsOrdered().forEach((Raid raid) -> {
+                response.append(raid.name).append(": ").append(raidClears.get(raid)).append("\n");
+            });
+            response.append("\nTOTAL: ").append(user.getTotalWeeklyRaidClears());
         }
         return response.toString();
     }
@@ -501,7 +504,7 @@ public class RaidReportTool {
                     conn.addRequestProperty("Accept", "Application/Json");
 
                     LOGGER.trace(String.format("Makking HTTP call #%d for %s:%s", page + 1,
-                            member.getCombinedBungieGlobalDisplayName(),character.getUID()));
+                            member.getCombinedBungieGlobalDisplayName(), character.getUID()));
                     conn.connect();
 
                     // Getting the response code
