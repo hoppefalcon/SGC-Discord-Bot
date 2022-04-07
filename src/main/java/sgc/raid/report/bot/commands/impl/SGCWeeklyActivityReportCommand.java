@@ -45,8 +45,8 @@ public class SGCWeeklyActivityReportCommand implements Command {
                                 Instant end = Instant.now();
                                 Duration timeElapsed = Duration.between(start, end);
                                 long hours = timeElapsed.toHours();
-                                long minutes = timeElapsed.toMinutesPart();
-                                long secounds = timeElapsed.toSecondsPart();
+                                long minutes = timeElapsed.toMinutes() % 60;
+                                long secounds = timeElapsed.toSeconds() % 60;
 
                                 if (sgcWeeklyActivityReport.isEmpty()) {
                                         interactionOriginalResponseUpdater.setContent("").addEmbed(new EmbedBuilder()
