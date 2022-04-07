@@ -69,7 +69,7 @@ public class RaidReportTool {
 
     // String output = getSGCWeeklyActivityReport(LocalDate.parse("20220222",
     // DateTimeFormatter.BASIC_ISO_DATE),
-    // LocalDate.parse("20220228", DateTimeFormatter.BASIC_ISO_DATE));
+    // LocalDate.parse("20220228", DateTimeFormatter.BASIC_ISO_DATE), null);
 
     // executorService.shutdown();
 
@@ -80,8 +80,6 @@ public class RaidReportTool {
     // long hours = timeElapsed.toHours();
     // long minutes = timeElapsed.toMinutesPart();
     // long secounds = timeElapsed.toSecondsPart();
-    // System.out.println("Post Game Carnage Reports Processed: " +
-    // PGCR_COUNT.get());
     // System.out.println(String.format("DONE (%02d:%02d:%02d)", hours, minutes,
     // secounds));
     // }
@@ -306,10 +304,10 @@ public class RaidReportTool {
                     .getAsJsonObject("Response").get("characters");
             results.forEach((entry) -> {
                 try {
-                    // if (entry.getAsJsonObject().get("deleted").getAsBoolean() == false) {
-                    String characterId = entry.getAsJsonObject().get("characterId").getAsString();
-                    member.getCharacters().put(characterId, new Character(characterId));
-                    // }
+                    if (entry.getAsJsonObject().get("deleted").getAsBoolean() == false) {
+                        String characterId = entry.getAsJsonObject().get("characterId").getAsString();
+                        member.getCharacters().put(characterId, new Character(characterId));
+                    }
                 } catch (Exception ex) {
                     LOGGER.error(ex.getMessage(), ex);
                 }
@@ -654,12 +652,13 @@ public class RaidReportTool {
 
         AtomicLong TOTAL_PGCR_COUNT = new AtomicLong(0);
         AtomicLong SCORED_PGCR_COUNT = new AtomicLong(0);
-
-        interactionOriginalResponseUpdater.setContent(String
-                .format("Building a SGC weekly activity report from %s to %s\nThis will take a while.",
-                        startDate,
-                        endDate))
-                .update().join();
+        if (interactionOriginalResponseUpdater != null) {
+            interactionOriginalResponseUpdater.setContent(String
+                    .format("Building a SGC weekly activity report from %s to %s\nThis will take a while.",
+                            startDate,
+                            endDate))
+                    .update().join();
+        }
         HashMap<String, Clan> clanMap = initializeClanMap();
         HashMap<String, Member> sgcClanMembersMap = new HashMap<>();
 
@@ -681,11 +680,13 @@ public class RaidReportTool {
                     SCORED_PGCR_COUNT.addAndGet(member.getClearedActivitiesWithSGCMembersCount());
                     LOGGER.debug("Finished processing " + member.getDisplayName());
 
-                    interactionOriginalResponseUpdater.setContent(String
-                            .format("Building a SGC weekly activity report from %s to %s\nThis will take a while. (%d/%d)\nTotal PGCRs Processed: %,d\nScored PGCRs for Weekly Activity: %,d",
-                                    startDate, endDate, completed.incrementAndGet(), sgcClanMembersMap.size(),
-                                    TOTAL_PGCR_COUNT.get(), SCORED_PGCR_COUNT.get()))
-                            .update().join();
+                    if (interactionOriginalResponseUpdater != null) {
+                        interactionOriginalResponseUpdater.setContent(String
+                                .format("Building a SGC weekly activity report from %s to %s\nThis will take a while. (%d/%d)\nTotal PGCRs Processed: %,d\nScored PGCRs for Weekly Activity: %,d",
+                                        startDate, endDate, completed.incrementAndGet(), sgcClanMembersMap.size(),
+                                        TOTAL_PGCR_COUNT.get(), SCORED_PGCR_COUNT.get()))
+                                .update().join();
+                    }
 
                     LOGGER.debug("Updated Message");
                 } catch (IOException ex) {
@@ -695,18 +696,22 @@ public class RaidReportTool {
             });
         });
         executorService.invokeAll(tasks);
-        interactionOriginalResponseUpdater.setContent(String
-                .format("Generating the SGC weekly activity report csv from %s to %s",
-                        startDate,
-                        endDate))
-                .update().join();
+        if (interactionOriginalResponseUpdater != null) {
+            interactionOriginalResponseUpdater.setContent(String
+                    .format("Generating the SGC weekly activity report csv from %s to %s",
+                            startDate,
+                            endDate))
+                    .update().join();
+        }
         String potwActivityReportAsCsv = getPOTWActivityReportAsCsv(clanMap, sgcClanMembersMap);
 
-        interactionOriginalResponseUpdater.setContent(String
-                .format("SGC weekly activity report from %s to %s Complete",
-                        startDate,
-                        endDate))
-                .update().join();
+        if (interactionOriginalResponseUpdater != null) {
+            interactionOriginalResponseUpdater.setContent(String
+                    .format("SGC weekly activity report from %s to %s Complete",
+                            startDate,
+                            endDate))
+                    .update().join();
+        }
         LOGGER.info("SGC Weekly Activity Report Complete");
         return potwActivityReportAsCsv;
     }
@@ -761,7 +766,7 @@ public class RaidReportTool {
                 List<GenericActivity> genericActivitiesToProcess = new ArrayList<>();
                 for (int page = 0; !next; page++) {
                     URL url = new URL(String.format(
-                            "https://www.bungie.net/Platform/Destiny2/%s/Account/%s/Character/%s/Stats/Activities/?page=%d&count=250",
+                            "https://www.bungie.net/Platform/Destiny2/%s/Account/%s/Character/%s/Stats/Activities/?page=%d&mode=0&count=250",
                             member.getMemberType(), member.getUID(), character.getUID(), page));
 
                     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -786,7 +791,8 @@ public class RaidReportTool {
                         JsonArray results = (JsonArray) JsonParser.parseString(content.toString()).getAsJsonObject()
                                 .getAsJsonObject("Response").get("activities");
                         if (results != null) {
-                            next = results.size() < 250;
+                            AtomicInteger recordsAfterEndDate = new AtomicInteger(0);
+
                             List<JsonObject> clearedActivities = IntStream.range(0, results.size())
                                     .mapToObj(index -> (JsonObject) results.get(index)).filter((result) -> {
                                         int mode = result.getAsJsonObject("activityDetails")
@@ -801,12 +807,16 @@ public class RaidReportTool {
                                         if (dateCompleted.isBefore(startDate) || dateCompleted.isAfter(endDate)) {
                                             return false;
                                         }
+                                        if (dateCompleted.isAfter(endDate)) {
+                                            recordsAfterEndDate.incrementAndGet();
+                                        }
                                         boolean completed = result.getAsJsonObject().getAsJsonObject("values")
                                                 .getAsJsonObject("completed")
                                                 .getAsJsonObject("basic").getAsJsonPrimitive("value")
                                                 .getAsDouble() == 1.0;
                                         return completed;
                                     }).collect(Collectors.toList());
+                            next = (results.size() < 250) || (recordsAfterEndDate.get() == results.size());
 
                             clearedActivities.forEach((activity) -> {
                                 String instanceId = activity.getAsJsonObject().getAsJsonObject("activityDetails")
