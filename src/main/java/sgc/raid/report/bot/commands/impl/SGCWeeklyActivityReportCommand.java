@@ -52,6 +52,7 @@ public class SGCWeeklyActivityReportCommand implements Command {
                                 } else {
                                         LOGGER.info("Sending SGC Weekly Activity Report to " + slashCommandInteraction
                                                         .getChannel().get().getIdAsString());
+
                                         new MessageBuilder()
                                                         .addEmbed(new EmbedBuilder()
                                                                         .setAuthor(slashCommandInteraction.getUser())
@@ -59,7 +60,7 @@ public class SGCWeeklyActivityReportCommand implements Command {
                                                                                         "SGC Weekly Activity Report from %s to %s",
                                                                                         startDate.toString(),
                                                                                         endDate.toString()))
-                                                                        .setDescription(sgcWeeklyActivityReport)
+                                                                        .setDescription("SGC Weekly Activity Report Completed")
                                                                         .setFooter("#AreYouShrouded")
                                                                         .setThumbnail(getClass().getClassLoader()
                                                                                         .getResourceAsStream(
