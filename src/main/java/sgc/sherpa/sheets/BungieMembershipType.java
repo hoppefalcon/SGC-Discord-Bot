@@ -5,7 +5,6 @@
  */
 package sgc.sherpa.sheets;
 
-
 /**
  * @author chris hoppe
  */

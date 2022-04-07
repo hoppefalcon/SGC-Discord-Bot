@@ -10,8 +10,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.time.Duration;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -63,22 +61,24 @@ public class RaidReportTool {
      * @throws IOException
      */
 
-    public static void main(String[] args) throws InterruptedException,
-            IOException {
-        System.out.println(System.getProperty("os.name"));
-        Instant start = Instant.now();
+    // public static void main(String[] args) throws InterruptedException,
+    // IOException {
+    // System.out.println(System.getProperty("os.name"));
+    // Instant start = Instant.now();
 
-        String output = getSGCWeeklyActivityReport(LocalDate.parse("20220222", DateTimeFormatter.BASIC_ISO_DATE),
-                LocalDate.parse("20220228", DateTimeFormatter.BASIC_ISO_DATE));
+    // String output = getSGCWeeklyActivityReport(LocalDate.parse("20220222",
+    // DateTimeFormatter.BASIC_ISO_DATE),
+    // LocalDate.parse("20220228", DateTimeFormatter.BASIC_ISO_DATE));
 
-        executorService.shutdown();
+    // executorService.shutdown();
 
-        Instant end = Instant.now();
-        Duration timeElapsed = Duration.between(start,
-                end);
-        System.out.println("Post Game Carnage Reports Processed: " + PGCR_COUNT.get());
-        System.out.println("DONE (" + timeElapsed.getSeconds() + ")");
-    }
+    // Instant end = Instant.now();
+    // Duration timeElapsed = Duration.between(start,
+    // end);
+    // System.out.println("Post Game Carnage Reports Processed: " +
+    // PGCR_COUNT.get());
+    // System.out.println("DONE (" + timeElapsed.getSeconds() + ")");
+    // }
 
     public static void initializeClanIdMap() {
 
