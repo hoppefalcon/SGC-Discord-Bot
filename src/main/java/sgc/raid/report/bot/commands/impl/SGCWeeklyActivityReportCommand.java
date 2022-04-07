@@ -31,7 +31,8 @@ public class SGCWeeklyActivityReportCommand implements Command {
                 slashCommandInteraction.respondLater().thenAccept(interactionOriginalResponseUpdater -> {
 
                         interactionOriginalResponseUpdater.setContent(String
-                                        .format("Building a SGC weekly activity report from %s to %s", startDateStr,
+                                        .format("Building a SGC weekly activity report from %s to %s\nThis will take a while.",
+                                                        startDateStr,
                                                         endDateStr))
                                         .update();
 
@@ -69,7 +70,7 @@ public class SGCWeeklyActivityReportCommand implements Command {
                                                                                         startDate.toString(),
                                                                                         endDate.toString()))
                                                                         .setDescription(String.format(
-                                                                                        "SGC Weekly Activity Report Completed in %02d:%02d:%02d",
+                                                                                        "Completed in %02d:%02d:%02d",
                                                                                         hours, minutes, secounds))
                                                                         .setFooter("#AreYouShrouded")
                                                                         .setThumbnail(getClass().getClassLoader()
@@ -77,7 +78,7 @@ public class SGCWeeklyActivityReportCommand implements Command {
                                                                                                         "thumbnail.jpg"))
                                                                         .setColor(Color.PINK))
                                                         .addAttachment(sgcWeeklyActivityReport.getBytes(),
-                                                                        String.format("SGC_Weekly_Activity_Report [%s-%s].csv",
+                                                                        String.format("SGC_Weekly_Activity_Report_%s_to_%s.csv",
                                                                                         startDate.toString(),
                                                                                         endDate.toString()))
                                                         .send(slashCommandInteraction.getChannel().get());
