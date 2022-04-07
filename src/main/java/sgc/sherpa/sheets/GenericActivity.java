@@ -8,6 +8,7 @@ public class GenericActivity {
     private List<String> extraSGCClans = new ArrayList<>();
     private boolean playedWithClanMember = false;
     private boolean allSGCActivity = false;
+    private double team = 0.0;
 
     public GenericActivity(String uID) {
         UID = uID;
@@ -53,6 +54,14 @@ public class GenericActivity {
 
     public boolean earnsPoints() {
         return getEarnedPoints() > 0;
+    }
+
+    public double getTeam() {
+        return team;
+    }
+
+    public void setTeam(double team) {
+        this.team = team;
     }
 
 }

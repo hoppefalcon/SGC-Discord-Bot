@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -61,29 +63,29 @@ public class RaidReportTool {
      * @throws IOException
      */
 
-    // public static void main(String[] args) throws InterruptedException,
-    // IOException {
-    // System.out.println(System.getProperty("os.name"));
-    // Instant start = Instant.now();
+    public static void main(String[] args) throws InterruptedException,
+            IOException {
+        System.out.println(System.getProperty("os.name"));
+        Instant start = Instant.now();
 
-    // // String output = getSGCWeeklyActivityReport(LocalDate.parse("20220222",
-    // // DateTimeFormatter.BASIC_ISO_DATE),
-    // // LocalDate.parse("20220228", DateTimeFormatter.BASIC_ISO_DATE));
+        String output = getSGCWeeklyActivityReport(LocalDate.parse("20220222",
+                DateTimeFormatter.BASIC_ISO_DATE),
+                LocalDate.parse("20220228", DateTimeFormatter.BASIC_ISO_DATE));
 
-    // executorService.shutdown();
+        executorService.shutdown();
 
-    // Instant end = Instant.now();
-    // Duration timeElapsed = Duration.between(start,
-    // end);
+        Instant end = Instant.now();
+        Duration timeElapsed = Duration.between(start,
+                end);
 
-    // long hours = timeElapsed.toHours();
-    // long minutes = timeElapsed.toMinutesPart();
-    // long secounds = timeElapsed.toSecondsPart();
-    // System.out.println("Post Game Carnage Reports Processed: " +
-    // PGCR_COUNT.get());
-    // System.out.println(String.format("DONE (%02d:%02d:%02d)", hours, minutes,
-    // secounds));
-    // }
+        long hours = timeElapsed.toHours();
+        long minutes = timeElapsed.toMinutesPart();
+        long secounds = timeElapsed.toSecondsPart();
+        System.out.println("Post Game Carnage Reports Processed: " +
+                PGCR_COUNT.get());
+        System.out.println(String.format("DONE (%02d:%02d:%02d)", hours, minutes,
+                secounds));
+    }
 
     public static void initializeClanIdMap() {
 
@@ -727,7 +729,7 @@ public class RaidReportTool {
                 List<GenericActivity> genericActivitiesToProcess = new ArrayList<>();
                 for (int page = 0; !next; page++) {
                     URL url = new URL(String.format(
-                            "https://www.bungie.net/Platform/Destiny2/%s/Account/%s/Character/%s/Stats/Activities/?page=%d&mode=4&count=250",
+                            "https://www.bungie.net/Platform/Destiny2/%s/Account/%s/Character/%s/Stats/Activities/?page=%d&count=250",
                             member.getMemberType(), member.getUID(), character.getUID(), page));
 
                     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -758,6 +760,7 @@ public class RaidReportTool {
                                         PGCR_COUNT.incrementAndGet();
                                         int mode = result.getAsJsonObject("activityDetails")
                                                 .getAsJsonPrimitive("mode").getAsInt();
+
                                         if (Mode.invalidModesForPOTW().contains(mode)) {
                                             return false;
                                         }
@@ -773,10 +776,17 @@ public class RaidReportTool {
                                                 .getAsDouble() == 1.0;
                                         return completed;
                                     }).collect(Collectors.toList());
+
                             clearedActivities.forEach((activity) -> {
-                                genericActivitiesToProcess.add(new GenericActivity(
-                                        activity.getAsJsonObject().getAsJsonObject("activityDetails")
-                                                .getAsJsonPrimitive("instanceId").toString().replace("\"", "")));
+                                String instanceId = activity.getAsJsonObject().getAsJsonObject("activityDetails")
+                                        .getAsJsonPrimitive("instanceId").toString().replace("\"", "");
+                                double team = activity.getAsJsonObject().getAsJsonObject("values")
+                                        .getAsJsonObject("team")
+                                        .getAsJsonObject("basic").getAsJsonPrimitive("value")
+                                        .getAsDouble();
+                                GenericActivity genericActivity = new GenericActivity(instanceId);
+                                genericActivity.setTeam(team);
+                                genericActivitiesToProcess.add(genericActivity);
                             });
                         } else {
                             next = true;
@@ -836,12 +846,19 @@ public class RaidReportTool {
                         .getAsJsonPrimitive("membershipId").getAsString();
                 boolean completed = entry.getAsJsonObject().getAsJsonObject("values").getAsJsonObject("completed")
                         .getAsJsonObject("basic").getAsJsonPrimitive("value").getAsDouble() == 1.0;
-                if (!member.getUID().equals(playerId)) {
-                    if (completed) {
-                        if (sgcClanMembersMap.get(playerId) != null) {
-                            activityWithSGCMembers.addExtraSGCClan(sgcClanMembersMap.get(playerId).getClanId());
-                        } else {
-                            allSGCActivity.set(false);
+                double team = entry.getAsJsonObject().getAsJsonObject("values")
+                        .getAsJsonObject("team")
+                        .getAsJsonObject("basic").getAsJsonPrimitive("value")
+                        .getAsDouble();
+
+                if (activityWithSGCMembers.getTeam() == team) {
+                    if (!member.getUID().equals(playerId)) {
+                        if (completed) {
+                            if (sgcClanMembersMap.get(playerId) != null) {
+                                activityWithSGCMembers.addExtraSGCClan(sgcClanMembersMap.get(playerId).getClanId());
+                            } else {
+                                allSGCActivity.set(false);
+                            }
                         }
                     }
                 }
