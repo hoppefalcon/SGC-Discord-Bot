@@ -682,7 +682,7 @@ public class RaidReportTool {
                     LOGGER.debug("Finished processing " + member.getDisplayName());
 
                     interactionOriginalResponseUpdater.setContent(String
-                            .format("Building a SGC weekly activity report from %s to %s\nThis will take a while. (%.2f%%)\nTotal PGCRs Processed: %,d\nScored PGCRs for Weekly Activity: %,d",
+                            .format("Building a SGC weekly activity report from %s to %s\nThis will take a while. (%.2f%%)\nTotal PGCRs Processed: %,.0f\nScored PGCRs for Weekly Activity: %,.0f",
                                     startDate,
                                     endDate,
                                     (completed.incrementAndGet() / (double) sgcClanMembersMap.size()) * 100.0,
