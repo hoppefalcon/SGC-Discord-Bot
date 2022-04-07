@@ -679,14 +679,17 @@ public class RaidReportTool {
                     TOTAL_PGCR_COUNT.addAndGet(
                             getMembersClearedActivities(member, startDate, endDate, sgcClanMembersMap));
                     SCORED_PGCR_COUNT.addAndGet(member.getClearedActivitiesWithSGCMembersCount());
+                    LOGGER.info("Finished processing " + member.getDisplayName());
 
                     interactionOriginalResponseUpdater.setContent(String
                             .format("Building a SGC weekly activity report from %s to %s\nThis will take a while. (%.2f%)\nTotal PGCRs Processed: %d\nScored PGCRs for Weekly Activity: %d",
                                     startDate,
                                     endDate,
-                                    completed.incrementAndGet() / (double) sgcClanMembersMap.size(),
+                                    (completed.incrementAndGet() / (double) sgcClanMembersMap.size()),
                                     TOTAL_PGCR_COUNT.get(), SCORED_PGCR_COUNT.get()))
                             .update();
+
+                    LOGGER.info("Updated Message");
                 } catch (IOException ex) {
                     LOGGER.error(ex.getMessage(), ex);
                 }
