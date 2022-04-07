@@ -674,7 +674,7 @@ public class RaidReportTool {
         sgcClanMembersMap.forEach((uid, member) -> {
             tasks.add(() -> {
                 try {
-                    LOGGER.debug("Starting to process " + member.getDisplayName());
+                    LOGGER.info("Starting to process " + member.getDisplayName());
                     TOTAL_PGCR_COUNT.addAndGet(
                             getMembersClearedActivities(member, startDate, endDate, sgcClanMembersMap));
                     SCORED_PGCR_COUNT.addAndGet(member.getClearedActivitiesWithSGCMembersCount());
