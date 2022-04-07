@@ -97,6 +97,10 @@ public class BotApplication {
 						"Pulls the Weekly Raid Report of the user. (Requires full Bungie ID, Start Date, and End Date)")
 						.addOption(bungieIdOption.build()).addOption(userWeeklyClearStartOption.build())
 						.addOption(userWeeklyClearEndOption.build()),
+				new SlashCommandBuilder().setName("sgc-weekly-activity-report").setDescription(
+						"Pulls the Weekly Activity Report for the SGC. (Requires Start Date, and End Date)")
+						.addOption(userWeeklyClearStartOption.build())
+						.addOption(userWeeklyClearEndOption.build()),
 				new SlashCommandBuilder().setName("raid-carnage-report")
 						.setDescription("Pulls a Full Raid Carnage Report.").addOption(carnageIdOption.build())))
 				.join();
