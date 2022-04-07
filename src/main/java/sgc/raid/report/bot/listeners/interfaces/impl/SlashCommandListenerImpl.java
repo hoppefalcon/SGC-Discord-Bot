@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import sgc.raid.report.bot.commands.impl.ClanRaidReportCommand;
 import sgc.raid.report.bot.commands.impl.RaidCarnageReportCommand;
+import sgc.raid.report.bot.commands.impl.SGCWeeklyActivityReportCommand;
 import sgc.raid.report.bot.commands.impl.UserRaidReportCommand;
 import sgc.raid.report.bot.commands.impl.UserWeeklyRaidReportCommand;
 import sgc.raid.report.bot.listeners.interfaces.SlashCommandListener;
@@ -17,32 +18,36 @@ public class SlashCommandListenerImpl implements SlashCommandListener {
     public void onSlashCommandCreate(SlashCommandCreateEvent event) {
         SlashCommandInteraction slashCommandInteraction = event.getSlashCommandInteraction();
         switch (slashCommandInteraction.getCommandName()) {
-        case "user-raid-report":
-            new UserRaidReportCommand().handle(slashCommandInteraction);
-            break;
+            case "user-raid-report":
+                new UserRaidReportCommand().handle(slashCommandInteraction);
+                break;
 
-        case "pc-clan-raid-report":
-            new ClanRaidReportCommand().handle(slashCommandInteraction);
-            break;
+            case "pc-clan-raid-report":
+                new ClanRaidReportCommand().handle(slashCommandInteraction);
+                break;
 
-        case "xbox-clan-raid-report":
-            new ClanRaidReportCommand().handle(slashCommandInteraction);
-            break;
+            case "xbox-clan-raid-report":
+                new ClanRaidReportCommand().handle(slashCommandInteraction);
+                break;
 
-        case "psn-clan-raid-report":
-            new ClanRaidReportCommand().handle(slashCommandInteraction);
-            break;
+            case "psn-clan-raid-report":
+                new ClanRaidReportCommand().handle(slashCommandInteraction);
+                break;
 
-        case "user-weekly-raid-report":
-            new UserWeeklyRaidReportCommand().handle(slashCommandInteraction);
-            break;
+            case "user-weekly-raid-report":
+                new UserWeeklyRaidReportCommand().handle(slashCommandInteraction);
+                break;
 
-        case "raid-carnage-report":
-            new RaidCarnageReportCommand().handle(slashCommandInteraction);
-            break;
+            case "raid-carnage-report":
+                new RaidCarnageReportCommand().handle(slashCommandInteraction);
+                break;
 
-        default:
-            break;
+            case "sgc-weekly-activity-report":
+                new SGCWeeklyActivityReportCommand().handle(slashCommandInteraction);
+                break;
+
+            default:
+                break;
         }
     }
 

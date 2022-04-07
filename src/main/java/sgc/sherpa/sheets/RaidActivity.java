@@ -8,13 +8,13 @@ package sgc.sherpa.sheets;
 /**
  * @author chris hoppe
  */
-public class Activity {
+public class RaidActivity {
 
     private final Raid raid;
     private int totalClears = 0;
     private int weeklyClears = 0;
 
-    public Activity(Raid raid) {
+    public RaidActivity(Raid raid) {
         this.raid = raid;
     }
 

@@ -13,12 +13,14 @@ import java.util.HashMap;
 public class Character {
 
     final String UID;
-    private final HashMap<Raid, Activity> activities = new HashMap<>();
-    private final HashMap<Raid, Activity> weeklyActivities = new HashMap<>();
+    private final HashMap<Raid, RaidActivity> raidActivities = new HashMap<>();
+    private final HashMap<Raid, RaidActivity> weeklyRaidActivities = new HashMap<>();
+    private final HashMap<String, GenericActivity> clearedActivitiesWithSGCMembers = new HashMap<>();
 
     public Character(String UID) {
         this.UID = UID;
-        Raid.getRaidsOrdered().forEach((Raid raid) -> {activities.put(raid, new Activity(raid));
+        Raid.getRaidsOrdered().forEach((Raid raid) -> {
+            raidActivities.put(raid, new RaidActivity(raid));
         });
     }
 
@@ -32,15 +34,22 @@ public class Character {
     /**
      * @return the activities
      */
-    public HashMap<Raid, Activity> getActivities() {
-        return activities;
+    public HashMap<Raid, RaidActivity> getRaidActivities() {
+        return raidActivities;
     }
 
     /**
      * @return the weeklyActivities
      */
-    public HashMap<Raid, Activity> getWeeklyActivities() {
-        return weeklyActivities;
+    public HashMap<Raid, RaidActivity> getWeeklyRaidActivities() {
+        return weeklyRaidActivities;
     }
 
+    public void addClearedActivitiesWithSGCMembers(GenericActivity activity) {
+        clearedActivitiesWithSGCMembers.put(activity.getUID(), activity);
+    }
+
+    public HashMap<String, GenericActivity> getClearedActivitiesWithSGCMembers() {
+        return clearedActivitiesWithSGCMembers;
+    }
 }

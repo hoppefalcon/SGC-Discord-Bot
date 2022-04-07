@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -19,6 +21,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -53,20 +56,29 @@ public class RaidReportTool {
 
     private static ExecutorService executorService = Executors.newFixedThreadPool(15);
 
+    private static AtomicInteger PGCR_COUNT = new AtomicInteger(0);
+
     /**
      * @param args the command line arguments
      * @throws IOException
      */
-    /*
-     * public static void main(String[] args) throws InterruptedException,
-     * IOException { System.out.println(System.getProperty("os.name")); Instant
-     * start = Instant.now(); runFullSheets(); // runMemberDeepDives();
-     * 
-     * executorService.shutdown();
-     * 
-     * Instant end = Instant.now(); Duration timeElapsed = Duration.between(start,
-     * end); System.out.println("DONE (" + timeElapsed.getSeconds() + ")"); }
-     */
+
+    public static void main(String[] args) throws InterruptedException,
+            IOException {
+        System.out.println(System.getProperty("os.name"));
+        Instant start = Instant.now();
+
+        String output = getSGCWeeklyActivityReport(LocalDate.parse("20220222", DateTimeFormatter.BASIC_ISO_DATE),
+                LocalDate.parse("20220228", DateTimeFormatter.BASIC_ISO_DATE));
+
+        executorService.shutdown();
+
+        Instant end = Instant.now();
+        Duration timeElapsed = Duration.between(start,
+                end);
+        System.out.println("Post Game Carnage Reports Processed: " + PGCR_COUNT.get());
+        System.out.println("DONE (" + timeElapsed.getSeconds() + ")");
+    }
 
     public static void initializeClanIdMap() {
 
@@ -204,10 +216,11 @@ public class RaidReportTool {
             while ((inputLine = in.readLine()) != null) {
                 content.append(inputLine);
             }
-            // JsonObject json =
-            // JsonParser.parseString(content.toString()).getAsJsonObject();
-            clan.setName(JsonParser.parseString(content.toString()).getAsJsonObject().getAsJsonObject("Response")
+            JsonObject json = JsonParser.parseString(content.toString()).getAsJsonObject();
+            clan.setName(json.getAsJsonObject("Response")
                     .getAsJsonObject("detail").get("name").getAsString());
+            clan.setCallsign(json.getAsJsonObject("Response")
+                    .getAsJsonObject("detail").getAsJsonObject("clanInfo").get("clanCallsign").getAsString());
             in.close();
         }
         conn.disconnect();
@@ -251,7 +264,7 @@ public class RaidReportTool {
                         LOGGER.info(displayName + " has yet to register for a bungieGlobalDisplayName");
                     }
                     clan.getMembers().put(membershipId, new Member(membershipId, displayName, membershipType,
-                            bungieGlobalDisplayName, bungieGlobalDisplayNameCode));
+                            bungieGlobalDisplayName, bungieGlobalDisplayNameCode, clan.getClanId()));
                 } catch (Exception ex) {
                     LOGGER.error(ex.getMessage(), ex);
                 }
@@ -338,7 +351,7 @@ public class RaidReportTool {
                         if (raid != null) {
                             String clears = entry.get("values").getAsJsonObject().get("activityCompletions")
                                     .getAsJsonObject().get("basic").getAsJsonObject().get("value").getAsString();
-                            character.getActivities().get(raid).addClears(Double.parseDouble(clears));
+                            character.getRaidActivities().get(raid).addClears(Double.parseDouble(clears));
                         }
                     });
 
@@ -354,20 +367,20 @@ public class RaidReportTool {
 
     public static String getClanRaidReportAsCsv(Clan clan) throws IOException {
         final StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("Gamertag,").append("BungieDisplayName,");
+        stringBuilder.append("\"Gamertag\",").append("\"BungieDisplayName\",");
         Raid.getRaidsOrdered().forEach((Raid raid) -> {
             stringBuilder.append(raid.name).append(",");
         });
-        stringBuilder.append("Clears in the past 7 Days").append("\n");
+        stringBuilder.append("\"Clears in the past 7 Days\"").append("\n");
 
         clan.getMembers().forEach((id, member) -> {
             HashMap<Raid, Integer> raidClears = member.getRaidClears();
-            stringBuilder.append(member.getDisplayName()).append(",")
-                    .append(member.getCombinedBungieGlobalDisplayName()).append(",");
+            stringBuilder.append("\"").append(member.getDisplayName()).append("\",")
+                    .append("\"").append(member.getCombinedBungieGlobalDisplayName()).append("\",");
             Raid.getRaidsOrdered().forEach((Raid raid) -> {
-                stringBuilder.append(raidClears.get(raid)).append(",");
+                stringBuilder.append("\"").append(raidClears.get(raid)).append("\",");
             });
-            stringBuilder.append(member.getTotalWeeklyRaidClears()).append("\n");
+            stringBuilder.append(member.getTotalWeeklyRaidClears()).append("\"\n");
 
         });
         return stringBuilder.toString();
@@ -445,7 +458,7 @@ public class RaidReportTool {
 
                             }
                             searchResults.put(membershipId, new Member(membershipId, displayName, membershipType,
-                                    bungieGlobalDisplayName, bungieGlobalDisplayNameCode));
+                                    bungieGlobalDisplayName, bungieGlobalDisplayNameCode, "NULL"));
 
                         } catch (Exception ex) {
                             LOGGER.error(ex.getMessage(), ex);
@@ -540,7 +553,7 @@ public class RaidReportTool {
                                         if ((dateCompleted.isEqual(startDate) || dateCompleted.isAfter(startDate))
                                                 && (dateCompleted.isBefore(endDate)
                                                         || dateCompleted.isEqual(endDate))) {
-                                            character.getActivities().get(raid).addWeeklyClears(1);
+                                            character.getRaidActivities().get(raid).addWeeklyClears(1);
                                         }
                                     }
                                 }
@@ -627,4 +640,228 @@ public class RaidReportTool {
         return raidCarnageReport;
 
     }
+
+    public static String getSGCWeeklyActivityReport(LocalDate startDate, LocalDate endDate)
+            throws InterruptedException, IOException {
+        LOGGER.info("Starting SGC Member Participation Report");
+        HashMap<String, Clan> clanMap = initializeClanMap();
+        HashMap<String, Member> sgcClanMembersMap = new HashMap<>();
+
+        clanMap.forEach((uid, clan) -> {
+            clan.getMembers().forEach((id, member) -> {
+                if (member.hasNewBungieName()) {
+                    sgcClanMembersMap.put(id, member);
+                }
+            });
+        });
+        List<Callable<Object>> tasks = new ArrayList<>();
+        sgcClanMembersMap.forEach((uid, member) -> {
+            tasks.add(() -> {
+                try {
+                    getMembersClearedActivities(member, startDate, endDate, sgcClanMembersMap);
+                } catch (IOException ex) {
+                    LOGGER.error(ex.getMessage(), ex);
+                }
+                return member;
+            });
+        });
+        executorService.invokeAll(tasks);
+        String potwActivityReportAsCsv = getPOTWActivityReportAsCsv(clanMap, sgcClanMembersMap);
+
+        LOGGER.info("SGC Member Participation Report Complete");
+        return potwActivityReportAsCsv;
+    }
+
+    public static HashMap<String, Clan> initializeClanMap() {
+        LOGGER.info("Initializing Clan Map");
+        HashMap<String, Clan> map = new HashMap<>();
+        pcClanIds.forEach((clanId) -> {
+            try {
+                Clan clan = new Clan(clanId);
+                getClanInfo(clan);
+                getClanMembers(clan);
+                map.put(clan.getClanId(), clan);
+            } catch (IOException e) {
+                LOGGER.error(e.getMessage(), e);
+            }
+        });
+
+        xbClanIds.forEach((clanId) -> {
+            try {
+                Clan clan = new Clan(clanId);
+                getClanInfo(clan);
+                getClanMembers(clan);
+                map.put(clan.getClanId(), clan);
+            } catch (IOException e) {
+                LOGGER.error(e.getMessage(), e);
+            }
+        });
+
+        psClanIds.forEach((clanId) -> {
+            try {
+                Clan clan = new Clan(clanId);
+                getClanInfo(clan);
+                getClanMembers(clan);
+                map.put(clan.getClanId(), clan);
+            } catch (IOException e) {
+                LOGGER.error(e.getMessage(), e);
+            }
+        });
+        LOGGER.info("Clan Map Initialized");
+        return map;
+    }
+
+    public static void getMembersClearedActivities(Member member, LocalDate startDate, LocalDate endDate,
+            HashMap<String, Member> sgcClanMembersMap) throws IOException {
+
+        LOGGER.info(String.format("Getting Cleared Activities for %s", member.getCombinedBungieGlobalDisplayName()));
+        getMemberCharacters(member);
+        member.getCharacters().forEach((characteruid, character) -> {
+            try {
+                boolean next = false;
+                List<GenericActivity> genericActivitiesToProcess = new ArrayList<>();
+                for (int page = 0; !next; page++) {
+                    URL url = new URL(String.format(
+                            "https://www.bungie.net/Platform/Destiny2/%s/Account/%s/Character/%s/Stats/Activities/?page=%d&mode=4&count=250",
+                            member.getMemberType(), member.getUID(), character.getUID(), page));
+
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.setRequestMethod("GET");
+                    conn.addRequestProperty("X-API-Key", apiKey);
+                    conn.addRequestProperty("Accept", "Application/Json");
+
+                    LOGGER.trace(String.format("Makking HTTP call #%d for %s:%s", page + 1,
+                            member.getCombinedBungieGlobalDisplayName(), character.getUID()));
+                    conn.connect();
+
+                    // Getting the response code
+                    int responsecode = conn.getResponseCode();
+
+                    if (responsecode == 200) {
+                        BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                        String inputLine;
+                        StringBuffer content = new StringBuffer();
+                        while ((inputLine = in.readLine()) != null) {
+                            content.append(inputLine);
+                        }
+                        JsonArray results = (JsonArray) JsonParser.parseString(content.toString()).getAsJsonObject()
+                                .getAsJsonObject("Response").get("activities");
+                        if (results != null) {
+                            next = results.size() < 250;
+                            List<JsonObject> clearedActivities = IntStream.range(0, results.size())
+                                    .mapToObj(index -> (JsonObject) results.get(index)).filter((result) -> {
+                                        PGCR_COUNT.incrementAndGet();
+                                        int mode = result.getAsJsonObject("activityDetails")
+                                                .getAsJsonPrimitive("mode").getAsInt();
+                                        if (Mode.invalidModesForPOTW().contains(mode)) {
+                                            return false;
+                                        }
+                                        String activityDateStr = result.getAsJsonPrimitive("period").getAsString();
+                                        LocalDate dateCompleted = LocalDate.parse(activityDateStr,
+                                                DateTimeFormatter.ISO_DATE_TIME);
+                                        if (dateCompleted.isBefore(startDate) || dateCompleted.isAfter(endDate)) {
+                                            return false;
+                                        }
+                                        boolean completed = result.getAsJsonObject().getAsJsonObject("values")
+                                                .getAsJsonObject("completed")
+                                                .getAsJsonObject("basic").getAsJsonPrimitive("value")
+                                                .getAsDouble() == 1.0;
+                                        return completed;
+                                    }).collect(Collectors.toList());
+                            clearedActivities.forEach((activity) -> {
+                                genericActivitiesToProcess.add(new GenericActivity(
+                                        activity.getAsJsonObject().getAsJsonObject("activityDetails")
+                                                .getAsJsonPrimitive("instanceId").toString().replace("\"", "")));
+                            });
+                        } else {
+                            next = true;
+                        }
+                        in.close();
+                    } else {
+                        next = true;
+                    }
+                    conn.disconnect();
+                }
+
+                genericActivitiesToProcess.forEach((activityWithSGCMembers) -> {
+                    try {
+                        getSGCMemberCarnageReport(member, activityWithSGCMembers, sgcClanMembersMap);
+                        if (activityWithSGCMembers.earnsPoints()) {
+                            character.addClearedActivitiesWithSGCMembers(activityWithSGCMembers);
+                        }
+                    } catch (Exception ex) {
+                        LOGGER.error(ex.getMessage(), ex);
+                    }
+                });
+
+            } catch (Exception ex) {
+                LOGGER.error(ex.getMessage(), ex);
+            }
+        });
+    }
+
+    public static void getSGCMemberCarnageReport(Member member, GenericActivity activityWithSGCMembers,
+            HashMap<String, Member> sgcClanMembersMap) throws IOException {
+        LOGGER.info(String.format("Processing PCGRs for %s", member.getCombinedBungieGlobalDisplayName()));
+        URL url = new URL(String.format("https://stats.bungie.net/Platform/Destiny2/Stats/PostGameCarnageReport/%s/",
+                activityWithSGCMembers.getUID()));
+
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.addRequestProperty("X-API-Key", apiKey);
+        conn.addRequestProperty("Accept", "Application/Json");
+        conn.connect();
+
+        // Getting the response code
+        int responsecode = conn.getResponseCode();
+        if (responsecode == 200) {
+            BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            String inputLine;
+            StringBuffer content = new StringBuffer();
+            while ((inputLine = in.readLine()) != null) {
+                content.append(inputLine);
+            }
+
+            JsonObject response = JsonParser.parseString(content.toString()).getAsJsonObject()
+                    .getAsJsonObject("Response");
+            JsonArray entries = response.get("entries").getAsJsonArray();
+            AtomicBoolean allSGCActivity = new AtomicBoolean(true);
+            entries.forEach((entry) -> {
+                String playerId = entry.getAsJsonObject().getAsJsonObject("player").getAsJsonObject("destinyUserInfo")
+                        .getAsJsonPrimitive("membershipId").getAsString();
+                boolean completed = entry.getAsJsonObject().getAsJsonObject("values").getAsJsonObject("completed")
+                        .getAsJsonObject("basic").getAsJsonPrimitive("value").getAsDouble() == 1.0;
+                if (!member.getUID().equals(playerId)) {
+                    if (completed) {
+                        if (sgcClanMembersMap.get(playerId) != null) {
+                            activityWithSGCMembers.addExtraSGCClan(sgcClanMembersMap.get(playerId).getClanId());
+                        } else {
+                            allSGCActivity.set(false);
+                        }
+                    }
+                }
+            });
+            in.close();
+            activityWithSGCMembers.setAllSGCActivity(allSGCActivity.get());
+        }
+        conn.disconnect();
+    }
+
+    public static String getPOTWActivityReportAsCsv(HashMap<String, Clan> clanMap,
+            HashMap<String, Member> sgcClanMembersMap) {
+        final StringBuilder stringBuilder = new StringBuilder();
+
+        stringBuilder.append("\"Gamertag\",").append("\"BungieDisplayName\",").append("\"Clan\",").append("\"Points\"")
+                .append("\n");
+
+        sgcClanMembersMap.forEach((memberId, member) -> {
+            stringBuilder.append("\"").append(member.getDisplayName()).append("\",")
+                    .append("\"").append(member.getCombinedBungieGlobalDisplayName()).append("\",")
+                    .append("\"").append(clanMap.get(member.getClanId()).getCallsign()).append("\",")
+                    .append("\"").append(member.getClearedActivitiesWithSGCMembersPoints()).append("\"\n");
+        });
+
+        return stringBuilder.toString();
+    }
+
 }

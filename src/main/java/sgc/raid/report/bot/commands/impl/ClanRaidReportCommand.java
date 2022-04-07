@@ -16,46 +16,54 @@ import sgc.sherpa.sheets.RaidReportTool;
 
 public class ClanRaidReportCommand implements Command {
 
-    private static final Logger LOGGER = BotApplication.getLogger();
+        private static final Logger LOGGER = BotApplication.getLogger();
 
-    @Override
-    public void handle(SlashCommandInteraction slashCommandInteraction) {
-        String bungieClanID = slashCommandInteraction.getOptionByName("Clan").get().getStringValue().get();
-        LOGGER.info("Running ClanRaidReportCommand with option " + bungieClanID);
+        @Override
+        public void handle(SlashCommandInteraction slashCommandInteraction) {
+                String bungieClanID = slashCommandInteraction.getOptionByName("Clan").get().getStringValue().get();
+                LOGGER.info("Running ClanRaidReportCommand with option " + bungieClanID);
 
-        slashCommandInteraction.respondLater().thenAccept(interactionOriginalResponseUpdater -> {
+                slashCommandInteraction.respondLater().thenAccept(interactionOriginalResponseUpdater -> {
 
-            interactionOriginalResponseUpdater.setContent("Building a clan raid report for " + bungieClanID).update();
+                        interactionOriginalResponseUpdater.setContent("Building a clan raid report for " + bungieClanID)
+                                        .update();
 
-            try {
-                Clan clan = RaidReportTool.getClanInformation(bungieClanID);
-                interactionOriginalResponseUpdater.setContent("Building a clan raid report for " + clan.getName())
-                        .update();
+                        try {
+                                Clan clan = RaidReportTool.getClanInformation(bungieClanID);
+                                interactionOriginalResponseUpdater
+                                                .setContent("Building a clan raid report for " + clan.getName())
+                                                .update();
 
-                RaidReportTool.getClanRaidReport(clan, interactionOriginalResponseUpdater);
+                                RaidReportTool.getClanRaidReport(clan, interactionOriginalResponseUpdater);
 
-                new MessageBuilder()
-                        .addEmbed(new EmbedBuilder().setAuthor(slashCommandInteraction.getUser())
-                                .setTitle(clan.getName() + " Raid Report").setDescription("Raid Report Completed")
-                                .setFooter("Happy Raiding!")
-                                .setThumbnail(getClass().getClassLoader().getResourceAsStream("thumbnail.jpg"))
-                                .setColor(Color.CYAN))
-                        .addAttachment(RaidReportTool.getClanRaidReportAsCsvByteArray(clan),
-                                String.format("%s [%s].csv", clan.getName(),
-                                        LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE)))
-                        .send(slashCommandInteraction.getChannel().get());
+                                new MessageBuilder()
+                                                .addEmbed(new EmbedBuilder()
+                                                                .setAuthor(slashCommandInteraction.getUser())
+                                                                .setTitle(clan.getName() + " Raid Report")
+                                                                .setDescription("Raid Report Completed")
+                                                                .setFooter("Happy Raiding!")
+                                                                .setThumbnail(getClass().getClassLoader()
+                                                                                .getResourceAsStream("thumbnail.jpg"))
+                                                                .setColor(Color.CYAN))
+                                                .addAttachment(RaidReportTool.getClanRaidReportAsCsvByteArray(clan),
+                                                                String.format("%s [%s].csv", clan.getName(),
+                                                                                LocalDate.now().format(
+                                                                                                DateTimeFormatter.BASIC_ISO_DATE)))
+                                                .send(slashCommandInteraction.getChannel().get());
 
-            } catch (Exception e) {
-                LOGGER.error(e.getMessage(), e);
-                interactionOriginalResponseUpdater.setContent("")
-                        .addEmbed(new EmbedBuilder().setTitle(bungieClanID + " Raid Report")
-                                .setDescription("An error occured while building a Raid Report for " + bungieClanID)
-                                .setFooter("ERROR")
-                                .setThumbnail(getClass().getClassLoader().getResourceAsStream("thumbnail.jpg"))
-                                .setColor(Color.RED))
-                        .update();
-            }
-        });
-    }
+                        } catch (Exception e) {
+                                LOGGER.error(e.getMessage(), e);
+                                interactionOriginalResponseUpdater.setContent("")
+                                                .addEmbed(new EmbedBuilder().setTitle(bungieClanID + " Raid Report")
+                                                                .setDescription("An error occured while building a Raid Report for "
+                                                                                + bungieClanID)
+                                                                .setFooter("ERROR")
+                                                                .setThumbnail(getClass().getClassLoader()
+                                                                                .getResourceAsStream("thumbnail.jpg"))
+                                                                .setColor(Color.RED))
+                                                .update();
+                        }
+                });
+        }
 
 }

@@ -15,6 +15,7 @@ public class Clan {
     private final String clanId;
     private HashMap<String, Member> members = new HashMap<>();
     private String name;
+    private String callsign;
 
     public Clan(String clanId) {
         this.clanId = clanId;
@@ -40,6 +41,14 @@ public class Clan {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getCallsign() {
+        return callsign;
+    }
+
+    public void setCallsign(String callsign) {
+        this.callsign = callsign;
     }
 
 }

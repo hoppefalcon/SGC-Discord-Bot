@@ -18,15 +18,17 @@ public class Member {
     private final String bungieGlobalDisplayName;
     private final String bungieGlobalDisplayNameCode;
     private final String MemberType;
-    private HashMap<String, Character> characters = new HashMap<>();
+    private final String clanId;
+    private final HashMap<String, Character> characters = new HashMap<>();
 
     public Member(String UID, String DisplayName, String MemberType, String bungieGlobalDisplayName,
-            String bungieGlobalDisplayNameCode) {
+            String bungieGlobalDisplayNameCode, String clanId) {
         this.UID = UID;
         this.DisplayName = DisplayName;
         this.MemberType = MemberType;
         this.bungieGlobalDisplayName = bungieGlobalDisplayName;
         this.bungieGlobalDisplayNameCode = bungieGlobalDisplayNameCode;
+        this.clanId = clanId;
     }
 
     public String getUID() {
@@ -53,6 +55,10 @@ public class Member {
         return characters;
     }
 
+    public String getClanId() {
+        return clanId;
+    }
+
     public HashMap<Raid, Integer> getRaidClears() {
         HashMap<Raid, Integer> raidClears = new HashMap<>();
         for (Raid r : Raid.values()) {
@@ -60,7 +66,7 @@ public class Member {
         }
         characters.values().forEach((c) -> {
             for (Raid r : Raid.values()) {
-                Activity activity = c.getActivities().get(r);
+                RaidActivity activity = c.getRaidActivities().get(r);
                 if (activity != null) {
                     int total = 0;
                     total += raidClears.get(r);
@@ -76,7 +82,7 @@ public class Member {
         AtomicInteger totalRaidClears = new AtomicInteger(0);
         characters.values().forEach((c) -> {
             for (Raid r : Raid.values()) {
-                Activity activity = c.getActivities().get(r);
+                RaidActivity activity = c.getRaidActivities().get(r);
                 if (activity != null) {
                     totalRaidClears.set(totalRaidClears.get() + activity.getTotalClears());
                 }
@@ -92,7 +98,7 @@ public class Member {
         }
         characters.values().forEach((c) -> {
             for (Raid r : Raid.values()) {
-                Activity activity = c.getActivities().get(r);
+                RaidActivity activity = c.getRaidActivities().get(r);
                 if (activity != null) {
                     int total = 0;
                     total += raidWeeklyClears.get(r);
@@ -108,7 +114,7 @@ public class Member {
         AtomicInteger totalWeeklyRaidClears = new AtomicInteger(0);
         characters.values().forEach((c) -> {
             for (Raid r : Raid.values()) {
-                Activity activity = c.getActivities().get(r);
+                RaidActivity activity = c.getRaidActivities().get(r);
                 if (activity != null) {
                     totalWeeklyRaidClears.set(totalWeeklyRaidClears.get() + activity.getWeeklyClears());
                 }
@@ -119,5 +125,27 @@ public class Member {
 
     public String getCombinedBungieGlobalDisplayName() {
         return String.format("%s#%s", this.getBungieGlobalDisplayName(), this.getBungieGlobalDisplayNameCode());
+    }
+
+    public HashMap<String, GenericActivity> getAllClearedActivitiesWithSGCMembers() {
+        HashMap<String, GenericActivity> clearedActivitiesWithSGCMembers = new HashMap<>();
+        characters.forEach((uid, character) -> {
+            clearedActivitiesWithSGCMembers.putAll(character.getClearedActivitiesWithSGCMembers());
+        });
+        return clearedActivitiesWithSGCMembers;
+    }
+
+    public boolean hasNewBungieName() {
+        return !bungieGlobalDisplayName.equals("") && !bungieGlobalDisplayNameCode.equals("");
+    }
+
+    public int getClearedActivitiesWithSGCMembersPoints() {
+        AtomicInteger total = new AtomicInteger(0);
+        characters.forEach((characterId, character) -> {
+            character.getClearedActivitiesWithSGCMembers().forEach((activityId, activity) -> {
+                total.addAndGet(activity.getEarnedPoints());
+            });
+        });
+        return total.get();
     }
 }
