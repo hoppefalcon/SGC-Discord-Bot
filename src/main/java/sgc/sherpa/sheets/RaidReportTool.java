@@ -673,7 +673,7 @@ public class RaidReportTool {
     }
 
     public static HashMap<String, Clan> initializeClanMap() {
-        LOGGER.info("Initializing Clan Map");
+        LOGGER.debug("Initializing Clan Map");
         HashMap<String, Clan> map = new HashMap<>();
         pcClanIds.forEach((clanId) -> {
             try {
@@ -707,14 +707,14 @@ public class RaidReportTool {
                 LOGGER.error(e.getMessage(), e);
             }
         });
-        LOGGER.info("Clan Map Initialized");
+        LOGGER.debug("Clan Map Initialized");
         return map;
     }
 
     public static void getMembersClearedActivities(Member member, LocalDate startDate, LocalDate endDate,
             HashMap<String, Member> sgcClanMembersMap) throws IOException {
 
-        LOGGER.info(String.format("Getting Cleared Activities for %s", member.getCombinedBungieGlobalDisplayName()));
+        LOGGER.debug(String.format("Getting Cleared Activities for %s", member.getCombinedBungieGlobalDisplayName()));
         getMemberCharacters(member);
         member.getCharacters().forEach((characteruid, character) -> {
             try {
@@ -802,7 +802,7 @@ public class RaidReportTool {
 
     public static void getSGCMemberCarnageReport(Member member, GenericActivity activityWithSGCMembers,
             HashMap<String, Member> sgcClanMembersMap) throws IOException {
-        LOGGER.info(String.format("Processing PCGRs for %s", member.getCombinedBungieGlobalDisplayName()));
+        LOGGER.debug(String.format("Processing PCGRs for %s", member.getCombinedBungieGlobalDisplayName()));
         URL url = new URL(String.format("https://stats.bungie.net/Platform/Destiny2/Stats/PostGameCarnageReport/%s/",
                 activityWithSGCMembers.getUID()));
 

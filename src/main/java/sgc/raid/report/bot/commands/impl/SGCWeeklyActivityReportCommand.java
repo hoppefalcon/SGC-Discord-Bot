@@ -50,6 +50,8 @@ public class SGCWeeklyActivityReportCommand implements Command {
                                                                         .getResourceAsStream("thumbnail.jpg"))
                                                         .setColor(Color.RED)).update();
                                 } else {
+                                        LOGGER.info("Sending SGC Weekly Activity Report to " + slashCommandInteraction
+                                                        .getChannel().get().getIdAsString());
                                         new MessageBuilder().addEmbed(new EmbedBuilder().setTitle(String.format(
                                                         "SGC Weekly Activity Report from %s to %s",
                                                         startDate.toString(),
