@@ -846,10 +846,15 @@ public class RaidReportTool {
                         .getAsJsonPrimitive("membershipId").getAsString();
                 boolean completed = entry.getAsJsonObject().getAsJsonObject("values").getAsJsonObject("completed")
                         .getAsJsonObject("basic").getAsJsonPrimitive("value").getAsDouble() == 1.0;
-                double team = entry.getAsJsonObject().getAsJsonObject("values")
-                        .getAsJsonObject("team")
-                        .getAsJsonObject("basic").getAsJsonPrimitive("value")
-                        .getAsDouble();
+                double team = 0.0;
+                try {
+                    team = entry.getAsJsonObject().getAsJsonObject("values")
+                            .getAsJsonObject("team")
+                            .getAsJsonObject("basic").getAsJsonPrimitive("value")
+                            .getAsDouble();
+                } catch (NullPointerException ex) {
+
+                }
 
                 if (activityWithSGCMembers.getTeam() == team) {
                     if (!member.getUID().equals(playerId)) {
