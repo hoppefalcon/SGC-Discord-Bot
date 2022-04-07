@@ -659,7 +659,7 @@ public class RaidReportTool {
                 .format("Building a SGC weekly activity report from %s to %s\nThis will take a while.",
                         startDate,
                         endDate))
-                .update();
+                .update().join();
         HashMap<String, Clan> clanMap = initializeClanMap();
         HashMap<String, Member> sgcClanMembersMap = new HashMap<>();
 
@@ -687,7 +687,7 @@ public class RaidReportTool {
                                     endDate,
                                     (completed.incrementAndGet() / (double) sgcClanMembersMap.size()),
                                     TOTAL_PGCR_COUNT.get(), SCORED_PGCR_COUNT.get()))
-                            .update();
+                            .update().join();
 
                     LOGGER.info("Updated Message");
                 } catch (IOException ex) {
@@ -701,14 +701,14 @@ public class RaidReportTool {
                 .format("Generating the SGC weekly activity report csv from %s to %s",
                         startDate,
                         endDate))
-                .update();
+                .update().join();
         String potwActivityReportAsCsv = getPOTWActivityReportAsCsv(clanMap, sgcClanMembersMap);
 
         interactionOriginalResponseUpdater.setContent(String
                 .format("SGC weekly activity report from %s to %s Complete",
                         startDate,
                         endDate))
-                .update();
+                .update().join();
         LOGGER.info("SGC Weekly Activity Report Complete");
         return potwActivityReportAsCsv;
     }
