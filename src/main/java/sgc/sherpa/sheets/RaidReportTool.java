@@ -24,6 +24,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -671,6 +672,8 @@ public class RaidReportTool {
         });
         List<Callable<Object>> tasks = new ArrayList<>();
         AtomicInteger completed = new AtomicInteger();
+        final ReentrantLock lock = new ReentrantLock();
+
         sgcClanMembersMap.forEach((uid, member) -> {
             tasks.add(() -> {
                 try {
@@ -681,17 +684,21 @@ public class RaidReportTool {
                     LOGGER.debug("Finished processing " + member.getDisplayName());
 
                     if (interactionOriginalResponseUpdater != null) {
+                        lock.lock();
+                        try {
+                            interactionOriginalResponseUpdater.setContent(String
+                                    .format("Completed Processing %s",
+                                            member.getDisplayName()))
+                                    .update().join();
 
-                        interactionOriginalResponseUpdater.setContent(String
-                                .format("Completed Processing %s",
-                                        member.getDisplayName()))
-                                .update().join();
-
-                        interactionOriginalResponseUpdater.setContent(String
-                                .format("Building a SGC weekly activity report from %s to %s\nThis will take a while. (%d/%d)\nTotal PGCRs Processed: %,d\nScored PGCRs for Weekly Activity: %,d",
-                                        startDate, endDate, completed.incrementAndGet(), sgcClanMembersMap.size(),
-                                        TOTAL_PGCR_COUNT.get(), SCORED_PGCR_COUNT.get()))
-                                .update().join();
+                            interactionOriginalResponseUpdater.setContent(String
+                                    .format("Building a SGC weekly activity report from %s to %s\nThis will take a while. (%d/%d)\nTotal PGCRs Processed: %,d\nScored PGCRs for Weekly Activity: %,d",
+                                            startDate, endDate, completed.incrementAndGet(), sgcClanMembersMap.size(),
+                                            TOTAL_PGCR_COUNT.get(), SCORED_PGCR_COUNT.get()))
+                                    .update().join();
+                        } finally {
+                            lock.unlock();
+                        }
 
                     }
 
