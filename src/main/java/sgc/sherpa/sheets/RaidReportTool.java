@@ -675,21 +675,21 @@ public class RaidReportTool {
         sgcClanMembersMap.forEach((uid, member) -> {
             tasks.add(() -> {
                 try {
-                    LOGGER.info("Starting to process " + member.getDisplayName());
+                    LOGGER.debug("Starting to process " + member.getDisplayName());
                     TOTAL_PGCR_COUNT.addAndGet(
                             getMembersClearedActivities(member, startDate, endDate, sgcClanMembersMap));
                     SCORED_PGCR_COUNT.addAndGet(member.getClearedActivitiesWithSGCMembersCount());
-                    LOGGER.info("Finished processing " + member.getDisplayName());
+                    LOGGER.debug("Finished processing " + member.getDisplayName());
 
                     interactionOriginalResponseUpdater.setContent(String
-                            .format("Building a SGC weekly activity report from %s to %s\nThis will take a while. (%.2f%%)\nTotal PGCRs Processed: %d\nScored PGCRs for Weekly Activity: %d",
+                            .format("Building a SGC weekly activity report from %s to %s\nThis will take a while. (%.2f%%)\nTotal PGCRs Processed: %,d\nScored PGCRs for Weekly Activity: %,d",
                                     startDate,
                                     endDate,
                                     (completed.incrementAndGet() / (double) sgcClanMembersMap.size()) * 100.0,
                                     TOTAL_PGCR_COUNT.get(), SCORED_PGCR_COUNT.get()))
                             .update().join();
 
-                    LOGGER.info("Updated Message");
+                    LOGGER.debug("Updated Message");
                 } catch (IOException ex) {
                     LOGGER.error(ex.getMessage(), ex);
                 }
