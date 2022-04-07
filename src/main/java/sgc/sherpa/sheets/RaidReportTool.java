@@ -23,6 +23,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -55,8 +56,6 @@ public class RaidReportTool {
     private static List<String> psClanIds = Arrays.asList("4327587", "4327584", "4327575", "4327536", "4327542");
 
     private static ExecutorService executorService = Executors.newFixedThreadPool(15);
-
-    private static AtomicInteger PGCR_COUNT = new AtomicInteger(0);
 
     /**
      * @param args the command line arguments
@@ -652,6 +651,10 @@ public class RaidReportTool {
             InteractionOriginalResponseUpdater interactionOriginalResponseUpdater)
             throws InterruptedException, IOException {
         LOGGER.info("Starting SGC Weekly Activity Report");
+
+        AtomicLong TOTAL_PGCR_COUNT = new AtomicLong(0);
+        AtomicLong SCORED_PGCR_COUNT = new AtomicLong(0);
+
         interactionOriginalResponseUpdater.setContent(String
                 .format("Building a SGC weekly activity report from %s to %s\nThis will take a while.",
                         startDate,
@@ -672,12 +675,16 @@ public class RaidReportTool {
         sgcClanMembersMap.forEach((uid, member) -> {
             tasks.add(() -> {
                 try {
-                    getMembersClearedActivities(member, startDate, endDate, sgcClanMembersMap);
+                    TOTAL_PGCR_COUNT.addAndGet(
+                            getMembersClearedActivities(member, startDate, endDate, sgcClanMembersMap));
+                    SCORED_PGCR_COUNT.addAndGet(member.getClearedActivitiesWithSGCMembersCount());
+
                     interactionOriginalResponseUpdater.setContent(String
-                            .format("Building a SGC weekly activity report from %s to %s\nThis will take a while. (%.2d%)",
+                            .format("Building a SGC weekly activity report from %s to %s\nThis will take a while. (%.2f%)\nTotal PGCRs Processed: %d\nScored PGCRs for Weekly Activity: %d",
                                     startDate,
                                     endDate,
-                                    completed.incrementAndGet() / (double) sgcClanMembersMap.size()))
+                                    completed.incrementAndGet() / (double) sgcClanMembersMap.size(),
+                                    TOTAL_PGCR_COUNT.get(), SCORED_PGCR_COUNT.get()))
                             .update();
                 } catch (IOException ex) {
                     LOGGER.error(ex.getMessage(), ex);
@@ -741,10 +748,10 @@ public class RaidReportTool {
         return map;
     }
 
-    public static void getMembersClearedActivities(Member member, LocalDate startDate, LocalDate endDate,
+    public static int getMembersClearedActivities(Member member, LocalDate startDate, LocalDate endDate,
             HashMap<String, Member> sgcClanMembersMap) throws IOException {
-
         LOGGER.debug(String.format("Getting Cleared Activities for %s", member.getCombinedBungieGlobalDisplayName()));
+        AtomicInteger PGCR_COUNT = new AtomicInteger(0);
         getMemberCharacters(member);
         member.getCharacters().forEach((characteruid, character) -> {
             try {
@@ -780,7 +787,6 @@ public class RaidReportTool {
                             next = results.size() < 250;
                             List<JsonObject> clearedActivities = IntStream.range(0, results.size())
                                     .mapToObj(index -> (JsonObject) results.get(index)).filter((result) -> {
-                                        PGCR_COUNT.incrementAndGet();
                                         int mode = result.getAsJsonObject("activityDetails")
                                                 .getAsJsonPrimitive("mode").getAsInt();
 
@@ -820,7 +826,7 @@ public class RaidReportTool {
                     }
                     conn.disconnect();
                 }
-
+                PGCR_COUNT.set(genericActivitiesToProcess.size());
                 genericActivitiesToProcess.forEach((activityWithSGCMembers) -> {
                     try {
                         getSGCMemberCarnageReport(member, activityWithSGCMembers, sgcClanMembersMap);
@@ -836,6 +842,7 @@ public class RaidReportTool {
                 LOGGER.error(ex.getMessage(), ex);
             }
         });
+        return PGCR_COUNT.get();
     }
 
     public static void getSGCMemberCarnageReport(Member member, GenericActivity activityWithSGCMembers,

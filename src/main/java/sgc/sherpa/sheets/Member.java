@@ -148,4 +148,12 @@ public class Member {
         });
         return total.get();
     }
+
+    public int getClearedActivitiesWithSGCMembersCount() {
+        AtomicInteger total = new AtomicInteger(0);
+        characters.forEach((characterId, character) -> {
+            total.addAndGet(character.getClearedActivitiesWithSGCMembers().size());
+        });
+        return total.get();
+    }
 }
