@@ -648,9 +648,15 @@ public class RaidReportTool {
 
     }
 
-    public static String getSGCWeeklyActivityReport(LocalDate startDate, LocalDate endDate)
+    public static String getSGCWeeklyActivityReport(LocalDate startDate, LocalDate endDate,
+            InteractionOriginalResponseUpdater interactionOriginalResponseUpdater)
             throws InterruptedException, IOException {
-        LOGGER.info("Starting SGC Member Participation Report");
+        LOGGER.info("Starting SGC Weekly Activity Report");
+        interactionOriginalResponseUpdater.setContent(String
+                .format("Building a SGC weekly activity report from %s to %s\nThis will take a while.",
+                        startDate,
+                        endDate))
+                .update();
         HashMap<String, Clan> clanMap = initializeClanMap();
         HashMap<String, Member> sgcClanMembersMap = new HashMap<>();
 
@@ -662,10 +668,17 @@ public class RaidReportTool {
             });
         });
         List<Callable<Object>> tasks = new ArrayList<>();
+        AtomicInteger completed = new AtomicInteger();
         sgcClanMembersMap.forEach((uid, member) -> {
             tasks.add(() -> {
                 try {
                     getMembersClearedActivities(member, startDate, endDate, sgcClanMembersMap);
+                    interactionOriginalResponseUpdater.setContent(String
+                            .format("Building a SGC weekly activity report from %s to %s\nThis will take a while. (%.2d%)",
+                                    startDate,
+                                    endDate,
+                                    completed.incrementAndGet() / (double) sgcClanMembersMap.size()))
+                            .update();
                 } catch (IOException ex) {
                     LOGGER.error(ex.getMessage(), ex);
                 }
@@ -673,9 +686,19 @@ public class RaidReportTool {
             });
         });
         executorService.invokeAll(tasks);
+        interactionOriginalResponseUpdater.setContent(String
+                .format("Generating the SGC weekly activity report csv from %s to %s",
+                        startDate,
+                        endDate))
+                .update();
         String potwActivityReportAsCsv = getPOTWActivityReportAsCsv(clanMap, sgcClanMembersMap);
 
-        LOGGER.info("SGC Member Participation Report Complete");
+        interactionOriginalResponseUpdater.setContent(String
+                .format("SGC weekly activity report from %s to %s Complete",
+                        startDate,
+                        endDate))
+                .update();
+        LOGGER.info("SGC Weekly Activity Report Complete");
         return potwActivityReportAsCsv;
     }
 

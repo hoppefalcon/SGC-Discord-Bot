@@ -41,7 +41,7 @@ public class SGCWeeklyActivityReportCommand implements Command {
                                 LocalDate endDate = LocalDate.parse(endDateStr, DateTimeFormatter.BASIC_ISO_DATE);
                                 Instant start = Instant.now();
                                 String sgcWeeklyActivityReport = RaidReportTool.getSGCWeeklyActivityReport(startDate,
-                                                endDate);
+                                                endDate, interactionOriginalResponseUpdater);
                                 Instant end = Instant.now();
                                 Duration timeElapsed = Duration.between(start, end);
                                 long timeElapsedInSeconds = timeElapsed.getSeconds();
