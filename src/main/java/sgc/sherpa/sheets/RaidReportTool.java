@@ -685,7 +685,7 @@ public class RaidReportTool {
                             .format("Building a SGC weekly activity report from %s to %s\nThis will take a while. (%.2f%%)\nTotal PGCRs Processed: %d\nScored PGCRs for Weekly Activity: %d",
                                     startDate,
                                     endDate,
-                                    (completed.incrementAndGet() / (double) sgcClanMembersMap.size()),
+                                    (completed.incrementAndGet() / (double) sgcClanMembersMap.size()) * 100.0,
                                     TOTAL_PGCR_COUNT.get(), SCORED_PGCR_COUNT.get()))
                             .update().join();
 
