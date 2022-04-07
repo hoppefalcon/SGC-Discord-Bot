@@ -44,9 +44,11 @@ public class SGCWeeklyActivityReportCommand implements Command {
                                                 endDate);
                                 Instant end = Instant.now();
                                 Duration timeElapsed = Duration.between(start, end);
-                                long hours = timeElapsed.toHours();
-                                long minutes = timeElapsed.toMinutes() % 60;
-                                long secounds = timeElapsed.toSeconds() % 60;
+                                long timeElapsedInSeconds = timeElapsed.getSeconds();
+
+                                long hours = timeElapsedInSeconds / 3600;
+                                long minutes = (timeElapsedInSeconds % 3600) / 60;
+                                long seconds = timeElapsedInSeconds % 60;
 
                                 if (sgcWeeklyActivityReport.isEmpty()) {
                                         interactionOriginalResponseUpdater.setContent("").addEmbed(new EmbedBuilder()
@@ -71,7 +73,7 @@ public class SGCWeeklyActivityReportCommand implements Command {
                                                                                         endDate.toString()))
                                                                         .setDescription(String.format(
                                                                                         "Completed in %02d:%02d:%02d",
-                                                                                        hours, minutes, secounds))
+                                                                                        hours, minutes, seconds))
                                                                         .setFooter("#AreYouShrouded")
                                                                         .setThumbnail(getClass().getClassLoader()
                                                                                         .getResourceAsStream(
