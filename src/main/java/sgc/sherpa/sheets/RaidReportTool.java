@@ -66,18 +66,23 @@ public class RaidReportTool {
     // System.out.println(System.getProperty("os.name"));
     // Instant start = Instant.now();
 
-    // String output = getSGCWeeklyActivityReport(LocalDate.parse("20220222",
-    // DateTimeFormatter.BASIC_ISO_DATE),
-    // LocalDate.parse("20220228", DateTimeFormatter.BASIC_ISO_DATE));
+    // // String output = getSGCWeeklyActivityReport(LocalDate.parse("20220222",
+    // // DateTimeFormatter.BASIC_ISO_DATE),
+    // // LocalDate.parse("20220228", DateTimeFormatter.BASIC_ISO_DATE));
 
     // executorService.shutdown();
 
     // Instant end = Instant.now();
     // Duration timeElapsed = Duration.between(start,
     // end);
+
+    // long hours = timeElapsed.toHours();
+    // long minutes = timeElapsed.toMinutesPart();
+    // long secounds = timeElapsed.toSecondsPart();
     // System.out.println("Post Game Carnage Reports Processed: " +
     // PGCR_COUNT.get());
-    // System.out.println("DONE (" + timeElapsed.getSeconds() + ")");
+    // System.out.println(String.format("DONE (%02d:%02d:%02d)", hours, minutes,
+    // secounds));
     // }
 
     public static void initializeClanIdMap() {

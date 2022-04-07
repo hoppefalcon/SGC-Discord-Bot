@@ -1,6 +1,8 @@
 package sgc.raid.report.bot.commands.impl;
 
 import java.awt.Color;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
@@ -36,8 +38,14 @@ public class SGCWeeklyActivityReportCommand implements Command {
                         try {
                                 LocalDate startDate = LocalDate.parse(startDateStr, DateTimeFormatter.BASIC_ISO_DATE);
                                 LocalDate endDate = LocalDate.parse(endDateStr, DateTimeFormatter.BASIC_ISO_DATE);
+                                Instant start = Instant.now();
                                 String sgcWeeklyActivityReport = RaidReportTool.getSGCWeeklyActivityReport(startDate,
                                                 endDate);
+                                Instant end = Instant.now();
+                                Duration timeElapsed = Duration.between(start, end);
+                                long hours = timeElapsed.toHours();
+                                long minutes = timeElapsed.toMinutesPart();
+                                long secounds = timeElapsed.toSecondsPart();
 
                                 if (sgcWeeklyActivityReport.isEmpty()) {
                                         interactionOriginalResponseUpdater.setContent("").addEmbed(new EmbedBuilder()
@@ -60,7 +68,9 @@ public class SGCWeeklyActivityReportCommand implements Command {
                                                                                         "SGC Weekly Activity Report from %s to %s",
                                                                                         startDate.toString(),
                                                                                         endDate.toString()))
-                                                                        .setDescription("SGC Weekly Activity Report Completed")
+                                                                        .setDescription(String.format(
+                                                                                        "SGC Weekly Activity Report Completed in %02d:%02d:%02d",
+                                                                                        hours, minutes, secounds))
                                                                         .setFooter("#AreYouShrouded")
                                                                         .setThumbnail(getClass().getClassLoader()
                                                                                         .getResourceAsStream(
