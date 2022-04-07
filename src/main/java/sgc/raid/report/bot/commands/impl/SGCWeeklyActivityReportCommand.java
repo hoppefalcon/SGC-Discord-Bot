@@ -52,15 +52,19 @@ public class SGCWeeklyActivityReportCommand implements Command {
                                 } else {
                                         LOGGER.info("Sending SGC Weekly Activity Report to " + slashCommandInteraction
                                                         .getChannel().get().getIdAsString());
-                                        new MessageBuilder().addEmbed(new EmbedBuilder().setTitle(String.format(
-                                                        "SGC Weekly Activity Report from %s to %s",
-                                                        startDate.toString(),
-                                                        endDate.toString()))
-                                                        .setDescription(sgcWeeklyActivityReport)
-                                                        .setFooter("#AreYouShrouded")
-                                                        .setThumbnail(getClass().getClassLoader()
-                                                                        .getResourceAsStream("thumbnail.jpg"))
-                                                        .setColor(Color.GREEN))
+                                        new MessageBuilder()
+                                                        .addEmbed(new EmbedBuilder()
+                                                                        .setAuthor(slashCommandInteraction.getUser())
+                                                                        .setTitle(String.format(
+                                                                                        "SGC Weekly Activity Report from %s to %s",
+                                                                                        startDate.toString(),
+                                                                                        endDate.toString()))
+                                                                        .setDescription(sgcWeeklyActivityReport)
+                                                                        .setFooter("#AreYouShrouded")
+                                                                        .setThumbnail(getClass().getClassLoader()
+                                                                                        .getResourceAsStream(
+                                                                                                        "thumbnail.jpg"))
+                                                                        .setColor(Color.PINK))
                                                         .addAttachment(sgcWeeklyActivityReport.getBytes(),
                                                                         String.format("SGC_Weekly_Activity_Report [%s-%s].csv",
                                                                                         startDate.toString(),
