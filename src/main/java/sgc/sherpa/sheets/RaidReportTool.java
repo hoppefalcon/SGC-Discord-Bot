@@ -671,12 +671,13 @@ public class RaidReportTool {
         AtomicBoolean errorFound = new AtomicBoolean(false);
         clanMap.values().stream().takeWhile((map) -> !errorFound.get())
                 .forEach((clan) -> {
+                    LOGGER.info("Starting to process " + clan.getCallsign());
                     AtomicInteger completed = new AtomicInteger();
                     clan.getMembers().forEach((uid, member) -> {
                         if (member.hasNewBungieName()) {
                             tasks.add(() -> {
                                 try {
-                                    LOGGER.info("Starting to process " + member.getDisplayName());
+                                    LOGGER.debug("Starting to process " + member.getDisplayName());
                                     TOTAL_PGCR_COUNT.addAndGet(
                                             getMembersClearedActivities(member, startDate, endDate, sgcClanMembersMap));
                                     SCORED_PGCR_COUNT.addAndGet(member.getWeeklySGCActivity().get("COUNT"));
@@ -685,11 +686,6 @@ public class RaidReportTool {
                                     if (interactionOriginalResponseUpdater != null) {
                                         lock.lock();
                                         try {
-                                            interactionOriginalResponseUpdater.setContent(String
-                                                    .format("Completed Processing %s",
-                                                            member.getDisplayName()))
-                                                    .update().join();
-
                                             interactionOriginalResponseUpdater.setContent(String
                                                     .format("Building a SGC weekly activity report from %s to %s\nProcessing %s: %d/%d\nTotal PGCRs Processed: %,d\nScored PGCRs for Weekly Activity: %,d",
                                                             startDate, endDate, clan.getCallsign(),
@@ -721,6 +717,7 @@ public class RaidReportTool {
                         errorFound.set(true);
                     } finally {
                         System.gc();
+                        LOGGER.info("Finished processing " + clan.getCallsign());
                     }
                 });
 
