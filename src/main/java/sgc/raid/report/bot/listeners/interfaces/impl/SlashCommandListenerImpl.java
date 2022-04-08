@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 import sgc.raid.report.bot.commands.impl.ClanRaidReportCommand;
 import sgc.raid.report.bot.commands.impl.RaidCarnageReportCommand;
-import sgc.raid.report.bot.commands.impl.SGCWeeklyActivityReportCommand;
+import sgc.raid.report.bot.commands.impl.SGCActivityReportCommand;
 import sgc.raid.report.bot.commands.impl.UserRaidReportCommand;
 import sgc.raid.report.bot.commands.impl.UserWeeklyRaidReportCommand;
 import sgc.raid.report.bot.listeners.interfaces.SlashCommandListener;
@@ -42,8 +42,8 @@ public class SlashCommandListenerImpl implements SlashCommandListener {
                 new RaidCarnageReportCommand().handle(slashCommandInteraction);
                 break;
 
-            case "sgc-weekly-activity-report":
-                new SGCWeeklyActivityReportCommand().handle(slashCommandInteraction);
+            case "sgc-activity-report":
+                new SGCActivityReportCommand().handle(slashCommandInteraction);
                 break;
 
             default:
