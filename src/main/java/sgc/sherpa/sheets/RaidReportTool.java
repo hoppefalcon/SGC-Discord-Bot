@@ -10,8 +10,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.time.Duration;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -27,7 +25,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -648,7 +645,7 @@ public class RaidReportTool {
 
     public static String getSGCWeeklyActivityReport(LocalDate startDate, LocalDate endDate,
             InteractionOriginalResponseUpdater interactionOriginalResponseUpdater)
-            throws InterruptedException, IOException {
+            throws IOException {
         LOGGER.info("Starting SGC Weekly Activity Report");
 
         AtomicLong TOTAL_PGCR_COUNT = new AtomicLong(0);
@@ -665,51 +662,70 @@ public class RaidReportTool {
 
         clanMap.forEach((uid, clan) -> {
             clan.getMembers().forEach((id, member) -> {
-                if (member.hasNewBungieName()) {
-                    sgcClanMembersMap.put(id, member);
-                }
+                sgcClanMembersMap.put(id, member);
             });
         });
+
         List<Callable<Object>> tasks = new ArrayList<>();
-        AtomicInteger completed = new AtomicInteger();
         final ReentrantLock lock = new ReentrantLock();
+        AtomicBoolean errorFound = new AtomicBoolean(false);
+        clanMap.values().stream().takeWhile((map) -> errorFound.get())
+                .forEach((clan) -> {
+                    AtomicInteger completed = new AtomicInteger();
+                    clan.getMembers().forEach((uid, member) -> {
+                        if (member.hasNewBungieName()) {
+                            tasks.add(() -> {
+                                try {
+                                    LOGGER.info("Starting to process " + member.getDisplayName());
+                                    TOTAL_PGCR_COUNT.addAndGet(
+                                            getMembersClearedActivities(member, startDate, endDate, sgcClanMembersMap));
+                                    SCORED_PGCR_COUNT.addAndGet(member.getClearedActivitiesWithSGCMembersCount());
+                                    LOGGER.debug("Finished processing " + member.getDisplayName());
 
-        sgcClanMembersMap.forEach((uid, member) -> {
-            tasks.add(() -> {
-                try {
-                    LOGGER.info("Starting to process " + member.getDisplayName());
-                    TOTAL_PGCR_COUNT.addAndGet(
-                            getMembersClearedActivities(member, startDate, endDate, sgcClanMembersMap));
-                    SCORED_PGCR_COUNT.addAndGet(member.getClearedActivitiesWithSGCMembersCount());
-                    LOGGER.debug("Finished processing " + member.getDisplayName());
+                                    if (interactionOriginalResponseUpdater != null) {
+                                        lock.lock();
+                                        try {
+                                            interactionOriginalResponseUpdater.setContent(String
+                                                    .format("Completed Processing %s",
+                                                            member.getDisplayName()))
+                                                    .update().join();
 
-                    if (interactionOriginalResponseUpdater != null) {
-                        lock.lock();
-                        try {
-                            interactionOriginalResponseUpdater.setContent(String
-                                    .format("Completed Processing %s",
-                                            member.getDisplayName()))
-                                    .update().join();
+                                            interactionOriginalResponseUpdater.setContent(String
+                                                    .format("Building a SGC weekly activity report from %s to %s\nProcessing %s: %d/%d\nTotal PGCRs Processed: %,d\nScored PGCRs for Weekly Activity: %,d",
+                                                            startDate, endDate, clan.getCallsign(),
+                                                            completed.incrementAndGet(), clan.getMembers().size(),
+                                                            TOTAL_PGCR_COUNT.get(), SCORED_PGCR_COUNT.get()))
+                                                    .update().join();
+                                        } finally {
+                                            lock.unlock();
+                                        }
 
-                            interactionOriginalResponseUpdater.setContent(String
-                                    .format("Building a SGC weekly activity report from %s to %s\nThis will take a while. (%d/%d)\nTotal PGCRs Processed: %,d\nScored PGCRs for Weekly Activity: %,d",
-                                            startDate, endDate, completed.incrementAndGet(), sgcClanMembersMap.size(),
-                                            TOTAL_PGCR_COUNT.get(), SCORED_PGCR_COUNT.get()))
-                                    .update().join();
-                        } finally {
-                            lock.unlock();
+                                    }
+
+                                    LOGGER.debug("Updated Message");
+                                } catch (IOException ex) {
+                                    LOGGER.error(ex.getMessage(), ex);
+                                    errorFound.set(true);
+                                }
+                                return member;
+                            });
+                        } else {
+                            completed.incrementAndGet();
                         }
+                    });
 
+                    try {
+                        executorService.invokeAll(tasks);
+                    } catch (InterruptedException ex) {
+                        LOGGER.error(ex.getMessage(), ex);
+                        errorFound.set(true);
                     }
+                });
 
-                    LOGGER.debug("Updated Message");
-                } catch (IOException ex) {
-                    LOGGER.error(ex.getMessage(), ex);
-                }
-                return member;
-            });
-        });
-        executorService.invokeAll(tasks);
+        if (errorFound.get()) {
+            throw new RuntimeException("An Error Occured during Clan Processing");
+        }
+
         if (interactionOriginalResponseUpdater != null) {
             interactionOriginalResponseUpdater.setContent(String
                     .format("Generating the SGC weekly activity report csv from %s to %s",
