@@ -669,7 +669,7 @@ public class RaidReportTool {
         List<Callable<Object>> tasks = new ArrayList<>();
         final ReentrantLock lock = new ReentrantLock();
         AtomicBoolean errorFound = new AtomicBoolean(false);
-        clanMap.values().stream().takeWhile((map) -> errorFound.get())
+        clanMap.values().stream().takeWhile((map) -> !errorFound.get())
                 .forEach((clan) -> {
                     AtomicInteger completed = new AtomicInteger();
                     clan.getMembers().forEach((uid, member) -> {
