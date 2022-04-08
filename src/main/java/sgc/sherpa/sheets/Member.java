@@ -147,6 +147,8 @@ public class Member {
                 character.clearActivitiesWithSGCMembers();
             });
             activityScoreCalculated = true;
+            weeklySGCActivityScore = score.get();
+            weeklySGCActivityCount = count.get();
             System.gc();
         }
         HashMap<String, Integer> output = new HashMap<String, Integer>();
