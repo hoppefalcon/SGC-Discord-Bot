@@ -144,7 +144,7 @@ public class Member {
                     score.addAndGet(activity.getEarnedPoints());
                     count.addAndGet(character.getClearedActivitiesWithSGCMembers().size());
                 });
-                character.clearWeeklySGCActivitiesWithMembers();
+                character.clearActivitiesWithSGCMembers();
             });
             activityScoreCalculated = true;
             System.gc();

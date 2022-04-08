@@ -15,7 +15,7 @@ public class Character {
     final String UID;
     private final HashMap<Raid, RaidActivity> raidActivities = new HashMap<>();
     private final HashMap<Raid, RaidActivity> weeklyRaidActivities = new HashMap<>();
-    private final HashMap<String, GenericActivity> clearedActivitiesWithSGCMembers = new HashMap<>();
+    private final HashMap<String, GenericActivity> activitiesWithSGCMembers = new HashMap<>();
 
     public Character(String UID) {
         this.UID = UID;
@@ -46,10 +46,14 @@ public class Character {
     }
 
     public void addClearedActivitiesWithSGCMembers(GenericActivity activity) {
-        clearedActivitiesWithSGCMembers.put(activity.getUID(), activity);
+        activitiesWithSGCMembers.put(activity.getUID(), activity);
     }
 
     public HashMap<String, GenericActivity> getClearedActivitiesWithSGCMembers() {
-        return clearedActivitiesWithSGCMembers;
+        return activitiesWithSGCMembers;
+    }
+
+    public void clearActivitiesWithSGCMembers() {
+        activitiesWithSGCMembers.clear();
     }
 }
