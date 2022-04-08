@@ -142,8 +142,8 @@ public class Member {
             characters.forEach((characterId, character) -> {
                 character.getClearedActivitiesWithSGCMembers().forEach((activityId, activity) -> {
                     score.addAndGet(activity.getEarnedPoints());
-                    count.addAndGet(character.getClearedActivitiesWithSGCMembers().size());
                 });
+                count.addAndGet(character.getClearedActivitiesWithSGCMembers().size());
                 character.clearActivitiesWithSGCMembers();
             });
             activityScoreCalculated = true;
