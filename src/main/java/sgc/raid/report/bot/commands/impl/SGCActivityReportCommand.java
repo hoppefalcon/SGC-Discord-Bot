@@ -15,7 +15,7 @@ import sgc.raid.report.bot.BotApplication;
 import sgc.raid.report.bot.commands.Command;
 import sgc.sherpa.sheets.RaidReportTool;
 
-public class SGCWeeklyActivityReportCommand implements Command {
+public class SGCActivityReportCommand implements Command {
 
         private static final Logger LOGGER = BotApplication.getLogger();
 
@@ -30,10 +30,9 @@ public class SGCWeeklyActivityReportCommand implements Command {
 
                 slashCommandInteraction.respondLater().thenAccept(interactionOriginalResponseUpdater -> {
 
-                        interactionOriginalResponseUpdater.setContent(String
-                                        .format("Building a SGC weekly activity report from %s to %s\nThis will take a while.",
-                                                        startDateStr,
-                                                        endDateStr))
+                        interactionOriginalResponseUpdater.setContent(
+                                        String.format("Building a SGC weekly activity report from %s to %s\nThis will take a while.",
+                                                        startDateStr, endDateStr))
                                         .update();
 
                         try {
