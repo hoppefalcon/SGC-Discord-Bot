@@ -6,6 +6,7 @@
 package sgc.sherpa.sheets;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -20,6 +21,9 @@ public class Member {
     private final String MemberType;
     private final String clanId;
     private final HashMap<String, Character> characters = new HashMap<>();
+    private int weeklySGCActivityScore = 0;
+    private int weeklySGCActivityCount = 0;
+    private boolean activityScoreCalculated = false;
 
     public Member(String UID, String DisplayName, String MemberType, String bungieGlobalDisplayName,
             String bungieGlobalDisplayNameCode, String clanId) {
@@ -127,33 +131,27 @@ public class Member {
         return String.format("%s#%s", this.getBungieGlobalDisplayName(), this.getBungieGlobalDisplayNameCode());
     }
 
-    public HashMap<String, GenericActivity> getAllClearedActivitiesWithSGCMembers() {
-        HashMap<String, GenericActivity> clearedActivitiesWithSGCMembers = new HashMap<>();
-        characters.forEach((uid, character) -> {
-            clearedActivitiesWithSGCMembers.putAll(character.getClearedActivitiesWithSGCMembers());
-        });
-        return clearedActivitiesWithSGCMembers;
-    }
-
     public boolean hasNewBungieName() {
         return !bungieGlobalDisplayName.equals("") && !bungieGlobalDisplayNameCode.equals("");
     }
 
-    public int getClearedActivitiesWithSGCMembersPoints() {
-        AtomicInteger total = new AtomicInteger(0);
-        characters.forEach((characterId, character) -> {
-            character.getClearedActivitiesWithSGCMembers().forEach((activityId, activity) -> {
-                total.addAndGet(activity.getEarnedPoints());
+    public Map<String, Integer> getWeeklySGCActivity() {
+        if (!activityScoreCalculated) {
+            AtomicInteger score = new AtomicInteger(0);
+            AtomicInteger count = new AtomicInteger(0);
+            characters.forEach((characterId, character) -> {
+                character.getClearedActivitiesWithSGCMembers().forEach((activityId, activity) -> {
+                    score.addAndGet(activity.getEarnedPoints());
+                    count.addAndGet(character.getClearedActivitiesWithSGCMembers().size());
+                });
+                character.clearWeeklySGCActivitiesWithMembers();
             });
-        });
-        return total.get();
-    }
-
-    public int getClearedActivitiesWithSGCMembersCount() {
-        AtomicInteger total = new AtomicInteger(0);
-        characters.forEach((characterId, character) -> {
-            total.addAndGet(character.getClearedActivitiesWithSGCMembers().size());
-        });
-        return total.get();
+            activityScoreCalculated = true;
+            System.gc();
+        }
+        HashMap<String, Integer> output = new HashMap<String, Integer>();
+        output.put("SCORE", weeklySGCActivityScore);
+        output.put("COUNT", weeklySGCActivityCount);
+        return output;
     }
 }

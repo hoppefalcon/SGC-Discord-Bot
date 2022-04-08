@@ -679,7 +679,7 @@ public class RaidReportTool {
                                     LOGGER.info("Starting to process " + member.getDisplayName());
                                     TOTAL_PGCR_COUNT.addAndGet(
                                             getMembersClearedActivities(member, startDate, endDate, sgcClanMembersMap));
-                                    SCORED_PGCR_COUNT.addAndGet(member.getClearedActivitiesWithSGCMembersCount());
+                                    SCORED_PGCR_COUNT.addAndGet(member.getWeeklySGCActivity().get("COUNT"));
                                     LOGGER.debug("Finished processing " + member.getDisplayName());
 
                                     if (interactionOriginalResponseUpdater != null) {
@@ -719,6 +719,8 @@ public class RaidReportTool {
                     } catch (InterruptedException ex) {
                         LOGGER.error(ex.getMessage(), ex);
                         errorFound.set(true);
+                    } finally {
+                        System.gc();
                     }
                 });
 
@@ -957,7 +959,7 @@ public class RaidReportTool {
             stringBuilder.append("\"").append(member.getDisplayName()).append("\",")
                     .append("\"").append(member.getCombinedBungieGlobalDisplayName()).append("\",")
                     .append("\"").append(clanMap.get(member.getClanId()).getCallsign()).append("\",")
-                    .append("\"").append(member.getClearedActivitiesWithSGCMembersPoints()).append("\"\n");
+                    .append("\"").append(member.getWeeklySGCActivity().get("SCORE")).append("\"\n");
         });
 
         return stringBuilder.toString();
