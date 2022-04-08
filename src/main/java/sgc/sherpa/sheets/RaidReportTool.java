@@ -16,6 +16,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import static java.util.Map.entry;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -28,6 +30,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import org.javacord.api.entity.DiscordClient;
 import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
 import org.slf4j.Logger;
 
@@ -46,11 +49,26 @@ public class RaidReportTool {
     private static final HashMap<String, String> xbClanIdMap = new HashMap<>();
     private static final HashMap<String, String> psClanIdMap = new HashMap<>();
 
-    private static List<String> pcClanIds = Arrays.asList("3087185", "3019103", "3063489", "3007121", "3008645",
-            "3076620", "3090996", "3100797", "3095868", "2820714", "2801315", "3915247", "3949151", "3095835",
-            "3070603", "3795604");
-    private static List<String> xbClanIds = Arrays.asList("4327464", "4327434", "4327418", "4327389", "4418635");
-    private static List<String> psClanIds = Arrays.asList("4327587", "4327584", "4327575", "4327536", "4327542");
+    // private static List<String> pcClanIds = Arrays.asList("3087185", "3019103",
+    // "3063489", "3007121", "3008645",
+    // "3076620", "3090996", "3100797", "3095868", "2820714", "2801315", "3915247",
+    // "3949151", "3095835",
+    // "3070603", "3795604");
+    // private static List<String> xbClanIds = Arrays.asList("4327464", "4327434",
+    // "4327418", "4327389", "4418635");
+    // private static List<String> psClanIds = Arrays.asList("4327587", "4327584",
+    // "4327575", "4327536", "4327542");
+
+    private static Map<String, List<String>> clanIdMap = Map.ofEntries(
+            entry("PC",
+                    Arrays.asList("3087185", "3019103", "3063489", "3007121", "3008645",
+                            "3076620", "3090996", "3100797", "3095868", "2820714", "2801315", "3915247", "3949151",
+                            "3095835",
+                            "3070603", "3795604")),
+            entry("Xbox",
+                    Arrays.asList("4327464", "4327434", "4327418", "4327389", "4418635")),
+            entry("PSN",
+                    Arrays.asList("4327587", "4327584", "4327575", "4327536", "4327542")));
 
     private static ExecutorService executorService = Executors.newFixedThreadPool(15);
 
@@ -82,35 +100,16 @@ public class RaidReportTool {
     // }
 
     public static void initializeClanIdMap() {
-
-        pcClanIds.forEach((clanId) -> {
-            try {
-                Clan clan = new Clan(clanId);
-                getClanInfo(clan);
-                pcClanIdMap.put(clan.getName(), clan.getClanId());
-            } catch (IOException e) {
-                LOGGER.error(e.getMessage(), e);
-            }
-        });
-
-        xbClanIds.forEach((clanId) -> {
-            try {
-                Clan clan = new Clan(clanId);
-                getClanInfo(clan);
-                xbClanIdMap.put(clan.getName(), clan.getClanId());
-            } catch (IOException e) {
-                LOGGER.error(e.getMessage(), e);
-            }
-        });
-
-        psClanIds.forEach((clanId) -> {
-            try {
-                Clan clan = new Clan(clanId);
-                getClanInfo(clan);
-                psClanIdMap.put(clan.getName(), clan.getClanId());
-            } catch (IOException e) {
-                LOGGER.error(e.getMessage(), e);
-            }
+        clanIdMap.forEach((platform, clanIds) -> {
+            clanIds.forEach((clanId) -> {
+                try {
+                    Clan clan = new Clan(clanId);
+                    getClanInfo(clan);
+                    pcClanIdMap.put(clan.getName(), clan.getClanId());
+                } catch (IOException e) {
+                    LOGGER.error(e.getMessage(), e);
+                }
+            });
         });
     }
 
@@ -658,63 +657,66 @@ public class RaidReportTool {
         }
         HashMap<String, Clan> clanMap = initializeClanMap();
         HashMap<String, Member> sgcClanMembersMap = new HashMap<>();
+        HashMap<Clan, DiscordProcessStatus> clanStatus = new HashMap<>();
+
+        List<Callable<Object>> tasks = new ArrayList<>();
+
+        updateWeeklySGCActivityMessage(startDate, endDate, interactionOriginalResponseUpdater, clanStatus);
 
         clanMap.forEach((uid, clan) -> {
+            clanStatus.put(clan, DiscordProcessStatus.WAITING);
+
             clan.getMembers().forEach((id, member) -> {
                 sgcClanMembersMap.put(id, member);
             });
-        });
 
-        List<Callable<Object>> tasks = new ArrayList<>();
-        AtomicBoolean errorFound = new AtomicBoolean(false);
-        clanMap.values().stream().takeWhile((map) -> !errorFound.get())
-                .forEach((clan) -> {
-                    LOGGER.info("Starting to process " + clan.getCallsign());
-                    AtomicInteger completed = new AtomicInteger();
-                    clan.getMembers().forEach((uid, member) -> {
-                        if (member.hasNewBungieName()) {
-                            tasks.add(() -> {
-                                try {
-                                    LOGGER.debug("Starting to process " + member.getDisplayName());
-                                    TOTAL_PGCR_COUNT.addAndGet(
-                                            getMembersClearedActivities(member, startDate, endDate, sgcClanMembersMap));
-                                    SCORED_PGCR_COUNT.addAndGet(member.getWeeklySGCActivity().get("COUNT"));
-                                    LOGGER.debug("Finished processing " + member.getDisplayName());
+            tasks.add(() -> {
+                LOGGER.info("Starting to process " + clan.getCallsign());
+                clanStatus.put(clan, DiscordProcessStatus.PROCESSING);
+                clan.getMembers().forEach((memberId, member) -> {
+                    if (member.hasNewBungieName()) {
+                        try {
+                            LOGGER.debug("Starting to process " + member.getDisplayName());
+                            TOTAL_PGCR_COUNT.addAndGet(
+                                    getMembersClearedActivities(member, startDate, endDate,
+                                            sgcClanMembersMap));
+                            SCORED_PGCR_COUNT.addAndGet(member.getWeeklySGCActivity().get("COUNT"));
+                            LOGGER.debug("Finished processing " + member.getDisplayName());
 
-                                    if (interactionOriginalResponseUpdater != null) {
-                                        interactionOriginalResponseUpdater.setContent(String
-                                                .format("Building a SGC weekly activity report from %s to %s\nProcessing %s: %d/%d\nTotal PGCRs Processed: %,d\nScored PGCRs for Weekly Activity: %,d",
-                                                        startDate, endDate, clan.getCallsign(),
-                                                        completed.incrementAndGet(), clan.getMembers().size(),
-                                                        TOTAL_PGCR_COUNT.get(), SCORED_PGCR_COUNT.get()))
-                                                .update().join();
-                                    }
-
-                                    LOGGER.debug("Updated Message");
-                                } catch (IOException ex) {
-                                    LOGGER.error(ex.getMessage(), ex);
-                                    errorFound.set(true);
-                                }
-                                return member;
-                            });
-                        } else {
-                            completed.incrementAndGet();
+                            LOGGER.debug("Updated Message");
+                        } catch (IOException ex) {
+                            LOGGER.error(ex.getMessage(), ex);
+                            clanStatus.put(clan, DiscordProcessStatus.ERROR);
                         }
-                    });
+                    }
 
                     try {
                         executorService.invokeAll(tasks);
                     } catch (InterruptedException ex) {
                         LOGGER.error(ex.getMessage(), ex);
-                        errorFound.set(true);
                     } finally {
                         System.gc();
                         LOGGER.info("Finished processing " + clan.getCallsign());
+                        if (clanStatus.get(clan) != DiscordProcessStatus.ERROR) {
+                            clanStatus.put(clan, DiscordProcessStatus.DONE);
+                        }
+                        updateWeeklySGCActivityMessage(startDate, endDate,
+                                interactionOriginalResponseUpdater, clanStatus);
                     }
                 });
 
-        if (errorFound.get()) {
-            throw new RuntimeException("An Error Occured during Clan Processing");
+                return clan;
+            });
+        });
+        try {
+            executorService.invokeAll(tasks);
+        } catch (InterruptedException ex) {
+            LOGGER.error(ex.getMessage(), ex);
+        } finally {
+            System.gc();
+            LOGGER.info("Finished processing All Clans for SGC Weekly Activity Report");
+            updateWeeklySGCActivityMessage(startDate, endDate,
+                    interactionOriginalResponseUpdater, clanStatus);
         }
 
         if (interactionOriginalResponseUpdater != null) {
@@ -740,37 +742,17 @@ public class RaidReportTool {
     public static HashMap<String, Clan> initializeClanMap() {
         LOGGER.debug("Initializing Clan Map");
         HashMap<String, Clan> map = new HashMap<>();
-        pcClanIds.forEach((clanId) -> {
-            try {
-                Clan clan = new Clan(clanId);
-                getClanInfo(clan);
-                getClanMembers(clan);
-                map.put(clan.getClanId(), clan);
-            } catch (IOException e) {
-                LOGGER.error(e.getMessage(), e);
-            }
-        });
-
-        xbClanIds.forEach((clanId) -> {
-            try {
-                Clan clan = new Clan(clanId);
-                getClanInfo(clan);
-                getClanMembers(clan);
-                map.put(clan.getClanId(), clan);
-            } catch (IOException e) {
-                LOGGER.error(e.getMessage(), e);
-            }
-        });
-
-        psClanIds.forEach((clanId) -> {
-            try {
-                Clan clan = new Clan(clanId);
-                getClanInfo(clan);
-                getClanMembers(clan);
-                map.put(clan.getClanId(), clan);
-            } catch (IOException e) {
-                LOGGER.error(e.getMessage(), e);
-            }
+        clanIdMap.forEach((platform, clanIds) -> {
+            clanIds.forEach((clanId) -> {
+                try {
+                    Clan clan = new Clan(clanId);
+                    getClanInfo(clan);
+                    getClanMembers(clan);
+                    map.put(clan.getClanId(), clan);
+                } catch (IOException e) {
+                    LOGGER.error(e.getMessage(), e);
+                }
+            });
         });
         LOGGER.debug("Clan Map Initialized");
         return map;
@@ -952,6 +934,46 @@ public class RaidReportTool {
         });
 
         return stringBuilder.toString();
+    }
+
+    public static void updateWeeklySGCActivityMessage(LocalDate startDate, LocalDate endDate,
+            InteractionOriginalResponseUpdater interactionOriginalResponseUpdater,
+            HashMap<Clan, DiscordProcessStatus> clans) {
+        StringBuilder message = new StringBuilder();
+        if (interactionOriginalResponseUpdater != null) {
+            AtomicLong TOTAL_PGCR_COUNT = new AtomicLong(0);
+            message.append("Building a SGC weekly activity report from ").append(startDate).append(" to ")
+                    .append(endDate).append("\n");
+
+            clans.forEach((clan, status) -> {
+                message.append(clan.getCallsign()).append(" ");
+                switch (status) {
+                    case DONE:
+                        message.append(DiscordProcessStatus.DONE);
+                        break;
+                    case ERROR:
+                        message.append(DiscordProcessStatus.ERROR);
+                        break;
+                    case PROCESSING:
+                        message.append(DiscordProcessStatus.PROCESSING);
+                        break;
+                    case WAITING:
+                        message.append(DiscordProcessStatus.WAITING);
+                        break;
+                    default:
+                        break;
+                }
+                message.append("\n");
+            });
+            message.append("PGCRs Scored: ").append(TOTAL_PGCR_COUNT.get()).append("\n");
+
+            message.append("\n").append("Waiting: ").append(message.append(DiscordProcessStatus.WAITING))
+                    .append("\n").append("Processing: ").append(message.append(DiscordProcessStatus.PROCESSING))
+                    .append("\n").append("Done: ").append(message.append(DiscordProcessStatus.DONE))
+                    .append("\n").append("Error: ").append(message.append(DiscordProcessStatus.ERROR));
+
+            interactionOriginalResponseUpdater.setContent(message.toString()).update().join();
+        }
     }
 
 }
