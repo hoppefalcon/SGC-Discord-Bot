@@ -83,7 +83,7 @@ public class BotApplication {
 		final SlashCommandOptionBuilder carnageIdOption = new SlashCommandOptionBuilder().setName("ID")
 				.setType(SlashCommandOptionType.STRING).setRequired(true).setDescription("Postgame Carnage Report ID");
 
-		api.bulkOverwriteGlobalSlashCommands(Arrays.asList(
+		api.bulkOverwriteGlobalApplicationCommands(Arrays.asList(
 				new SlashCommandBuilder().setName("user-raid-report")
 						.setDescription("Pulls the Raid Report of the user. (Requires full Bungie ID)")
 						.addOption(bungieIdOption.build()),
@@ -97,7 +97,7 @@ public class BotApplication {
 						"Pulls the Weekly Raid Report of the user. (Requires full Bungie ID, Start Date, and End Date)")
 						.addOption(bungieIdOption.build()).addOption(userWeeklyClearStartOption.build())
 						.addOption(userWeeklyClearEndOption.build()),
-				new SlashCommandBuilder().setName("sgc-weekly-activity-report").setDescription(
+				new SlashCommandBuilder().setName("sgc-activity-report").setDescription(
 						"Pulls the Weekly Activity Report for the SGC. (Requires Start Date, and End Date)")
 						.addOption(userWeeklyClearStartOption.build())
 						.addOption(userWeeklyClearEndOption.build()),
