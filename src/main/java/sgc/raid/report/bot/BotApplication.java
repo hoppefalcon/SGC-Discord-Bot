@@ -38,34 +38,34 @@ public class BotApplication {
 	private static final String BOT_TOKEN = System.getenv("DISCORD-TOKEN");
 
 	public static void main(String[] args) {
-		RaidReportTool.initializeClanIdMap();
 		SpringApplication.run(BotApplication.class, args);
 	}
 
 	@Bean
 	@ConfigurationProperties(value = "discord-api")
 	public DiscordApi discordApi() {
+		RaidReportTool.initializeClanIdMap();
 		DiscordApi api = new DiscordApiBuilder().setToken(BOT_TOKEN).login().join();
 
 		final SlashCommandOptionBuilder pcClanOption = new SlashCommandOptionBuilder().setName("Clan")
 				.setType(SlashCommandOptionType.STRING).setRequired(true).setDescription("Clan for Raid Report");
 
-		RaidReportTool.getPcclanidmap().keySet().forEach((name) -> {
-			pcClanOption.addChoice(name, RaidReportTool.getPcclanidmap().get(name));
+		RaidReportTool.getPcClanIdMap().forEach((clanCallsign, clan) -> {
+			pcClanOption.addChoice(clanCallsign, clan);
 		});
 
 		final SlashCommandOptionBuilder xbClanOption = new SlashCommandOptionBuilder().setName("Clan")
 				.setType(SlashCommandOptionType.STRING).setRequired(true).setDescription("Clan for Raid Report");
 
-		RaidReportTool.getXbclanidmap().keySet().forEach((name) -> {
-			xbClanOption.addChoice(name, RaidReportTool.getXbclanidmap().get(name));
+		RaidReportTool.getXbClanIdMap().forEach((clanCallsign, clan) -> {
+			xbClanOption.addChoice(clanCallsign, clan);
 		});
 
 		final SlashCommandOptionBuilder psClanOption = new SlashCommandOptionBuilder().setName("Clan")
 				.setType(SlashCommandOptionType.STRING).setRequired(true).setDescription("Clan for Raid Report");
 
-		RaidReportTool.getPsclanidmap().keySet().forEach((name) -> {
-			psClanOption.addChoice(name, RaidReportTool.getPsclanidmap().get(name));
+		RaidReportTool.getPsClanIdMap().forEach((clanCallsign, clan) -> {
+			psClanOption.addChoice(clanCallsign, clan);
 		});
 
 		final SlashCommandOptionBuilder userWeeklyClearStartOption = new SlashCommandOptionBuilder()
@@ -97,11 +97,10 @@ public class BotApplication {
 						"Pulls the Weekly Raid Report of the user. (Requires full Bungie ID, Start Date, and End Date)")
 						.addOption(bungieIdOption.build()).addOption(userWeeklyClearStartOption.build())
 						.addOption(userWeeklyClearEndOption.build()),
-				// new SlashCommandBuilder().setName("sgc-activity-report").setDescription(
-				// "Pulls the Weekly Activity Report for the SGC. (Requires Start Date, and End
-				// Date)")
-				// .addOption(userWeeklyClearStartOption.build())
-				// .addOption(userWeeklyClearEndOption.build()),
+				new SlashCommandBuilder().setName("sgc-activity-report").setDescription(
+						"Pulls the Weekly Activity Report for the SGC. (Requires Start Date, and End Date)")
+						.addOption(userWeeklyClearStartOption.build())
+						.addOption(userWeeklyClearEndOption.build()),
 				new SlashCommandBuilder().setName("raid-carnage-report")
 						.setDescription("Pulls a Full Raid Carnage Report.").addOption(carnageIdOption.build())))
 				.join();
