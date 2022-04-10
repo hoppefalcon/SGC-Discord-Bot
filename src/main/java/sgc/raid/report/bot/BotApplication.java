@@ -98,7 +98,7 @@ public class BotApplication {
 						.addOption(bungieIdOption.build()).addOption(userWeeklyClearStartOption.build())
 						.addOption(userWeeklyClearEndOption.build()),
 				new SlashCommandBuilder().setName("sgc-activity-report").setDescription(
-						"Pulls the Weekly Activity Report for the SGC. (Requires Start Date, and End Date)")
+						"Pulls the a Community Activity Report for the SGC. (Requires Start Date, and End Date)")
 						.addOption(userWeeklyClearStartOption.build())
 						.addOption(userWeeklyClearEndOption.build()),
 				new SlashCommandBuilder().setName("raid-carnage-report")

@@ -5,6 +5,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 
 import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
@@ -31,7 +32,7 @@ public class SGCActivityReportCommand implements Command {
                 slashCommandInteraction.respondLater().thenAccept(interactionOriginalResponseUpdater -> {
 
                         interactionOriginalResponseUpdater.setContent(
-                                        String.format("Building a SGC weekly activity report from %s to %s\nThis will take a while.",
+                                        String.format("Building a SGC activity report from %s to %s\nThis will take a while.",
                                                         startDateStr, endDateStr))
                                         .update();
 
@@ -39,10 +40,11 @@ public class SGCActivityReportCommand implements Command {
                                 LocalDate startDate = LocalDate.parse(startDateStr, DateTimeFormatter.BASIC_ISO_DATE);
                                 LocalDate endDate = LocalDate.parse(endDateStr, DateTimeFormatter.BASIC_ISO_DATE);
                                 Instant start = Instant.now();
-                                String sgcWeeklyActivityReport = RaidReportTool.getSGCWeeklyActivityReport(startDate,
-                                                endDate, interactionOriginalResponseUpdater,
-                                                slashCommandInteraction.getChannel().get(),
-                                                slashCommandInteraction.getUser());
+                                HashMap<String, String> sgcWeeklyActivityReport = RaidReportTool
+                                                .getSGCWeeklyActivityReport(startDate,
+                                                                endDate, interactionOriginalResponseUpdater,
+                                                                slashCommandInteraction.getChannel().get(),
+                                                                slashCommandInteraction.getUser());
                                 Instant end = Instant.now();
                                 Duration timeElapsed = Duration.between(start, end);
                                 long timeElapsedInSeconds = timeElapsed.getSeconds();
@@ -52,50 +54,59 @@ public class SGCActivityReportCommand implements Command {
                                 long seconds = timeElapsedInSeconds % 60;
 
                                 if (sgcWeeklyActivityReport.isEmpty()) {
-                                        interactionOriginalResponseUpdater.setContent("").addEmbed(new EmbedBuilder()
+                                        new MessageBuilder().setContent("").addEmbed(new EmbedBuilder()
                                                         .setTitle(String.format(
-                                                                        "SGC Weekly Activity Report from %s to %s",
+                                                                        "SGC Activity Reports from %s to %s",
                                                                         startDate.toString(), endDate.toString()))
                                                         .setDescription("An Error occured. Please contact Hoppefalcon")
                                                         .setFooter("ERROR")
                                                         .setThumbnail(getClass().getClassLoader()
                                                                         .getResourceAsStream("thumbnail.jpg"))
-                                                        .setColor(Color.RED)).update();
+                                                        .setColor(Color.RED))
+                                                        .send(slashCommandInteraction.getChannel().get());
                                 } else {
-                                        LOGGER.info("Sending SGC Weekly Activity Report to " + slashCommandInteraction
+                                        LOGGER.info("Sending SGC Activity Reports to " + slashCommandInteraction
                                                         .getChannel().get().getIdAsString());
 
-                                        new MessageBuilder()
-                                                        .addEmbed(new EmbedBuilder()
-                                                                        .setAuthor(slashCommandInteraction.getUser())
-                                                                        .setTitle(String.format(
-                                                                                        "SGC Weekly Activity Report from %s to %s",
-                                                                                        startDate.toString(),
-                                                                                        endDate.toString()))
-                                                                        .setDescription(String.format(
-                                                                                        "Completed in %02d:%02d:%02d",
-                                                                                        hours, minutes, seconds))
-                                                                        .setFooter("#AreYouShrouded")
-                                                                        .setThumbnail(getClass().getClassLoader()
-                                                                                        .getResourceAsStream(
-                                                                                                        "thumbnail.jpg"))
-                                                                        .setColor(Color.PINK))
-                                                        .addAttachment(sgcWeeklyActivityReport.getBytes(),
-                                                                        String.format("SGC_Weekly_Activity_Report_%s_to_%s.csv",
-                                                                                        startDate.toString(),
-                                                                                        endDate.toString()))
-                                                        .send(slashCommandInteraction.getChannel().get());
+                                        sgcWeeklyActivityReport.forEach((platform, report) -> {
+                                                new MessageBuilder()
+                                                                .addEmbed(new EmbedBuilder()
+                                                                                .setAuthor(slashCommandInteraction
+                                                                                                .getUser())
+                                                                                .setTitle(String.format(
+                                                                                                "%s Activity Report from %s to %s",
+                                                                                                platform,
+                                                                                                startDate.toString(),
+                                                                                                endDate.toString()))
+                                                                                .setDescription(String.format(
+                                                                                                "Completed in %02d:%02d:%02d",
+                                                                                                hours, minutes,
+                                                                                                seconds))
+                                                                                .setFooter("#AreYouShrouded")
+                                                                                .setThumbnail(getClass()
+                                                                                                .getClassLoader()
+                                                                                                .getResourceAsStream(
+                                                                                                                "thumbnail.jpg"))
+                                                                                .setColor(Color.ORANGE))
+                                                                .addAttachment(report.getBytes(),
+                                                                                String.format("%s_Activity_Report_%s_to_%s.csv",
+                                                                                                platform,
+                                                                                                startDate.toString(),
+                                                                                                endDate.toString()))
+                                                                .send(slashCommandInteraction.getChannel().get());
+                                        });
+
                                 }
                         } catch (Exception e) {
                                 LOGGER.error(e.getMessage(), e);
-                                interactionOriginalResponseUpdater.setContent("").addEmbed(new EmbedBuilder()
-                                                .setTitle(String.format("SGC Weekly Activity Report from %s to %s",
+                                new MessageBuilder().setContent("").addEmbed(new EmbedBuilder()
+                                                .setTitle(String.format("SGC Activity Report from %s to %s",
                                                                 startDateStr, endDateStr))
                                                 .setDescription("An Error occured. Please contact Hoppefalcon")
                                                 .setFooter("ERROR")
                                                 .setThumbnail(getClass().getClassLoader()
                                                                 .getResourceAsStream("thumbnail.jpg"))
-                                                .setColor(Color.RED)).update();
+                                                .setColor(Color.RED)).send(slashCommandInteraction.getChannel().get());
                         }
                 });
         }

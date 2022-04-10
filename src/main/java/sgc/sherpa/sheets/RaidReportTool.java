@@ -50,7 +50,7 @@ import sgc.raid.report.bot.BotApplication;;
 public class RaidReportTool {
 
     private static final Logger LOGGER = BotApplication.getLogger();
-    private static String apiKey = "2cb81deccdbf45aabd77e941022c15de";// System.getenv("BUNGIE-TOKEN");
+    private static String apiKey = System.getenv("BUNGIE-TOKEN");
 
     private static final HashMap<String, String> pcClanIdMap = new HashMap<>();
     private static final HashMap<String, String> xbClanIdMap = new HashMap<>();
@@ -59,8 +59,7 @@ public class RaidReportTool {
     // private static List<String> pcClanIds = Arrays.asList("3087185", "3019103",
     // "3063489", "3007121", "3008645",
     // "3076620", "3090996", "3100797", "3095868", "2820714", "2801315", "3915247",
-    // "3949151", "3095835",
-    // "3070603", "3795604");
+    // "3949151", "3070603", "3795604");
     // private static List<String> xbClanIds = Arrays.asList("4327464", "4327434",
     // "4327418", "4327389", "4418635");
     // private static List<String> psClanIds = Arrays.asList("4327587", "4327584",
@@ -68,13 +67,14 @@ public class RaidReportTool {
 
     private static Map<String, List<String>> clanIdMap = Map.ofEntries(
             entry("PC",
-                    Arrays.asList("3087185", "3019103", "3063489", "3007121", "3008645",
-                            "3076620", "3090996", "3100797", "3095868", "2820714", "2801315", "3915247", "3949151",
-                            "3095835", "3070603", "3795604")),
+                    Arrays.asList("3087185", "3019103")), // ,
+            // "3063489", "3007121", "3008645",
+            // "3076620", "3090996", "3100797", "3095868", "2820714",
+            // "2801315", "3915247", "3949151", "3070603", "3795604")),
             entry("Xbox",
-                    Arrays.asList("4327464", "4327434", "4327418", "4327389", "4418635")),
+                    Arrays.asList("4327464", "4327434")), // , "4327418", "4327389", "4418635")),
             entry("PSN",
-                    Arrays.asList("4327587", "4327584", "4327575", "4327536", "4327542")));
+                    Arrays.asList("4327587", "4327584")));// , "4327575", "4327536", "4327542")));
 
     private static ExecutorService executorService = Executors.newFixedThreadPool(15);
 
@@ -660,17 +660,17 @@ public class RaidReportTool {
 
     }
 
-    public static String getSGCWeeklyActivityReport(LocalDate startDate, LocalDate endDate,
+    public static HashMap<String, String> getSGCWeeklyActivityReport(LocalDate startDate, LocalDate endDate,
             InteractionOriginalResponseUpdater interactionOriginalResponseUpdater, TextChannel textChannel,
             User discordUser)
             throws IOException {
-        LOGGER.info("Starting SGC Weekly Activity Report");
+        LOGGER.info("Starting SGC Activity Report");
 
         AtomicLong TOTAL_PGCR_COUNT = new AtomicLong(0);
         AtomicLong SCORED_PGCR_COUNT = new AtomicLong(0);
         if (interactionOriginalResponseUpdater != null) {
             interactionOriginalResponseUpdater.setContent(String
-                    .format("Building a SGC weekly activity report from %s to %s\nThis will take a while.",
+                    .format("Building a SGC activity report from %s to %s\nThis will take a while.",
                             startDate,
                             endDate))
                     .update().join();
@@ -708,18 +708,10 @@ public class RaidReportTool {
 
         }
 
-        LOGGER.info("Finished processing All Clans for SGC Weekly Activity Report");
+        LOGGER.info("Finished processing All Clans for SGC Activity Report");
 
-        String potwActivityReportAsCsv = getFullActivityReportAsCsv(clanList);
-
-        if (interactionOriginalResponseUpdater != null) {
-            interactionOriginalResponseUpdater.setContent(String
-                    .format("SGC activity report from %s to %s Complete",
-                            startDate,
-                            endDate))
-                    .update().join();
-        }
-        LOGGER.info("SGC Weekly Activity Report Complete");
+        HashMap<String, String> potwActivityReportAsCsv = getFullActivityReportAsCsv(clanList);
+        LOGGER.info("SGC Activity Report Complete");
         return potwActivityReportAsCsv;
     }
 
@@ -934,24 +926,44 @@ public class RaidReportTool {
         return stringBuilder.toString();
     }
 
-    public static String getFullActivityReportAsCsv(List<Clan> clanList) {
-        final StringBuilder stringBuilder = new StringBuilder();
+    public static HashMap<String, String> getFullActivityReportAsCsv(List<Clan> clanList) {
+        final StringBuilder pcReportBuilder = new StringBuilder();
+        final StringBuilder xbReportBuilder = new StringBuilder();
+        final StringBuilder psnReportBuilder = new StringBuilder();
 
-        stringBuilder.append("\"Gamertag\",").append("\"BungieDisplayName\",").append("\"Clan\",").append("\"Points\"")
+        HashMap<String, StringBuilder> platformToReportBuilderMap = new HashMap<>();
+        platformToReportBuilderMap.put("PC", pcReportBuilder);
+        platformToReportBuilderMap.put("Xbox", xbReportBuilder);
+        platformToReportBuilderMap.put("PSN", psnReportBuilder);
+
+        HashMap<String, String> clanIdToPlatformMap = new HashMap<>();
+
+        clanIdMap.forEach((platform, clanIdList) -> {
+            clanIdList.forEach((clanId) -> {
+                clanIdToPlatformMap.put(clanId, platform);
+            });
+        });
+
+        psnReportBuilder.append("\"Gamertag\",").append("\"BungieDisplayName\",").append("\"Clan\",")
+                .append("\"Points\"")
                 .append("\n");
 
         clanList.forEach((clan) -> {
             clan.getMembers().forEach((memberId, member) -> {
                 if (member.hasNewBungieName()) {
-                    stringBuilder.append("\"").append(member.getDisplayName()).append("\",")
+                    platformToReportBuilderMap.get(clanIdToPlatformMap.get(clan.getClanId())).append("\"")
+                            .append(member.getDisplayName()).append("\",")
                             .append("\"").append(member.getCombinedBungieGlobalDisplayName()).append("\",")
                             .append("\"").append(clan.getCallsign()).append("\",")
                             .append("\"").append(member.getWeeklySGCActivity().get("SCORE")).append("\"\n");
                 }
             });
         });
-
-        return stringBuilder.toString();
+        HashMap<String, String> output = new HashMap<>();
+        platformToReportBuilderMap.forEach((platform, reportBuilder) -> {
+            output.put(platform, reportBuilder.toString());
+        });
+        return output;
     }
 
     private static ReentrantLock sendClanSGCActivityMessageLock = new ReentrantLock();
@@ -964,7 +976,7 @@ public class RaidReportTool {
             new MessageBuilder().addEmbed(new EmbedBuilder()
                     .setAuthor(discordUser)
                     .setTitle(String.format(
-                            "%s Weekly Activity Report ",
+                            "%s Activity Report",
                             clan.getCallsign()))
                     .setDescription(String.format(
                             "%s to %s",
@@ -974,7 +986,7 @@ public class RaidReportTool {
                     .setThumbnail(RaidReportTool.class.getClassLoader()
                             .getResourceAsStream(
                                     "thumbnail.jpg"))
-                    .setColor(Color.PINK))
+                    .setColor(Color.ORANGE))
                     .addAttachment(clanActivityReportAsCsv.getBytes(),
                             String.format("%s_Weekly_Activity_Report_%s_to_%s.csv",
                                     clan.getCallsign(),
