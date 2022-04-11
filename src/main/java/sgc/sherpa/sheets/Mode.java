@@ -103,6 +103,15 @@ public enum Mode {
         this.weeklyActivityWeight = weeklyActivityWeight;
     }
 
+    public static Mode getFromValue(int value) {
+        for (Mode mode : Mode.values()) {
+            if (mode.getValue() == value) {
+                return mode;
+            }
+        }
+        return null;
+    }
+
     public String getName() {
         return name;
     }

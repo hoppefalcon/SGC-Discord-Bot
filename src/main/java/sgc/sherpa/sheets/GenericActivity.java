@@ -1,17 +1,22 @@
 package sgc.sherpa.sheets;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class GenericActivity {
     private final String UID;
-    private List<String> extraSGCClans = new ArrayList<>();
+    private final Platform memberClanPlatform;
+    private ArrayList<Clan> extraSGCClans = new ArrayList<>();
     private boolean playedWithClanMember = false;
     private boolean allSGCActivity = false;
     private double team = 0.0;
+    private final Mode MODE;
 
-    public GenericActivity(String uID) {
-        UID = uID;
+    public GenericActivity(String uid, Mode mode, Platform memberClanPlatform) {
+        UID = uid;
+        MODE = mode;
+        this.memberClanPlatform = memberClanPlatform;
     }
 
     public String getUID() {
@@ -34,9 +39,9 @@ public class GenericActivity {
         this.allSGCActivity = allSGCActivity;
     }
 
-    public void addExtraSGCClan(String clanId) {
-        if (!extraSGCClans.contains(clanId)) {
-            extraSGCClans.add(clanId);
+    public void addExtraSGCClan(Clan clan) {
+        if (!extraSGCClans.contains(clan)) {
+            extraSGCClans.add(clan);
         }
     }
 
@@ -49,6 +54,14 @@ public class GenericActivity {
             total += 1;
         }
         total += extraSGCClans.size();
+        List<Platform> platforms = Arrays.asList(memberClanPlatform);
+        for (Clan clan : extraSGCClans) {
+            if (!platforms.contains(clan.getClanPlatform())) {
+                platforms.add(clan.getClanPlatform());
+                total += 1;
+            }
+        }
+        total = (int) Math.ceil(total + MODE.getWeeklyActivityWeight());
         return total;
     }
 
@@ -62,6 +75,10 @@ public class GenericActivity {
 
     public void setTeam(double team) {
         this.team = team;
+    }
+
+    public Mode getMODE() {
+        return MODE;
     }
 
 }

@@ -12,10 +12,11 @@ import java.util.HashMap;
  */
 public class Character {
 
-    final String UID;
+    private final String UID;
     private final HashMap<Raid, RaidActivity> raidActivities = new HashMap<>();
     private final HashMap<Raid, RaidActivity> weeklyRaidActivities = new HashMap<>();
-    private final HashMap<String, GenericActivity> activitiesWithSGCMembers = new HashMap<>();
+    private int activitiesWithSGCMembersScore = 0;
+    private int activitiesWithSGCMembersCount = 0;
 
     public Character(String UID) {
         this.UID = UID;
@@ -46,14 +47,18 @@ public class Character {
     }
 
     public void addClearedActivitiesWithSGCMembers(GenericActivity activity) {
-        activitiesWithSGCMembers.put(activity.getUID(), activity);
+        if (activity != null && activity.getEarnedPoints() > 0) {
+            activitiesWithSGCMembersScore += activity.getEarnedPoints();
+            activitiesWithSGCMembersCount += 1;
+        }
     }
 
-    public HashMap<String, GenericActivity> getClearedActivitiesWithSGCMembers() {
-        return activitiesWithSGCMembers;
+    public int getActivitiesWithSGCMembersScore() {
+        return activitiesWithSGCMembersScore;
     }
 
-    public void clearActivitiesWithSGCMembers() {
-        activitiesWithSGCMembers.clear();
+    public int getActivitiesWithSGCMembersCount() {
+        return activitiesWithSGCMembersCount;
     }
+
 }

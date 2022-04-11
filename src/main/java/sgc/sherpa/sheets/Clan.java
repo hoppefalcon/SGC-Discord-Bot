@@ -16,9 +16,11 @@ public class Clan {
     private HashMap<String, Member> members = new HashMap<>();
     private String name;
     private String callsign;
+    private final Platform clanPlatform;
 
-    public Clan(String clanId) {
+    public Clan(String clanId, Platform clanPlatform) {
         this.clanId = clanId;
+        this.clanPlatform = clanPlatform;
     }
 
     public void addMember(Member member) {
@@ -49,6 +51,10 @@ public class Clan {
 
     public void setCallsign(String callsign) {
         this.callsign = callsign;
+    }
+
+    public Platform getClanPlatform() {
+        return clanPlatform;
     }
 
 }
