@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 
 import sgc.raid.report.bot.BotApplication;
 import sgc.raid.report.bot.commands.Command;
+import sgc.sherpa.sheets.Platform;
 import sgc.sherpa.sheets.RaidReportTool;
 
 public class SGCActivityReportCommand implements Command {
@@ -40,7 +41,7 @@ public class SGCActivityReportCommand implements Command {
                                 LocalDate startDate = LocalDate.parse(startDateStr, DateTimeFormatter.BASIC_ISO_DATE);
                                 LocalDate endDate = LocalDate.parse(endDateStr, DateTimeFormatter.BASIC_ISO_DATE);
                                 Instant start = Instant.now();
-                                HashMap<String, String> sgcWeeklyActivityReport = RaidReportTool
+                                HashMap<Platform, String> sgcWeeklyActivityReport = RaidReportTool
                                                 .getSGCWeeklyActivityReport(startDate,
                                                                 endDate, interactionOriginalResponseUpdater,
                                                                 slashCommandInteraction.getChannel().get(),

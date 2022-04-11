@@ -1,10 +1,14 @@
 package sgc.sherpa.sheets;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+
+import org.slf4j.Logger;
+
+import sgc.raid.report.bot.BotApplication;
 
 public class GenericActivity {
+    private static final Logger LOGGER = BotApplication.getLogger();
+
     private final String UID;
     private final Platform memberClanPlatform;
     private ArrayList<Clan> extraSGCClans = new ArrayList<>();
@@ -54,11 +58,18 @@ public class GenericActivity {
             total += 1;
         }
         total += extraSGCClans.size();
-        List<Platform> platforms = Arrays.asList(memberClanPlatform);
+        ArrayList<Platform> platforms = new ArrayList<>();
+        platforms.add(memberClanPlatform);
         for (Clan clan : extraSGCClans) {
             if (!platforms.contains(clan.getClanPlatform())) {
-                platforms.add(clan.getClanPlatform());
-                total += 1;
+                try {
+                    platforms.add(clan.getClanPlatform());
+                    total += 1;
+                } catch (Exception ex) {
+                    LOGGER.error(
+                            String.format("There was an error getting the Clan Platform for %s", clan.getCallsign()),
+                            ex);
+                }
             }
         }
         total = (int) Math.ceil(total + MODE.getWeeklyActivityWeight());
