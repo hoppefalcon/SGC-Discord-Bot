@@ -990,20 +990,25 @@ public class RaidReportTool {
         try {
             sendClanSGCActivityMessageLock.lock();
             String clanActivityReportAsCsv = getClanActivityReportAsCsv(clan);
-            new MessageBuilder().addEmbed(new EmbedBuilder()
-                    .setAuthor(discordUser)
-                    .setTitle(String.format(
-                            "%s Activity Report",
-                            clan.getCallsign()))
-                    .setDescription(String.format(
-                            "%s to %s",
-                            startDate.toString(),
-                            endDate.toString()))
-                    .setFooter("#AreYouShrouded")
-                    .setThumbnail(RaidReportTool.class.getClassLoader()
-                            .getResourceAsStream(
-                                    "thumbnail.jpg"))
-                    .setColor(Color.ORANGE))
+            new MessageBuilder()
+                    .setContent(
+                            String.format("%s Activity Report",
+                                    clan.getCallsign()))
+                    .addEmbed(
+                            new EmbedBuilder()
+                                    .setAuthor(discordUser)
+                                    .setTitle(String.format(
+                                            "%s Activity Report",
+                                            clan.getCallsign()))
+                                    .setDescription(String.format(
+                                            "%s to %s",
+                                            startDate.toString(),
+                                            endDate.toString()))
+                                    .setFooter("#AreYouShrouded")
+                                    .setThumbnail(RaidReportTool.class.getClassLoader()
+                                            .getResourceAsStream(
+                                                    "thumbnail.jpg"))
+                                    .setColor(Color.ORANGE))
                     .addAttachment(clanActivityReportAsCsv.getBytes(),
                             String.format("%s_Weekly_Activity_Report_%s_to_%s.csv",
                                     clan.getCallsign(),

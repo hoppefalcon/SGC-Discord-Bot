@@ -27,7 +27,7 @@ public class RaidCarnageReportCommand implements Command {
                         try {
                                 RaidCarnageReport raidCarnageReport = RaidReportTool
                                                 .getRaidCarnageReport(carnageReportID);
-                                new MessageBuilder()
+                                new MessageBuilder().setContent("Raid Postgame Carnage Report")
                                                 .addEmbed(new EmbedBuilder()
                                                                 .setAuthor(slashCommandInteraction.getUser())
                                                                 .setTitle("Raid Postgame Carnage Report")

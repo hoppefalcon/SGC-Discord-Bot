@@ -55,15 +55,21 @@ public class SGCActivityReportCommand implements Command {
                                 long seconds = timeElapsedInSeconds % 60;
 
                                 if (sgcWeeklyActivityReport.isEmpty()) {
-                                        new MessageBuilder().setContent("").addEmbed(new EmbedBuilder()
-                                                        .setTitle(String.format(
-                                                                        "SGC Activity Reports from %s to %s",
-                                                                        startDate.toString(), endDate.toString()))
-                                                        .setDescription("An Error occured. Please contact Hoppefalcon")
-                                                        .setFooter("ERROR")
-                                                        .setThumbnail(getClass().getClassLoader()
-                                                                        .getResourceAsStream("thumbnail.jpg"))
-                                                        .setColor(Color.RED))
+                                        new MessageBuilder().setContent(String.format(
+                                                        "SGC Activity Reports from %s to %s",
+                                                        startDate.toString(),
+                                                        endDate.toString()))
+                                                        .addEmbed(new EmbedBuilder()
+                                                                        .setTitle(String.format(
+                                                                                        "SGC Activity Reports from %s to %s",
+                                                                                        startDate.toString(),
+                                                                                        endDate.toString()))
+                                                                        .setDescription("An Error occured. Please contact Hoppefalcon")
+                                                                        .setFooter("ERROR")
+                                                                        .setThumbnail(getClass().getClassLoader()
+                                                                                        .getResourceAsStream(
+                                                                                                        "thumbnail.jpg"))
+                                                                        .setColor(Color.RED))
                                                         .send(slashCommandInteraction.getChannel().get());
                                 } else {
                                         LOGGER.info("Sending SGC Activity Reports to " + slashCommandInteraction
@@ -71,6 +77,11 @@ public class SGCActivityReportCommand implements Command {
 
                                         sgcWeeklyActivityReport.forEach((platform, report) -> {
                                                 new MessageBuilder()
+                                                                .setContent(String.format(
+                                                                                "%s Activity Report from %s to %s",
+                                                                                platform,
+                                                                                startDate.toString(),
+                                                                                endDate.toString()))
                                                                 .addEmbed(new EmbedBuilder()
                                                                                 .setAuthor(slashCommandInteraction
                                                                                                 .getUser())
@@ -100,14 +111,21 @@ public class SGCActivityReportCommand implements Command {
                                 }
                         } catch (Exception e) {
                                 LOGGER.error(e.getMessage(), e);
-                                new MessageBuilder().setContent("").addEmbed(new EmbedBuilder()
-                                                .setTitle(String.format("SGC Activity Report from %s to %s",
-                                                                startDateStr, endDateStr))
-                                                .setDescription("An Error occured. Please contact Hoppefalcon")
-                                                .setFooter("ERROR")
-                                                .setThumbnail(getClass().getClassLoader()
-                                                                .getResourceAsStream("thumbnail.jpg"))
-                                                .setColor(Color.RED)).send(slashCommandInteraction.getChannel().get());
+                                new MessageBuilder().setContent(
+                                                String.format("SGC Activity Report from %s to %s",
+                                                                startDateStr,
+                                                                endDateStr))
+                                                .addEmbed(new EmbedBuilder()
+                                                                .setTitle(String.format(
+                                                                                "SGC Activity Report from %s to %s",
+                                                                                startDateStr,
+                                                                                endDateStr))
+                                                                .setDescription("An Error occured. Please contact Hoppefalcon")
+                                                                .setFooter("ERROR")
+                                                                .setThumbnail(getClass().getClassLoader()
+                                                                                .getResourceAsStream("thumbnail.jpg"))
+                                                                .setColor(Color.RED))
+                                                .send(slashCommandInteraction.getChannel().get());
                         }
                 });
         }

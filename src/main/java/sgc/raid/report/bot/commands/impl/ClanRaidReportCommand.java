@@ -36,7 +36,7 @@ public class ClanRaidReportCommand implements Command {
 
                                 RaidReportTool.getClanRaidReport(clan, interactionOriginalResponseUpdater);
 
-                                new MessageBuilder()
+                                new MessageBuilder().setContent(clan.getName() + " Raid Report")
                                                 .addEmbed(new EmbedBuilder()
                                                                 .setAuthor(slashCommandInteraction.getUser())
                                                                 .setTitle(clan.getName() + " Raid Report")
