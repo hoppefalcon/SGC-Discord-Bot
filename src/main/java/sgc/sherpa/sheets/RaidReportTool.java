@@ -399,7 +399,7 @@ public class RaidReportTool {
             Raid.getRaidsOrdered().forEach((Raid raid) -> {
                 stringBuilder.append("\"").append(raidClears.get(raid)).append("\",");
             });
-            stringBuilder.append(member.getTotalWeeklyRaidClears()).append("\"\n");
+            stringBuilder.append("\"").append(member.getTotalWeeklyRaidClears()).append("\"\n");
 
         });
         return stringBuilder.toString();
