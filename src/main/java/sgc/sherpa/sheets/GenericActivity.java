@@ -12,7 +12,6 @@ public class GenericActivity {
     private final String UID;
     private final Platform memberClanPlatform;
     private ArrayList<Clan> extraSGCClans = new ArrayList<>();
-    private boolean playedWithClanMember = false;
     private boolean allSGCActivity = false;
     private double team = 0.0;
     private final Mode MODE;
@@ -25,14 +24,6 @@ public class GenericActivity {
 
     public String getUID() {
         return UID;
-    }
-
-    public boolean isPlayedWithClanMember() {
-        return playedWithClanMember;
-    }
-
-    public void setPlayedWithClanMember(boolean playedWithClanMember) {
-        this.playedWithClanMember = playedWithClanMember;
     }
 
     public boolean isAllSGCActivity() {
@@ -51,9 +42,6 @@ public class GenericActivity {
 
     public int getEarnedPoints() {
         int total = 0;
-        if (playedWithClanMember) {
-            total += 1;
-        }
         if (allSGCActivity) {
             total += 1;
         }
@@ -72,7 +60,7 @@ public class GenericActivity {
                 }
             }
         }
-        total = (int) Math.ceil(total + MODE.getWeeklyActivityWeight());
+        total = (int) Math.ceil(total * MODE.getWeeklyActivityWeight());
         return total;
     }
 

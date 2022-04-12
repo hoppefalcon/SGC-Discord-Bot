@@ -14,7 +14,8 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -566,8 +567,8 @@ public class RaidReportTool {
                                             .getAsString().equalsIgnoreCase("Yes");
                                     if (completed) {
                                         String dateCompletedStr = entry.getAsJsonPrimitive("period").getAsString();
-                                        LocalDate dateCompleted = LocalDate.parse(dateCompletedStr,
-                                                DateTimeFormatter.ISO_DATE_TIME);
+                                        LocalDate dateCompleted = ZonedDateTime.parse(dateCompletedStr)
+                                                .withZoneSameInstant(ZoneId.of("US/Eastern")).toLocalDate();
                                         if ((dateCompleted.isEqual(startDate) || dateCompleted.isAfter(startDate))
                                                 && (dateCompleted.isBefore(endDate)
                                                         || dateCompleted.isEqual(endDate))) {
@@ -619,7 +620,8 @@ public class RaidReportTool {
             JsonArray entries = response.get("entries").getAsJsonArray();
 
             String dateCompletedStr = response.get("period").getAsString();
-            LocalDate dateCompleted = LocalDate.parse(dateCompletedStr, DateTimeFormatter.ISO_DATE_TIME);
+            LocalDate dateCompleted = ZonedDateTime.parse(dateCompletedStr)
+                    .withZoneSameInstant(ZoneId.of("US/Eastern")).toLocalDate();
 
             final RaidCarnageReport tempRaidCarnageReport = new RaidCarnageReport(
                     Raid.getRaid(activityDetails.get("directorActivityHash").getAsString()), dateCompleted);
@@ -802,9 +804,10 @@ public class RaidReportTool {
                                 if (!Mode.invalidModesForPOTW().contains(mode)) {
                                     String activityDateStr = result.getAsJsonObject().getAsJsonPrimitive("period")
                                             .getAsString();
-                                    LocalDate dateCompleted = LocalDate.parse(activityDateStr,
-                                            DateTimeFormatter.ISO_DATE_TIME);
-                                    if (dateCompleted.isAfter(startDate) && dateCompleted.isBefore(endDate)) {
+                                    LocalDate dateCompleted = ZonedDateTime.parse(activityDateStr)
+                                            .withZoneSameInstant(ZoneId.of("US/Eastern")).toLocalDate();
+                                    if ((dateCompleted.isAfter(startDate) && dateCompleted.isBefore(endDate))
+                                            || dateCompleted.isEqual(startDate) || dateCompleted.isEqual(endDate)) {
                                         boolean completed = result.getAsJsonObject().getAsJsonObject("values")
                                                 .getAsJsonObject("completed")
                                                 .getAsJsonObject("basic").getAsJsonPrimitive("value")
