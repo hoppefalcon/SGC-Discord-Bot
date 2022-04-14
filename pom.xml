@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>sgc.raid.bot</groupId>
 	<artifactId>bot</artifactId>
-	<version>2.0</version>
+	<version>2.1</version>
 	<name>bot</name>
 	<description>Discord Bot for Shrouded Gaming Community</description>
 	<properties>

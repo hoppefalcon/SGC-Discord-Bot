@@ -902,25 +902,37 @@ public class RaidReportTool {
             JsonArray entries = response.get("entries").getAsJsonArray();
             AtomicBoolean allSGCActivity = new AtomicBoolean(true);
             entries.forEach((entry) -> {
-                String playerId = entry.getAsJsonObject().getAsJsonObject("player").getAsJsonObject("destinyUserInfo")
-                        .getAsJsonPrimitive("membershipId").getAsString();
+
                 boolean completed = entry.getAsJsonObject().getAsJsonObject("values").getAsJsonObject("completed")
                         .getAsJsonObject("basic").getAsJsonPrimitive("value").getAsDouble() == 1.0;
-                double team = 0.0;
-                try {
-                    team = entry.getAsJsonObject().getAsJsonObject("values")
-                            .getAsJsonObject("team")
-                            .getAsJsonObject("basic").getAsJsonPrimitive("value")
-                            .getAsDouble();
-                } catch (NullPointerException ex) {
 
-                }
+                if (completed) {
 
-                if (activityWithSGCMembers.getTeam() == team) {
+                    String playerId = entry.getAsJsonObject().getAsJsonObject("player")
+                            .getAsJsonObject("destinyUserInfo")
+                            .getAsJsonPrimitive("membershipId").getAsString();
+
                     if (!member.getUID().equals(playerId)) {
-                        if (completed) {
+
+                        double team = 0.0;
+
+                        try {
+
+                            team = entry.getAsJsonObject().getAsJsonObject("values")
+                                    .getAsJsonObject("team")
+                                    .getAsJsonObject("basic").getAsJsonPrimitive("value")
+                                    .getAsDouble();
+
+                        } catch (NullPointerException ex) {
+                            LOGGER.error(ex.getMessage(), ex);
+                        }
+
+                        if (activityWithSGCMembers.getTeam() == team) {
                             if (sgcClanMembersMap.get(playerId) != null) {
-                                activityWithSGCMembers.addExtraSGCClan(sgcClanMembersMap.get(playerId).getClan());
+                                if (!sgcClanMembersMap.get(playerId).getClan().equals(member.getClan())) {
+                                    activityWithSGCMembers.addOtherSGCClan(sgcClanMembersMap.get(playerId).getClan());
+                                }
+                                activityWithSGCMembers.addOtherSGCMember();
                             } else {
                                 allSGCActivity.set(false);
                             }

@@ -49,7 +49,7 @@ public class Character {
     public void addClearedActivitiesWithSGCMembers(GenericActivity activity) {
         if (activity != null && activity.getEarnedPoints() > 0) {
             activitiesWithSGCMembersScore += activity.getEarnedPoints();
-            activitiesWithSGCMembersCount += 1;
+            activitiesWithSGCMembersCount++;
         }
     }
 

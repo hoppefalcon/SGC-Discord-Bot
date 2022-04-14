@@ -11,7 +11,8 @@ public class GenericActivity {
 
     private final String UID;
     private final Platform memberClanPlatform;
-    private ArrayList<Clan> extraSGCClans = new ArrayList<>();
+    private ArrayList<Clan> otherSGCClans = new ArrayList<>();
+    private int otherSGCMembers = 0;
     private boolean allSGCActivity = false;
     private double team = 0.0;
     private final Mode MODE;
@@ -34,21 +35,29 @@ public class GenericActivity {
         this.allSGCActivity = allSGCActivity;
     }
 
-    public void addExtraSGCClan(Clan clan) {
-        if (!extraSGCClans.contains(clan)) {
-            extraSGCClans.add(clan);
+    public void addOtherSGCClan(Clan clan) {
+        if (!otherSGCClans.contains(clan)) {
+            otherSGCClans.add(clan);
         }
+    }
+
+    public void addOtherSGCMember() {
+        otherSGCMembers++;
     }
 
     public int getEarnedPoints() {
         int total = 0;
-        if (allSGCActivity) {
-            total += 1;
-        }
-        total += extraSGCClans.size();
+
+        // One Point For Every SGC Member
+        total += otherSGCMembers;
+
+        // One Point For Each Unique Clan, Other Than Your Own
+        total += otherSGCClans.size();
+
+        // One Point For Each Unique Platform, Other Than Your Own
         ArrayList<Platform> platforms = new ArrayList<>();
         platforms.add(memberClanPlatform);
-        for (Clan clan : extraSGCClans) {
+        for (Clan clan : otherSGCClans) {
             if (!platforms.contains(clan.getClanPlatform())) {
                 try {
                     platforms.add(clan.getClanPlatform());
@@ -60,7 +69,15 @@ public class GenericActivity {
                 }
             }
         }
+
+        // One Point For A Ful SGC Fireteam
+        if (allSGCActivity) {
+            total += 1;
+        }
+
+        // Multiplied By The Activity Weight
         total = (int) Math.ceil(total * MODE.getWeeklyActivityWeight());
+
         return total;
     }
 
