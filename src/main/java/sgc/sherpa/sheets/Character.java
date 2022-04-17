@@ -13,13 +13,15 @@ import java.util.HashMap;
 public class Character {
 
     private final String UID;
+    private final DestinyClassType classType;
     private final HashMap<Raid, RaidActivity> raidActivities = new HashMap<>();
     private final HashMap<Raid, RaidActivity> weeklyRaidActivities = new HashMap<>();
     private int activitiesWithSGCMembersScore = 0;
     private int activitiesWithSGCMembersCount = 0;
 
-    public Character(String UID) {
+    public Character(String UID, DestinyClassType classType) {
         this.UID = UID;
+        this.classType = classType;
         Raid.getRaidsOrdered().forEach((Raid raid) -> {
             raidActivities.put(raid, new RaidActivity(raid));
         });
@@ -59,6 +61,10 @@ public class Character {
 
     public int getActivitiesWithSGCMembersCount() {
         return activitiesWithSGCMembersCount;
+    }
+
+    public DestinyClassType getClassType() {
+        return classType;
     }
 
 }

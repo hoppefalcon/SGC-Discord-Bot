@@ -145,4 +145,13 @@ public class Member {
         output.put("COUNT", count.get());
         return output;
     }
+
+    public Character getCharacterByDestinyClassType(DestinyClassType classType) {
+        for (Character character : characters.values()) {
+            if (character.getClassType().equals(classType)) {
+                return character;
+            }
+        }
+        return null;
+    }
 }

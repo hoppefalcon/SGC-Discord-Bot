@@ -313,15 +313,16 @@ public class RaidReportTool {
             while ((inputLine = in.readLine()) != null) {
                 content.append(inputLine);
             }
-            // JsonObject json =
-            // JsonParser.parseString(content.toString()).getAsJsonObject();
+
             JsonArray results = (JsonArray) JsonParser.parseString(content.toString()).getAsJsonObject()
                     .getAsJsonObject("Response").get("characters");
             results.forEach((entry) -> {
                 try {
                     if (entry.getAsJsonObject().get("deleted").getAsBoolean() == false) {
                         String characterId = entry.getAsJsonObject().get("characterId").getAsString();
-                        member.getCharacters().put(characterId, new Character(characterId));
+                        DestinyClassType classType = DestinyClassType.getByValue(
+                                entry.getAsJsonObject().get("classType").getAsInt());
+                        member.getCharacters().put(characterId, new Character(characterId, classType));
                     }
                 } catch (Exception ex) {
                     LOGGER.error(ex.getMessage(), ex);
@@ -950,7 +951,7 @@ public class RaidReportTool {
         final StringBuilder stringBuilder = new StringBuilder();
 
         stringBuilder.append("\"Gamertag\",").append("\"BungieDisplayName\",").append("\"Clan\",").append("\"Points\"")
-                .append("\n");
+                .append("\"Titan Clears\"").append("\"Hunter Clears\"").append("\"Warlock Clears\"").append("\n");
 
         stringBuilder.append(getClanActivityCsvPart(clan));
 
@@ -962,11 +963,25 @@ public class RaidReportTool {
 
         clan.getMembers()
                 .forEach((memberId, member) -> {
+                    Character titanCharacter = member.getCharacterByDestinyClassType(DestinyClassType.TITAN);
+                    Character hunterCharacter = member.getCharacterByDestinyClassType(DestinyClassType.HUNTER);
+                    Character warlockCharacter = member.getCharacterByDestinyClassType(DestinyClassType.WARLOCK);
+
+                    int titanClears = titanCharacter != null ? titanCharacter.getActivitiesWithSGCMembersCount() : 0;
+
+                    int hunterClears = hunterCharacter != null ? hunterCharacter.getActivitiesWithSGCMembersCount() : 0;
+
+                    int warlockClears = warlockCharacter != null ? warlockCharacter.getActivitiesWithSGCMembersCount()
+                            : 0;
+
                     if (member.hasNewBungieName()) {
                         csvPart.append("\"").append(member.getDisplayName()).append("\",")
                                 .append("\"").append(member.getCombinedBungieGlobalDisplayName()).append("\",")
                                 .append("\"").append(clan.getCallsign()).append("\",")
-                                .append("\"").append(member.getWeeklySGCActivity().get("SCORE")).append("\"\n");
+                                .append("\"").append(member.getWeeklySGCActivity().get("SCORE")).append("\",")
+                                .append("\"").append(titanClears).append("\",")
+                                .append("\"").append(hunterClears).append("\",")
+                                .append("\"").append(warlockClears).append("\"\n");
                     }
                 });
 
