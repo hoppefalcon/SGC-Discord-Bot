@@ -17,7 +17,7 @@ public enum Raid {
     GARDEN_OF_SALVATION("Garden of Salvation", Arrays.asList("3845997235", "2659723068", "3458480158", "2497200493")),
     DEEP_STONE_CRYPT("Deep Stone Crypt", Arrays.asList("910380154", "3976949817")),
     VAULT_OF_GLASS("Vault of Glass", Arrays.asList("3881495763", "1485585878", "1681562271", "3711931140")),
-    VOW_OF_THE_DISCIPLE("Vow of the Disciple", Arrays.asList("1441982566"));
+    VOW_OF_THE_DISCIPLE("Vow of the Disciple", Arrays.asList("1441982566", "4156879541"));
 
     public final String name;
     private final List<String> validHashes;
