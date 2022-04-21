@@ -11,14 +11,15 @@ import org.javacord.api.interaction.SlashCommandOptionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Controller;
 
-import sgc.discord.bot.listeners.interfaces.SlashCommandListener;
 import sgc.bungie.api.processor.RaidReportTool;
+import sgc.discord.bot.listeners.interfaces.SlashCommandListener;
 
 @Controller
 @SpringBootApplication
@@ -35,6 +36,11 @@ public class BotApplication {
 	@Autowired
 	private SlashCommandListener slashCommandListener;
 
+	@Value("${server.address}")
+	private String serverAddress;
+	@Value("${server.port}")
+	private String serverPort;
+
 	private static final String BOT_TOKEN = System.getenv("DISCORD_TOKEN");
 
 	public static void main(String[] args) {
@@ -44,6 +50,9 @@ public class BotApplication {
 	@Bean
 	@ConfigurationProperties(value = "discord-api")
 	public DiscordApi discordApi() {
+		LOGGER.info(String.format("SGC Discord Bot Started (IP: %s | Port: %s)",
+				serverAddress, serverPort));
+
 		RaidReportTool.initializeClanIdMap();
 		DiscordApi api = new DiscordApiBuilder().setToken(BOT_TOKEN).login().join();
 
