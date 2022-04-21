@@ -34,6 +34,7 @@ import java.util.stream.IntStream;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.MessageBuilder;
@@ -320,6 +321,8 @@ public class RaidReportTool {
                 try {
                     if (entry.getAsJsonObject().get("deleted").getAsBoolean() == false) {
                         String characterId = entry.getAsJsonObject().get("characterId").getAsString();
+                        JsonPrimitive asJsonPrimitive = entry.getAsJsonObject().getAsJsonPrimitive("classType");
+                        LOGGER.info(asJsonPrimitive.getAsString());
                         DestinyClassType classType = DestinyClassType.getByValue(
                                 entry.getAsJsonObject().getAsJsonPrimitive("classType").getAsInt());
                         member.getCharacters().put(characterId, new Character(characterId, classType));
