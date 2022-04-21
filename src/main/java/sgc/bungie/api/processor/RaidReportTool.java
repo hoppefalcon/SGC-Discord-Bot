@@ -51,7 +51,7 @@ import sgc.discord.bot.BotApplication;;
 public class RaidReportTool {
 
     private static final Logger LOGGER = BotApplication.getLogger();
-    private static String apiKey = System.getenv("BUNGIE-TOKEN");
+    private static String apiKey = System.getenv("BUNGIE_TOKEN");
 
     private static final HashMap<String, String> pcClanIdMap = new HashMap<>();
     private static final HashMap<String, String> xbClanIdMap = new HashMap<>();

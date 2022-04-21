@@ -1,4 +1,3 @@
 FROM openjdk:slim
-VOLUME /tmp
-COPY ${JAR_FILE} SGC-Discord-Bot.jar
+ADD /target/sgc-discord-bot-*.jar SGC-Discord-Bot.jar
 ENTRYPOINT ["java","-jar","/SGC-Discord-Bot.jar"]

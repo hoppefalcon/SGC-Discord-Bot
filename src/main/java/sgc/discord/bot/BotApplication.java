@@ -35,7 +35,7 @@ public class BotApplication {
 	@Autowired
 	private SlashCommandListener slashCommandListener;
 
-	private static final String BOT_TOKEN = System.getenv("DISCORD-TOKEN");
+	private static final String BOT_TOKEN = System.getenv("DISCORD_TOKEN");
 
 	public static void main(String[] args) {
 		SpringApplication.run(BotApplication.class, args);
