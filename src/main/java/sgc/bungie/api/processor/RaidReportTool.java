@@ -321,8 +321,7 @@ public class RaidReportTool {
                 try {
                     if (entry.getAsJsonObject().get("deleted").getAsBoolean() == false) {
                         String characterId = entry.getAsJsonObject().get("characterId").getAsString();
-                        JsonPrimitive asJsonPrimitive = entry.getAsJsonObject().getAsJsonPrimitive("classType");
-                        LOGGER.info(asJsonPrimitive.getAsString());
+                        LOGGER.info(content.toString());
                         DestinyClassType classType = DestinyClassType.getByValue(
                                 entry.getAsJsonObject().getAsJsonPrimitive("classType").getAsInt());
                         member.getCharacters().put(characterId, new Character(characterId, classType));
