@@ -12,4 +12,4 @@ RUN mvn -f /home/app/pom.xml clean package
 FROM openjdk:18-slim
 COPY --from=build /home/app/target/sgc-discord-bot-*.jar /usr/local/lib/SGC-Discord-Bot.jar
 EXPOSE 8080
-ENTRYPOINT ["java","-jar","/usr/local/lib/SGC-Discord-Bot.jar"]
+ENTRYPOINT ["java","-jar","/usr/local/lib/SGC-Discord-Bot.jar","</dev/null 2>&1 &"] 
