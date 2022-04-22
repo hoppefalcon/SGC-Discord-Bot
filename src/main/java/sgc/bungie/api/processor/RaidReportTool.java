@@ -32,9 +32,9 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonPrimitive;
 
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.MessageBuilder;
@@ -295,7 +295,7 @@ public class RaidReportTool {
     }
 
     public static void getMemberCharacters(Member member) throws IOException {
-        URL url = new URL(String.format("https://www.bungie.net/Platform/Destiny2/%s/Account/%s/Stats",
+        URL url = new URL(String.format("https://www.bungie.net/Platform/Destiny2/%s/Profile/%s/?components=Characters",
                 member.getMemberType(), member.getUID()));
 
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -306,7 +306,6 @@ public class RaidReportTool {
 
         // Getting the response code
         int responsecode = conn.getResponseCode();
-
         if (responsecode == 200) {
             BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
             String inputLine;
@@ -314,18 +313,15 @@ public class RaidReportTool {
             while ((inputLine = in.readLine()) != null) {
                 content.append(inputLine);
             }
-
-            JsonArray results = (JsonArray) JsonParser.parseString(content.toString()).getAsJsonObject()
-                    .getAsJsonObject("Response").get("characters");
-            results.forEach((entry) -> {
+            JsonObject results = JsonParser.parseString(content.toString()).getAsJsonObject()
+                    .getAsJsonObject("Response").getAsJsonObject("characters").getAsJsonObject("data");
+            results.keySet().forEach((key) -> {
                 try {
-                    if (entry.getAsJsonObject().get("deleted").getAsBoolean() == false) {
-                        String characterId = entry.getAsJsonObject().get("characterId").getAsString();
-                        LOGGER.info(content.toString());
-                        DestinyClassType classType = DestinyClassType.getByValue(
-                                entry.getAsJsonObject().getAsJsonPrimitive("classType").getAsInt());
-                        member.getCharacters().put(characterId, new Character(characterId, classType));
-                    }
+                    JsonElement entry = results.get(key);
+                    String characterId = entry.getAsJsonObject().get("characterId").getAsString();
+                    DestinyClassType classType = DestinyClassType.getByValue(
+                            entry.getAsJsonObject().getAsJsonPrimitive("classType").getAsInt());
+                    member.getCharacters().put(characterId, new Character(characterId, classType));
                 } catch (Exception ex) {
                     LOGGER.error(ex.getMessage(), ex);
                 }

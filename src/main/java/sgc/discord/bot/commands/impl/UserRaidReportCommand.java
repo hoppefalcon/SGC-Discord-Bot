@@ -20,7 +20,6 @@ public class UserRaidReportCommand implements Command {
         LOGGER.info("Running UserRaidReportCommand with BungieID " + bungieID);
 
         slashCommandInteraction.respondLater().thenAccept(interactionOriginalResponseUpdater -> {
-
             interactionOriginalResponseUpdater.setContent("Building a raid report for " + bungieID).update();
 
             try {
