@@ -117,7 +117,7 @@ public class RaidReportTool {
                             break;
                     }
                 } catch (IOException e) {
-                    LOGGER.error(e.getMessage(), e);
+                    LOGGER.error("Error Initializing Clan Map", e);
                 }
             });
         });
@@ -172,7 +172,7 @@ public class RaidReportTool {
                 getMemberRaidInfo(member);
                 getUserWeeklyClears(member, LocalDate.now().minusDays(6), LocalDate.now());
             } catch (Exception e) {
-                LOGGER.error(e.getMessage(), e);
+                LOGGER.error("Error processing Clan Raid Report for " + clan.getName(), e);
             }
             LOGGER.trace("Finished Processing " + member.getDisplayName());
         });
@@ -197,7 +197,7 @@ public class RaidReportTool {
                     return member;
                 });
             } catch (Exception ex) {
-                LOGGER.error(ex.getMessage(), ex);
+                LOGGER.error("Error processing Clan Raid Report for " + clan.getName(), ex);
             }
         });
         executorService.invokeAll(tasks);
@@ -212,7 +212,7 @@ public class RaidReportTool {
             getMemberRaidInfo(member);
             getUserWeeklyClears(member, LocalDate.now().minusDays(6), LocalDate.now());
         } catch (Exception e) {
-            LOGGER.error(e.getMessage(), e);
+            LOGGER.error("Error processing Clan Member Raid Report for " + member.getDisplayName(), e);
         }
         LOGGER.trace("Finished Processing " + member.getDisplayName());
     }
@@ -286,7 +286,8 @@ public class RaidReportTool {
                     clan.getMembers().put(membershipId, new Member(membershipId, displayName, membershipType,
                             bungieGlobalDisplayName, bungieGlobalDisplayNameCode, clan));
                 } catch (Exception ex) {
-                    LOGGER.error(ex.getMessage(), ex);
+                    LOGGER.error("Error processing JSON result from "
+                            + url.toExternalForm(), ex);
                 }
             });
             in.close();
@@ -323,7 +324,8 @@ public class RaidReportTool {
                             entry.getAsJsonObject().getAsJsonPrimitive("classType").getAsInt());
                     member.getCharacters().put(characterId, new Character(characterId, classType));
                 } catch (Exception ex) {
-                    LOGGER.error(ex.getMessage(), ex);
+                    LOGGER.error("Error processing JSON result from "
+                            + url.toExternalForm(), ex);
                 }
             });
             in.close();
@@ -378,7 +380,8 @@ public class RaidReportTool {
                 conn.disconnect();
 
             } catch (Exception ex) {
-                LOGGER.error(ex.getMessage(), ex);
+                LOGGER.error("Error processing JSON result for characterID: "
+                        + characterId, ex);
             }
         });
     }
@@ -479,7 +482,8 @@ public class RaidReportTool {
                                     bungieGlobalDisplayName, bungieGlobalDisplayNameCode, null));
 
                         } catch (Exception ex) {
-                            LOGGER.error(ex.getMessage(), ex);
+                            LOGGER.error("Error processing JSON result from "
+                                    + url.toExternalForm(), ex);
                         }
                     });
 
@@ -586,7 +590,7 @@ public class RaidReportTool {
                     conn.disconnect();
                 }
             } catch (Exception ex) {
-                LOGGER.error(ex.getMessage(), ex);
+                LOGGER.error("Error Processing Weekly Clears for " + member.getCombinedBungieGlobalDisplayName(), ex);
             }
         });
         return member;
@@ -697,7 +701,7 @@ public class RaidReportTool {
                             SCORED_PGCR_COUNT.addAndGet(member.getWeeklySGCActivity().get("COUNT"));
                             LOGGER.debug("Finished processing " + member.getDisplayName());
                         } catch (IOException ex) {
-                            LOGGER.error(ex.getMessage(), ex);
+                            LOGGER.error("Error processing " + member.getDisplayName(), ex);
                         }
                     }
                     return null;
@@ -737,7 +741,7 @@ public class RaidReportTool {
                         clanListLock.lock();
                         clanList.add(clan);
                     } catch (IOException e) {
-                        LOGGER.error(e.getMessage(), e);
+                        LOGGER.error("Error Processing Clan " + clanId, e);
                     } finally {
                         clanListLock.unlock();
                     }
@@ -815,10 +819,14 @@ public class RaidReportTool {
                                             String instanceId = result.getAsJsonObject()
                                                     .getAsJsonObject("activityDetails")
                                                     .getAsJsonPrimitive("instanceId").toString().replace("\"", "");
-                                            double team = result.getAsJsonObject().getAsJsonObject("values")
-                                                    .getAsJsonObject("team")
-                                                    .getAsJsonObject("basic").getAsJsonPrimitive("value")
-                                                    .getAsDouble();
+                                            double team = 0.0;
+                                            try {
+                                                team = result.getAsJsonObject().getAsJsonObject("values")
+                                                        .getAsJsonObject("team")
+                                                        .getAsJsonObject("basic").getAsJsonPrimitive("value")
+                                                        .getAsDouble();
+                                            } catch (NullPointerException ex) {
+                                            }
                                             GenericActivity genericActivity = new GenericActivity(instanceId,
                                                     Mode.getFromValue(mode), member.getClan().getClanPlatform());
                                             genericActivity.setTeam(team);
@@ -857,15 +865,21 @@ public class RaidReportTool {
                             character.addClearedActivitiesWithSGCMembers(activityWithSGCMembers);
                         }
                     } catch (Exception ex) {
-                        LOGGER.error(ex.getMessage(), ex);
+                        LOGGER.error(String.format(
+                                "Error Processing Activity %s for %s (%s)",
+                                activityWithSGCMembers.getUID(), member.getCombinedBungieGlobalDisplayName(),
+                                character.getUID()), ex);
                     }
                 });
 
                 LOGGER.debug(
-                        "Finished processing Cleared Activities for" + member.getCombinedBungieGlobalDisplayName());
+                        "Finished Processing Cleared Activities for " + member.getCombinedBungieGlobalDisplayName());
 
             } catch (Exception ex) {
-                LOGGER.error(ex.getMessage(), ex);
+                LOGGER.error(
+                        "Error Processing Cleared Activities for "
+                                + member.getCombinedBungieGlobalDisplayName(),
+                        ex);
             }
         });
         LOGGER.info(String.format("PGCR Count for %s is %d", member.getCombinedBungieGlobalDisplayName(),
@@ -923,7 +937,6 @@ public class RaidReportTool {
                                     .getAsDouble();
 
                         } catch (NullPointerException ex) {
-                            LOGGER.error(ex.getMessage(), ex);
                         }
 
                         if (activityWithSGCMembers.getTeam() == team) {
