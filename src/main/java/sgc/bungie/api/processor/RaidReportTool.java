@@ -961,8 +961,9 @@ public class RaidReportTool {
     public static String getClanActivityReportAsCsv(Clan clan) {
         final StringBuilder stringBuilder = new StringBuilder();
 
-        stringBuilder.append("\"Gamertag\",").append("\"BungieDisplayName\",").append("\"Clan\",").append("\"Points\",")
-                .append("\"Titan Clears\",").append("\"Hunter Clears\",").append("\"Warlock Clears\"").append("\n");
+        stringBuilder.append("\"Gamertag\",").append("\"BungieDisplayName\",").append("\"Clan\",")
+                .append("\"Community POTW Points\",").append("\"Titan Clears\",").append("\"Hunter Clears\",")
+                .append("\"Warlock Clears\"").append("\n");
 
         stringBuilder.append(getClanActivityCsvPart(clan));
 
@@ -1007,7 +1008,7 @@ public class RaidReportTool {
 
         platformToReportBuilderMap.values().forEach((strBuilder) -> {
             strBuilder.append("\"Gamertag\",").append("\"BungieDisplayName\",").append("\"Clan\",")
-                    .append("\"Points\",").append("\"Titan Clears\",").append("\"Hunter Clears\",")
+                    .append("\"Community POTW Points\",").append("\"Titan Clears\",").append("\"Hunter Clears\",")
                     .append("\"Warlock Clears\"").append("\n");
         });
 
