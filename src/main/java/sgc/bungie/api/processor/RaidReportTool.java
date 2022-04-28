@@ -961,8 +961,8 @@ public class RaidReportTool {
     public static String getClanActivityReportAsCsv(Clan clan) {
         final StringBuilder stringBuilder = new StringBuilder();
 
-        stringBuilder.append("\"Gamertag\",").append("\"BungieDisplayName\",").append("\"Clan\",").append("\"Points\"")
-                .append("\"Titan Clears\"").append("\"Hunter Clears\"").append("\"Warlock Clears\"").append("\n");
+        stringBuilder.append("\"Gamertag\",").append("\"BungieDisplayName\",").append("\"Clan\",").append("\"Points\",")
+                .append("\"Titan Clears\",").append("\"Hunter Clears\",").append("\"Warlock Clears\"").append("\n");
 
         stringBuilder.append(getClanActivityCsvPart(clan));
 
@@ -1006,8 +1006,9 @@ public class RaidReportTool {
         platformToReportBuilderMap.put(Platform.PSN, new StringBuilder());
 
         platformToReportBuilderMap.values().forEach((strBuilder) -> {
-            strBuilder.append("\"Gamertag\",").append("\"BungieDisplayName\",")
-                    .append("\"Clan\",").append("\"Points\"").append("\n");
+            strBuilder.append("\"Gamertag\",").append("\"BungieDisplayName\",").append("\"Clan\",")
+                    .append("\"Points\",").append("\"Titan Clears\",").append("\"Hunter Clears\",")
+                    .append("\"Warlock Clears\"").append("\n");
         });
 
         clanList.forEach((clan) -> {
