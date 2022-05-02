@@ -84,7 +84,7 @@ public class UserCommunityActivityReportCommand implements Command {
                                                                                         startDate.toString(),
                                                                                         endDate.toString()))
                                                                         .setDescription(String.format(
-                                                                                        "Community Activity Points: ",
+                                                                                        "Community Activity Points: %d",
                                                                                         member.getWeeklySGCActivity()
                                                                                                         .get("SCORE")))
                                                                         .setFooter("#AreYouShrouded")
