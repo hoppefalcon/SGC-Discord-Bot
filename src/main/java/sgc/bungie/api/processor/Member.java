@@ -28,6 +28,10 @@ public class Member {
         this.DisplayName = DisplayName;
         this.MemberType = MemberType;
         this.bungieGlobalDisplayName = bungieGlobalDisplayName;
+
+        while (bungieGlobalDisplayNameCode.length() < 4) {
+            bungieGlobalDisplayNameCode = "0" + bungieGlobalDisplayNameCode;
+        }
         this.bungieGlobalDisplayNameCode = bungieGlobalDisplayNameCode;
         this.clan = clan;
     }
