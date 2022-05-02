@@ -680,13 +680,10 @@ public class RaidReportTool {
                     .update().join();
         }
         List<Clan> clanList = initializeClanList();
-        HashMap<String, Member> sgcClanMembersMap = new HashMap<>();
+        HashMap<String, Member> sgcClanMembersMap = initializeClanMembersMap(clanList);
 
         for (int i = 0; i < clanList.size(); i++) {
             Clan clan = clanList.get(i);
-            clan.getMembers().forEach((id, member) -> {
-                sgcClanMembersMap.put(id, member);
-            });
 
             List<Callable<Object>> tasks = new ArrayList<>();
             LOGGER.info("Starting to process " + clan.getCallsign());
@@ -760,6 +757,19 @@ public class RaidReportTool {
         }
 
         return clanList;
+    }
+
+    public static HashMap<String, Member> initializeClanMembersMap(List<Clan> clanList) {
+        HashMap<String, Member> sgcClanMembersMap = new HashMap<>();
+
+        for (int i = 0; i < clanList.size(); i++) {
+            Clan clan = clanList.get(i);
+            clan.getMembers().forEach((id, member) -> {
+                sgcClanMembersMap.put(id, member);
+            });
+        }
+
+        return sgcClanMembersMap;
     }
 
     public static int getMembersClearedActivities(Member member, LocalDate startDate, LocalDate endDate,
@@ -1059,6 +1069,47 @@ public class RaidReportTool {
         } finally {
             sendClanSGCActivityMessageLock.unlock();
         }
+    }
+
+    public static Member getUserCommunityActivityReport(String userBungieId, LocalDate startDate,
+            LocalDate endDate, InteractionOriginalResponseUpdater interactionOriginalResponseUpdater,
+            TextChannel textChannel, User discordUser)
+            throws IOException, InterruptedException {
+        LOGGER.info("Starting SGC Activity Report");
+
+        if (interactionOriginalResponseUpdater != null) {
+            interactionOriginalResponseUpdater.setContent(String
+                    .format("Building a SGC activity report from %s to %s\nThis will take a while.",
+                            startDate,
+                            endDate))
+                    .update().join();
+        }
+        List<Clan> clanList = initializeClanList();
+        HashMap<String, Member> sgcClanMembersMap = initializeClanMembersMap(clanList);
+
+        Member member = getMemberFromMap(userBungieId, sgcClanMembersMap);
+
+        if (member != null) {
+            try {
+                LOGGER.debug("Starting to process " + member.getDisplayName());
+                getMembersClearedActivities(member, startDate, endDate,
+                        sgcClanMembersMap);
+                LOGGER.debug("Finished processing " + member.getDisplayName());
+            } catch (IOException ex) {
+                LOGGER.error("Error processing " + member.getDisplayName(), ex);
+            }
+        }
+
+        return member;
+    }
+
+    private static Member getMemberFromMap(String userBungieId, HashMap<String, Member> sgcClanMembersMap) {
+        for (Member member : sgcClanMembersMap.values()) {
+            if (member.getCombinedBungieGlobalDisplayName().equalsIgnoreCase(userBungieId)) {
+                return member;
+            }
+        }
+        return null;
     }
 
 }

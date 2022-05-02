@@ -5,7 +5,6 @@ import java.util.Arrays;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.interaction.SlashCommandBuilder;
-import org.javacord.api.interaction.SlashCommandInteraction;
 import org.javacord.api.interaction.SlashCommandOptionBuilder;
 import org.javacord.api.interaction.SlashCommandOptionType;
 import org.slf4j.Logger;
@@ -39,7 +38,7 @@ public class BotApplication {
 	@Autowired
 	private ServerProperties serverProperties;
 
-	private static final String BOT_TOKEN = System.getenv("DISCORD_TOKEN");
+	private static final String BOT_TOKEN = "OTA1ODY5NTI0MjQ5NzM5Mjg0.YYQWvA.NqAyNQgYABpjOefrfuT-Hrgow5A";// System.getenv("DISCORD_TOKEN");
 
 	public static void main(String[] args) {
 		SpringApplication.run(BotApplication.class, args);
@@ -95,43 +94,34 @@ public class BotApplication {
 						.setDescription("Pulls the Raid Report of the user. (Requires full Bungie ID)")
 						.addOption(bungieIdOption.build()),
 				new SlashCommandBuilder().setName("pc-clan-raid-report")
-						.setDescription("Pulls a full PC clan raid report.").addOption(pcClanOption.build()),
+						.setDescription("Pulls a full PC clan raid report.")
+						.addOption(pcClanOption.build()),
 				new SlashCommandBuilder().setName("xbox-clan-raid-report")
-						.setDescription("Pulls a full Xbox clan raid report.").addOption(xbClanOption.build()),
+						.setDescription("Pulls a full Xbox clan raid report.")
+						.addOption(xbClanOption.build()),
 				new SlashCommandBuilder().setName("psn-clan-raid-report")
-						.setDescription("Pulls a full Playstation clan raid report.").addOption(psClanOption.build()),
+						.setDescription("Pulls a full Playstation clan raid report.")
+						.addOption(psClanOption.build()),
 				new SlashCommandBuilder().setName("user-weekly-raid-report").setDescription(
 						"Pulls the Weekly Raid Report of the user. (Requires full Bungie ID, Start Date, and End Date)")
-						.addOption(bungieIdOption.build()).addOption(userWeeklyClearStartOption.build())
+						.addOption(bungieIdOption.build())
+						.addOption(userWeeklyClearStartOption.build())
 						.addOption(userWeeklyClearEndOption.build()),
 				new SlashCommandBuilder().setName("sgc-activity-report").setDescription(
 						"Pulls the a Community Activity Report for the SGC. (Requires Start Date, and End Date)")
 						.addOption(userWeeklyClearStartOption.build())
 						.addOption(userWeeklyClearEndOption.build()),
+				new SlashCommandBuilder().setName("user-activity-report").setDescription(
+						"Pulls the a Community Activity Report for the User. (Requires Start Date, and End Date)")
+						.addOption(bungieIdOption.build())
+						.addOption(userWeeklyClearStartOption.build())
+						.addOption(userWeeklyClearEndOption.build()),
 				new SlashCommandBuilder().setName("raid-carnage-report")
-						.setDescription("Pulls a Full Raid Carnage Report.").addOption(carnageIdOption.build())))
+						.setDescription("Pulls a Full Raid Carnage Report.")
+						.addOption(carnageIdOption.build())))
 				.join();
 
 		api.addSlashCommandCreateListener(slashCommandListener);
-
-		api.addSlashCommandCreateListener(event -> {
-			SlashCommandInteraction slashCommandInteraction = event.getSlashCommandInteraction();
-			if (slashCommandInteraction.getCommandName().equals("user-raid-report")) {
-				slashCommandInteraction.respondLater().thenAccept(interactionOriginalResponseUpdater -> {
-
-					interactionOriginalResponseUpdater
-							.setContent("Building a raid report for "
-									+ slashCommandInteraction.getOptionByName("BungieID").get().getStringValue())
-							.update();
-
-					// time < 15 minutes
-					interactionOriginalResponseUpdater
-							.setContent(
-									"Thank you for your patience, it took a while but the answer to the universe is 42")
-							.update();
-				});
-			}
-		});
 
 		return api;
 	}
