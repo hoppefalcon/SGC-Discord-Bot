@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import sgc.discord.bot.commands.impl.ClanRaidReportCommand;
 import sgc.discord.bot.commands.impl.RaidCarnageReportCommand;
 import sgc.discord.bot.commands.impl.SGCActivityReportCommand;
+import sgc.discord.bot.commands.impl.UserCommunityActivityReportCommand;
 import sgc.discord.bot.commands.impl.UserRaidReportCommand;
 import sgc.discord.bot.commands.impl.UserWeeklyRaidReportCommand;
 import sgc.discord.bot.listeners.interfaces.SlashCommandListener;
@@ -47,7 +48,7 @@ public class SlashCommandListenerImpl implements SlashCommandListener {
                 break;
 
             case "user-activity-report":
-                new UserRaidReportCommand().handle(slashCommandInteraction);
+                new UserCommunityActivityReportCommand().handle(slashCommandInteraction);
                 break;
 
             default:
