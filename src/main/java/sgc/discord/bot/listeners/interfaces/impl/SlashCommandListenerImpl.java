@@ -46,6 +46,10 @@ public class SlashCommandListenerImpl implements SlashCommandListener {
                 new SGCActivityReportCommand().handle(slashCommandInteraction);
                 break;
 
+            case "user-activity-report":
+                new UserRaidReportCommand().handle(slashCommandInteraction);
+                break;
+
             default:
                 break;
         }
