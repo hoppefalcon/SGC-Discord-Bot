@@ -41,10 +41,7 @@ public class UserCommunityActivityReportCommand implements Command {
                                 LocalDate endDate = LocalDate.parse(endDateStr, DateTimeFormatter.BASIC_ISO_DATE);
 
                                 Member member = RaidReportTool.getUserCommunityActivityReport(userBungieId, startDate,
-                                                endDate,
-                                                interactionOriginalResponseUpdater,
-                                                slashCommandInteraction.getChannel().get(),
-                                                slashCommandInteraction.getUser());
+                                                endDate);
 
                                 if (member == null) {
                                         new MessageBuilder().setContent(String.format(

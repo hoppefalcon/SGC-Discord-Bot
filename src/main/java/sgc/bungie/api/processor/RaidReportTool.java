@@ -1072,18 +1072,10 @@ public class RaidReportTool {
     }
 
     public static Member getUserCommunityActivityReport(String userBungieId, LocalDate startDate,
-            LocalDate endDate, InteractionOriginalResponseUpdater interactionOriginalResponseUpdater,
-            TextChannel textChannel, User discordUser)
+            LocalDate endDate)
             throws IOException, InterruptedException {
-        LOGGER.info("Starting SGC Activity Report");
+        LOGGER.info("Starting User SGC Activity Report");
 
-        if (interactionOriginalResponseUpdater != null) {
-            interactionOriginalResponseUpdater.setContent(String
-                    .format("Building a SGC activity report from %s to %s\nThis will take a while.",
-                            startDate,
-                            endDate))
-                    .update().join();
-        }
         List<Clan> clanList = initializeClanList();
         HashMap<String, Member> sgcClanMembersMap = initializeClanMembersMap(clanList);
 
