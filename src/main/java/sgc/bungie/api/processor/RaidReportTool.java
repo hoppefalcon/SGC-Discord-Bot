@@ -77,8 +77,8 @@ public class RaidReportTool {
      */
 
     // public static void main(String[] args) throws Exception {
-    // Member memberInformationWithCharacters =
-    // getMemberInformationWithCharacters("FrostyAqua#5435");
+    // String userRaidReport = getUserRaidReport("hoppefalcon#7599");
+    // System.out.println();
     // }
 
     public static void initializeClanIdMap() {
@@ -147,22 +147,6 @@ public class RaidReportTool {
         return null;
     }
 
-    public static Clan getClanRaidReport(Clan clan) throws Exception {
-        LOGGER.trace("Processing " + clan.getName());
-        clan.getMembers().forEach((memberId, member) -> {
-            LOGGER.info("Processing " + member.getDisplayName());
-            try {
-                getMemberCharacters(member);
-                getMemberRaidInfo(member);
-                getUserWeeklyClears(member, LocalDate.now().minusDays(6), LocalDate.now());
-            } catch (Exception e) {
-                LOGGER.error("Error processing Clan Raid Report for " + clan.getName(), e);
-            }
-            LOGGER.trace("Finished Processing " + member.getDisplayName());
-        });
-        return clan;
-    }
-
     public static Clan getClanRaidReport(Clan clan,
             InteractionOriginalResponseUpdater interactionOriginalResponseUpdater) throws Exception {
         LOGGER.trace("Processing " + clan.getName());
@@ -172,7 +156,7 @@ public class RaidReportTool {
         clan.getMembers().forEach((memberId, member) -> {
             try {
                 tasks.add(() -> {
-                    getClanMemberRaidReport(memberId, member);
+                    getClanMemberRaidReport(member);
 
                     interactionOriginalResponseUpdater
                             .setContent(String.format("Building a clan raid report for %s (%d/%d)", clan.getName(),
@@ -189,10 +173,10 @@ public class RaidReportTool {
         return clan;
     }
 
-    private static void getClanMemberRaidReport(String memberId, Member member) {
+    private static void getClanMemberRaidReport(Member member) {
         LOGGER.trace("Processing " + member.getDisplayName());
         try {
-            getMemberCharacters(member);
+            getAllMembersCharacters(member);
             getMemberRaidInfo(member);
             getUserWeeklyClears(member, LocalDate.now().minusDays(6), LocalDate.now());
         } catch (Exception e) {
@@ -278,7 +262,12 @@ public class RaidReportTool {
         conn.disconnect();
     }
 
-    public static void getMemberCharacters(Member member) throws IOException {
+    public static void getAllMembersCharacters(Member member) throws IOException {
+        getMembersActiveCharacters(member);
+        getMembersDeletedCharacters(member);
+    }
+
+    public static void getMembersActiveCharacters(Member member) throws IOException {
         URL url = new URL(String.format("https://www.bungie.net/Platform/Destiny2/%s/Profile/%s/?components=Characters",
                 member.getMemberType(), member.getUID()));
 
@@ -305,10 +294,51 @@ public class RaidReportTool {
                     String characterId = entry.getAsJsonObject().get("characterId").getAsString();
                     DestinyClassType classType = DestinyClassType.getByValue(
                             entry.getAsJsonObject().getAsJsonPrimitive("classType").getAsInt());
-                    member.getCharacters().put(characterId, new Character(characterId, classType));
+
+                    if (member.getCharacters().get(characterId) != null) {
+                        member.getCharacters().put(characterId, new Character(characterId, classType));
+                    }
                 } catch (Exception ex) {
                     LOGGER.error("Error processing JSON result from "
                             + url.toExternalForm(), ex);
+                }
+            });
+            in.close();
+        }
+        conn.disconnect();
+    }
+
+    public static void getMembersDeletedCharacters(Member member) throws IOException {
+        URL url = new URL(String.format("https://www.bungie.net/Platform/Destiny2/%s/Account/%s/Stats",
+                member.getMemberType(), member.getUID()));
+
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.addRequestProperty("X-API-Key", apiKey);
+        conn.addRequestProperty("Accept", "Application/Json");
+        conn.connect();
+
+        // Getting the response code
+        int responsecode = conn.getResponseCode();
+
+        if (responsecode == 200) {
+            BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            String inputLine;
+            StringBuffer content = new StringBuffer();
+            while ((inputLine = in.readLine()) != null) {
+                content.append(inputLine);
+            }
+
+            JsonArray results = (JsonArray) JsonParser.parseString(content.toString()).getAsJsonObject()
+                    .getAsJsonObject("Response").get("characters");
+            results.forEach((entry) -> {
+                try {
+                    String characterId = entry.getAsJsonObject().get("characterId").getAsString();
+                    if (member.getCharacters().get(characterId) == null) {
+                        member.getCharacters().put(characterId, new Character(characterId, null));
+                    }
+                } catch (Exception ex) {
+                    LOGGER.error(ex.getMessage(), ex);
                 }
             });
             in.close();
@@ -394,8 +424,8 @@ public class RaidReportTool {
         return getClanRaidReportAsCsv(clan).getBytes();
     }
 
-    public static String getUserReport(String bungieId) throws Exception {
-        Member user = getMemberInformationWithCharacters(bungieId);
+    public static String getUserRaidReport(String bungieId) throws Exception {
+        Member user = getMemberInformationWithCharacters(bungieId, false);
         final StringBuilder response = new StringBuilder();
 
         if (user != null) {
@@ -409,7 +439,8 @@ public class RaidReportTool {
         return response.toString();
     }
 
-    public static Member getMemberInformationWithCharacters(String bungieId) throws Exception {
+    public static Member getMemberInformationWithCharacters(String bungieId, boolean OnlyActiveCharacters)
+            throws Exception {
         String[] splitBungieId = bungieId.split("#");
 
         Member user = null;
@@ -496,14 +527,17 @@ public class RaidReportTool {
                 user = getMemberFromClanList(bungieId);
             }
             if (user != null) {
-                getMemberCharacters(user);
+                getMembersActiveCharacters(user);
+                if (!OnlyActiveCharacters) {
+                    getMembersDeletedCharacters(user);
+                }
             }
         }
         return user;
     }
 
     public static String getUserWeeklyClears(String bungieId, LocalDate startDate, LocalDate endDate) throws Exception {
-        Member user = getMemberInformationWithCharacters(bungieId);
+        Member user = getMemberInformationWithCharacters(bungieId, true);
         final StringBuilder response = new StringBuilder();
 
         if (user != null) {
@@ -771,7 +805,7 @@ public class RaidReportTool {
             HashMap<String, Member> sgcClanMembersMap) throws IOException {
         LOGGER.debug(String.format("Getting Cleared Activities for %s", member.getCombinedBungieGlobalDisplayName()));
         AtomicInteger PGCR_COUNT = new AtomicInteger(0);
-        getMemberCharacters(member);
+        getMembersActiveCharacters(member);
         member.getCharacters().forEach((characteruid, character) -> {
             try {
                 boolean next = false;

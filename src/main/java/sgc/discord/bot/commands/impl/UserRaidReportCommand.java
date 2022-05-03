@@ -23,7 +23,7 @@ public class UserRaidReportCommand implements Command {
             interactionOriginalResponseUpdater.setContent("Building a raid report for " + bungieID).update();
 
             try {
-                String userReport = RaidReportTool.getUserReport(bungieID);
+                String userReport = RaidReportTool.getUserRaidReport(bungieID);
                 if (userReport.isEmpty()) {
                     interactionOriginalResponseUpdater.setContent("")
                             .addEmbed(new EmbedBuilder().setTitle(bungieID + " Raid Report").setDescription(
