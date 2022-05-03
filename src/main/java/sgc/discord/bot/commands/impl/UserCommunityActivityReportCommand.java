@@ -42,8 +42,9 @@ public class UserCommunityActivityReportCommand implements Command {
                                 LocalDate endDate = LocalDate.parse(endDateStr, DateTimeFormatter.BASIC_ISO_DATE);
                                 Period period = Period.between(startDate, endDate);
                                 if (period.getDays() > 7) {
-
-                                        new MessageBuilder().setContent(String.format(
+                                        LOGGER.info(String.format("The Period between %s and %s is %d days",
+                                                        startDate, endDate, period.getDays()));
+                                        interactionOriginalResponseUpdater.setContent(String.format(
                                                         "SGC activity report from %s to %s for %s",
                                                         startDate.toString(),
                                                         endDate.toString(),
@@ -63,7 +64,7 @@ public class UserCommunityActivityReportCommand implements Command {
                                                                                         .getResourceAsStream(
                                                                                                         "thumbnail.jpg"))
                                                                         .setColor(Color.RED))
-                                                        .send(slashCommandInteraction.getChannel().get());
+                                                        .update();
                                 } else {
                                         Member member = RaidReportTool.getUserCommunityActivityReport(userBungieId,
                                                         startDate,
