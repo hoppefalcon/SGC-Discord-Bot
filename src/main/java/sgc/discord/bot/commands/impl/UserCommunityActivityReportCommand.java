@@ -3,7 +3,6 @@ package sgc.discord.bot.commands.impl;
 import java.awt.Color;
 import java.time.Duration;
 import java.time.LocalDate;
-import java.time.Period;
 import java.time.format.DateTimeFormatter;
 
 import org.javacord.api.entity.message.MessageBuilder;
@@ -58,7 +57,7 @@ public class UserCommunityActivityReportCommand implements Command {
                                                                                         userBungieId))
                                                                         .setDescription(String.format(
                                                                                         "%d days exceeds the maximum 7 days for User Community Activity Reports",
-                                                                                        period.getDays()))
+                                                                                        duration.toDays()))
                                                                         .setFooter("ERROR")
                                                                         .setThumbnail(getClass()
                                                                                         .getClassLoader()
