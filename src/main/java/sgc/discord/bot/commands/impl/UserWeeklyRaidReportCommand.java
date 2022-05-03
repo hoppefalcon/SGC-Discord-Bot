@@ -1,17 +1,17 @@
 package sgc.discord.bot.commands.impl;
 
 import java.awt.Color;
-import java.time.Duration;
 import java.time.LocalDate;
+import java.time.Period;
 import java.time.format.DateTimeFormatter;
 
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.interaction.SlashCommandInteraction;
 import org.slf4j.Logger;
 
+import sgc.bungie.api.processor.RaidReportTool;
 import sgc.discord.bot.BotApplication;
 import sgc.discord.bot.commands.Command;
-import sgc.bungie.api.processor.RaidReportTool;
 
 public class UserWeeklyRaidReportCommand implements Command {
 
@@ -37,8 +37,10 @@ public class UserWeeklyRaidReportCommand implements Command {
                         try {
                                 LocalDate startDate = LocalDate.parse(startDateStr, DateTimeFormatter.BASIC_ISO_DATE);
                                 LocalDate endDate = LocalDate.parse(endDateStr, DateTimeFormatter.BASIC_ISO_DATE);
-                                Duration duration = Duration.between(startDate, endDate);
-                                if (duration.toDays() > 7) {
+                                Period period = Period.between(startDate, endDate);
+                                long durationInDays = period.getDays() + (period.getMonths() * (365 / 12))
+                                                + (period.getYears() * 365);
+                                if (durationInDays > 7) {
                                         interactionOriginalResponseUpdater.setContent("")
                                                         .addEmbed(new EmbedBuilder()
                                                                         .setTitle(String.format(
@@ -48,7 +50,7 @@ public class UserWeeklyRaidReportCommand implements Command {
                                                                                         endDate.toString()))
                                                                         .setDescription(String.format(
                                                                                         "%d days exceeds the maximum 7 days for User Weekly Raid Reports",
-                                                                                        duration.toDays()))
+                                                                                        durationInDays))
                                                                         .setFooter("ERROR")
                                                                         .setThumbnail(getClass()
                                                                                         .getClassLoader()

@@ -17,6 +17,7 @@ import java.net.URL;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -77,8 +78,18 @@ public class RaidReportTool {
      */
 
     // public static void main(String[] args) throws Exception {
-    // String userRaidReport = getUserRaidReport("hoppefalcon#7599");
-    // System.out.println();
+    // LocalDate startDate = LocalDate.parse("20220501",
+    // DateTimeFormatter.BASIC_ISO_DATE);
+    // LocalDate endDate = LocalDate.parse("20220502",
+    // DateTimeFormatter.BASIC_ISO_DATE);
+    // String bungieId = "hoppefalcon#7599";
+    // Member member = RaidReportTool.getUserCommunityActivityReport(bungieId,
+    // startDate,
+    // endDate);
+    // System.out.println(String.format(
+    // "Community Activity Points: %d",
+    // member.getWeeklySGCActivity()
+    // .get("SCORE")));
     // }
 
     public static void initializeClanIdMap() {
@@ -295,7 +306,7 @@ public class RaidReportTool {
                     DestinyClassType classType = DestinyClassType.getByValue(
                             entry.getAsJsonObject().getAsJsonPrimitive("classType").getAsInt());
 
-                    if (member.getCharacters().get(characterId) != null) {
+                    if (member.getCharacters().get(characterId) == null) {
                         member.getCharacters().put(characterId, new Character(characterId, classType));
                     }
                 } catch (Exception ex) {
@@ -334,6 +345,7 @@ public class RaidReportTool {
             results.forEach((entry) -> {
                 try {
                     String characterId = entry.getAsJsonObject().get("characterId").getAsString();
+
                     if (member.getCharacters().get(characterId) == null) {
                         member.getCharacters().put(characterId, new Character(characterId, null));
                     }
