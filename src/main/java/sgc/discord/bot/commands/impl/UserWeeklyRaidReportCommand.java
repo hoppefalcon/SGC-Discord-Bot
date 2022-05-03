@@ -2,6 +2,7 @@ package sgc.discord.bot.commands.impl;
 
 import java.awt.Color;
 import java.time.LocalDate;
+import java.time.Period;
 import java.time.format.DateTimeFormatter;
 
 import org.javacord.api.entity.message.embed.EmbedBuilder;
@@ -36,27 +37,55 @@ public class UserWeeklyRaidReportCommand implements Command {
                         try {
                                 LocalDate startDate = LocalDate.parse(startDateStr, DateTimeFormatter.BASIC_ISO_DATE);
                                 LocalDate endDate = LocalDate.parse(endDateStr, DateTimeFormatter.BASIC_ISO_DATE);
-                                String userReport = RaidReportTool.getUserWeeklyClears(bungieId, startDate, endDate);
-                                if (userReport.isEmpty()) {
-                                        interactionOriginalResponseUpdater.setContent("").addEmbed(new EmbedBuilder()
-                                                        .setTitle(String.format("%s Raid Report from %s to %s",
-                                                                        bungieId, startDate.toString(),
-                                                                        endDate.toString()))
-                                                        .setDescription(
-                                                                        "An Error occured Finding this Guardian. Please make sure to provide the full BungieID (Guardian#0000)")
-                                                        .setFooter("ERROR")
-                                                        .setThumbnail(getClass().getClassLoader()
-                                                                        .getResourceAsStream("thumbnail.jpg"))
-                                                        .setColor(Color.RED)).update();
+                                Period period = Period.between(startDate, endDate);
+                                if (period.getDays() > 7) {
+                                        interactionOriginalResponseUpdater.setContent("")
+                                                        .addEmbed(new EmbedBuilder()
+                                                                        .setTitle(String.format(
+                                                                                        "%s Raid Report from %s to %s",
+                                                                                        bungieId,
+                                                                                        startDate.toString(),
+                                                                                        endDate.toString()))
+                                                                        .setDescription(String.format(
+                                                                                        "%d days exceeds the maximum 7 days for User Weekly Raid Reports",
+                                                                                        period.getDays()))
+                                                                        .setFooter("ERROR")
+                                                                        .setThumbnail(getClass()
+                                                                                        .getClassLoader()
+                                                                                        .getResourceAsStream(
+                                                                                                        "thumbnail.jpg"))
+                                                                        .setColor(Color.RED))
+                                                        .update();
                                 } else {
-                                        interactionOriginalResponseUpdater.addEmbed(new EmbedBuilder()
-                                                        .setTitle(String.format("%s Raid Report from %s to %s",
-                                                                        bungieId, startDate.toString(),
-                                                                        endDate.toString()))
-                                                        .setDescription(userReport).setFooter("Happy Raiding!")
-                                                        .setThumbnail(getClass().getClassLoader()
-                                                                        .getResourceAsStream("thumbnail.jpg"))
-                                                        .setColor(Color.GREEN)).update();
+                                        String userReport = RaidReportTool.getUserWeeklyClears(bungieId, startDate,
+                                                        endDate);
+                                        if (userReport.isEmpty()) {
+                                                interactionOriginalResponseUpdater.setContent("")
+                                                                .addEmbed(new EmbedBuilder()
+                                                                                .setTitle(String.format(
+                                                                                                "%s Raid Report from %s to %s",
+                                                                                                bungieId,
+                                                                                                startDate.toString(),
+                                                                                                endDate.toString()))
+                                                                                .setDescription(
+                                                                                                "An Error occured Finding this Guardian. Please make sure to provide the full BungieID (Guardian#0000)")
+                                                                                .setFooter("ERROR")
+                                                                                .setThumbnail(getClass()
+                                                                                                .getClassLoader()
+                                                                                                .getResourceAsStream(
+                                                                                                                "thumbnail.jpg"))
+                                                                                .setColor(Color.RED))
+                                                                .update();
+                                        } else {
+                                                interactionOriginalResponseUpdater.addEmbed(new EmbedBuilder()
+                                                                .setTitle(String.format("%s Raid Report from %s to %s",
+                                                                                bungieId, startDate.toString(),
+                                                                                endDate.toString()))
+                                                                .setDescription(userReport).setFooter("Happy Raiding!")
+                                                                .setThumbnail(getClass().getClassLoader()
+                                                                                .getResourceAsStream("thumbnail.jpg"))
+                                                                .setColor(Color.GREEN)).update();
+                                        }
                                 }
                         } catch (Exception e) {
                                 LOGGER.error(e.getMessage(), e);

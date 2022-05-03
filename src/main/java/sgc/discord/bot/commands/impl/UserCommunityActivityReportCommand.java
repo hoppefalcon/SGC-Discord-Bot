@@ -2,6 +2,7 @@ package sgc.discord.bot.commands.impl;
 
 import java.awt.Color;
 import java.time.LocalDate;
+import java.time.Period;
 import java.time.format.DateTimeFormatter;
 
 import org.javacord.api.entity.message.MessageBuilder;
@@ -39,11 +40,9 @@ public class UserCommunityActivityReportCommand implements Command {
                         try {
                                 LocalDate startDate = LocalDate.parse(startDateStr, DateTimeFormatter.BASIC_ISO_DATE);
                                 LocalDate endDate = LocalDate.parse(endDateStr, DateTimeFormatter.BASIC_ISO_DATE);
+                                Period period = Period.between(startDate, endDate);
+                                if (period.getDays() > 7) {
 
-                                Member member = RaidReportTool.getUserCommunityActivityReport(userBungieId, startDate,
-                                                endDate);
-
-                                if (member == null) {
                                         new MessageBuilder().setContent(String.format(
                                                         "SGC activity report from %s to %s for %s",
                                                         startDate.toString(),
@@ -55,42 +54,71 @@ public class UserCommunityActivityReportCommand implements Command {
                                                                                         startDate.toString(),
                                                                                         endDate.toString(),
                                                                                         userBungieId))
-                                                                        .setDescription("An Error occured Finding this Guardian. Please make sure to provide the full BungieID (Guardian#0000)")
+                                                                        .setDescription(String.format(
+                                                                                        "%d days exceeds the maximum 7 days for User Community Activity Reports",
+                                                                                        period.getDays()))
                                                                         .setFooter("ERROR")
-                                                                        .setThumbnail(getClass().getClassLoader()
+                                                                        .setThumbnail(getClass()
+                                                                                        .getClassLoader()
                                                                                         .getResourceAsStream(
                                                                                                         "thumbnail.jpg"))
                                                                         .setColor(Color.RED))
                                                         .send(slashCommandInteraction.getChannel().get());
                                 } else {
-                                        LOGGER.info("Sending SGC Activity Reports to " + slashCommandInteraction
-                                                        .getChannel().get().getIdAsString());
+                                        Member member = RaidReportTool.getUserCommunityActivityReport(userBungieId,
+                                                        startDate,
+                                                        endDate);
 
-                                        new MessageBuilder()
-                                                        .setContent(String.format(
-                                                                        "SGC Activity Report for %s from %s to %s",
-                                                                        member.getCombinedBungieGlobalDisplayName(),
-                                                                        startDate.toString(),
-                                                                        endDate.toString()))
-                                                        .addEmbed(new EmbedBuilder()
-                                                                        .setAuthor(slashCommandInteraction
-                                                                                        .getUser())
-                                                                        .setTitle(String.format(
-                                                                                        "SGC Activity Report for %s from %s to %s",
-                                                                                        member.getCombinedBungieGlobalDisplayName(),
-                                                                                        startDate.toString(),
-                                                                                        endDate.toString()))
-                                                                        .setDescription(String.format(
-                                                                                        "Community Activity Points: %d",
-                                                                                        member.getWeeklySGCActivity()
-                                                                                                        .get("SCORE")))
-                                                                        .setFooter("#AreYouShrouded")
-                                                                        .setThumbnail(getClass()
-                                                                                        .getClassLoader()
-                                                                                        .getResourceAsStream(
-                                                                                                        "thumbnail.jpg"))
-                                                                        .setColor(Color.ORANGE))
-                                                        .send(slashCommandInteraction.getChannel().get());
+                                        if (member == null) {
+                                                new MessageBuilder().setContent(String.format(
+                                                                "SGC activity report from %s to %s for %s",
+                                                                startDate.toString(),
+                                                                endDate.toString(),
+                                                                userBungieId))
+                                                                .addEmbed(new EmbedBuilder()
+                                                                                .setTitle(String.format(
+                                                                                                "SGC activity report from %s to %s for %s",
+                                                                                                startDate.toString(),
+                                                                                                endDate.toString(),
+                                                                                                userBungieId))
+                                                                                .setDescription("An Error occured Finding this Guardian. Please make sure to provide the full BungieID (Guardian#0000)")
+                                                                                .setFooter("ERROR")
+                                                                                .setThumbnail(getClass()
+                                                                                                .getClassLoader()
+                                                                                                .getResourceAsStream(
+                                                                                                                "thumbnail.jpg"))
+                                                                                .setColor(Color.RED))
+                                                                .send(slashCommandInteraction.getChannel().get());
+                                        } else {
+                                                LOGGER.info("Sending SGC Activity Reports to " + slashCommandInteraction
+                                                                .getChannel().get().getIdAsString());
+
+                                                new MessageBuilder()
+                                                                .setContent(String.format(
+                                                                                "SGC Activity Report for %s from %s to %s",
+                                                                                member.getCombinedBungieGlobalDisplayName(),
+                                                                                startDate.toString(),
+                                                                                endDate.toString()))
+                                                                .addEmbed(new EmbedBuilder()
+                                                                                .setAuthor(slashCommandInteraction
+                                                                                                .getUser())
+                                                                                .setTitle(String.format(
+                                                                                                "SGC Activity Report for %s from %s to %s",
+                                                                                                member.getCombinedBungieGlobalDisplayName(),
+                                                                                                startDate.toString(),
+                                                                                                endDate.toString()))
+                                                                                .setDescription(String.format(
+                                                                                                "Community Activity Points: %d",
+                                                                                                member.getWeeklySGCActivity()
+                                                                                                                .get("SCORE")))
+                                                                                .setFooter("#AreYouShrouded")
+                                                                                .setThumbnail(getClass()
+                                                                                                .getClassLoader()
+                                                                                                .getResourceAsStream(
+                                                                                                                "thumbnail.jpg"))
+                                                                                .setColor(Color.ORANGE))
+                                                                .send(slashCommandInteraction.getChannel().get());
+                                        }
                                 }
                         } catch (Exception e) {
                                 LOGGER.error(e.getMessage(), e);

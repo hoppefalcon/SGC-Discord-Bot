@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 
@@ -40,74 +41,95 @@ public class SGCActivityReportCommand implements Command {
                         try {
                                 LocalDate startDate = LocalDate.parse(startDateStr, DateTimeFormatter.BASIC_ISO_DATE);
                                 LocalDate endDate = LocalDate.parse(endDateStr, DateTimeFormatter.BASIC_ISO_DATE);
-                                Instant start = Instant.now();
-                                HashMap<Platform, String> sgcWeeklyActivityReport = RaidReportTool
-                                                .getSGCWeeklyActivityReport(startDate,
-                                                                endDate, interactionOriginalResponseUpdater,
-                                                                slashCommandInteraction.getChannel().get(),
-                                                                slashCommandInteraction.getUser());
-                                Instant end = Instant.now();
-                                Duration timeElapsed = Duration.between(start, end);
-                                long timeElapsedInSeconds = timeElapsed.getSeconds();
-
-                                long hours = timeElapsedInSeconds / 3600;
-                                long minutes = (timeElapsedInSeconds % 3600) / 60;
-                                long seconds = timeElapsedInSeconds % 60;
-
-                                if (sgcWeeklyActivityReport.isEmpty()) {
-                                        new MessageBuilder().setContent(String.format(
-                                                        "SGC Activity Reports from %s to %s",
-                                                        startDate.toString(),
-                                                        endDate.toString()))
-                                                        .addEmbed(new EmbedBuilder()
-                                                                        .setTitle(String.format(
-                                                                                        "SGC Activity Reports from %s to %s",
-                                                                                        startDate.toString(),
-                                                                                        endDate.toString()))
-                                                                        .setDescription("An Error occured. Please contact Hoppefalcon")
+                                Period period = Period.between(startDate, endDate);
+                                if (period.getDays() > 60) {
+                                        interactionOriginalResponseUpdater.setContent("")
+                                                        .addEmbed(new EmbedBuilder().setTitle(String.format(
+                                                                        "SGC Activity Reports from %s to %s",
+                                                                        startDate.toString(),
+                                                                        endDate.toString()))
+                                                                        .setDescription(String.format(
+                                                                                        "%d days exceeds the maximum 60 days for SGC Activity Reports",
+                                                                                        period.getDays()))
                                                                         .setFooter("ERROR")
-                                                                        .setThumbnail(getClass().getClassLoader()
+                                                                        .setThumbnail(getClass()
+                                                                                        .getClassLoader()
                                                                                         .getResourceAsStream(
                                                                                                         "thumbnail.jpg"))
                                                                         .setColor(Color.RED))
-                                                        .send(slashCommandInteraction.getChannel().get());
+                                                        .update();
                                 } else {
-                                        LOGGER.info("Sending SGC Activity Reports to " + slashCommandInteraction
-                                                        .getChannel().get().getIdAsString());
+                                        Instant start = Instant.now();
+                                        HashMap<Platform, String> sgcWeeklyActivityReport = RaidReportTool
+                                                        .getSGCWeeklyActivityReport(startDate,
+                                                                        endDate, interactionOriginalResponseUpdater,
+                                                                        slashCommandInteraction.getChannel().get(),
+                                                                        slashCommandInteraction.getUser());
+                                        Instant end = Instant.now();
+                                        Duration timeElapsed = Duration.between(start, end);
+                                        long timeElapsedInSeconds = timeElapsed.getSeconds();
 
-                                        sgcWeeklyActivityReport.forEach((platform, report) -> {
-                                                new MessageBuilder()
-                                                                .setContent(String.format(
-                                                                                "%s Activity Report from %s to %s",
-                                                                                platform,
-                                                                                startDate.toString(),
-                                                                                endDate.toString()))
+                                        long hours = timeElapsedInSeconds / 3600;
+                                        long minutes = (timeElapsedInSeconds % 3600) / 60;
+                                        long seconds = timeElapsedInSeconds % 60;
+
+                                        if (sgcWeeklyActivityReport.isEmpty()) {
+                                                new MessageBuilder().setContent(String.format(
+                                                                "SGC Activity Reports from %s to %s",
+                                                                startDate.toString(),
+                                                                endDate.toString()))
                                                                 .addEmbed(new EmbedBuilder()
-                                                                                .setAuthor(slashCommandInteraction
-                                                                                                .getUser())
                                                                                 .setTitle(String.format(
-                                                                                                "%s Activity Report from %s to %s",
-                                                                                                platform,
+                                                                                                "SGC Activity Reports from %s to %s",
                                                                                                 startDate.toString(),
                                                                                                 endDate.toString()))
-                                                                                .setDescription(String.format(
-                                                                                                "Completed in %02d:%02d:%02d",
-                                                                                                hours, minutes,
-                                                                                                seconds))
-                                                                                .setFooter("#AreYouShrouded")
+                                                                                .setDescription("An Error occured. Please contact Hoppefalcon")
+                                                                                .setFooter("ERROR")
                                                                                 .setThumbnail(getClass()
                                                                                                 .getClassLoader()
                                                                                                 .getResourceAsStream(
                                                                                                                 "thumbnail.jpg"))
-                                                                                .setColor(Color.ORANGE))
-                                                                .addAttachment(report.getBytes(),
-                                                                                String.format("%s_Activity_Report_%s_to_%s.csv",
-                                                                                                platform,
-                                                                                                startDate.toString(),
-                                                                                                endDate.toString()))
+                                                                                .setColor(Color.RED))
                                                                 .send(slashCommandInteraction.getChannel().get());
-                                        });
+                                        } else {
+                                                LOGGER.info("Sending SGC Activity Reports to " + slashCommandInteraction
+                                                                .getChannel().get().getIdAsString());
 
+                                                sgcWeeklyActivityReport.forEach((platform, report) -> {
+                                                        new MessageBuilder()
+                                                                        .setContent(String.format(
+                                                                                        "%s Activity Report from %s to %s",
+                                                                                        platform,
+                                                                                        startDate.toString(),
+                                                                                        endDate.toString()))
+                                                                        .addEmbed(new EmbedBuilder()
+                                                                                        .setAuthor(slashCommandInteraction
+                                                                                                        .getUser())
+                                                                                        .setTitle(String.format(
+                                                                                                        "%s Activity Report from %s to %s",
+                                                                                                        platform,
+                                                                                                        startDate.toString(),
+                                                                                                        endDate.toString()))
+                                                                                        .setDescription(String.format(
+                                                                                                        "Completed in %02d:%02d:%02d",
+                                                                                                        hours, minutes,
+                                                                                                        seconds))
+                                                                                        .setFooter("#AreYouShrouded")
+                                                                                        .setThumbnail(getClass()
+                                                                                                        .getClassLoader()
+                                                                                                        .getResourceAsStream(
+                                                                                                                        "thumbnail.jpg"))
+                                                                                        .setColor(Color.ORANGE))
+                                                                        .addAttachment(report.getBytes(),
+                                                                                        String.format("%s_Activity_Report_%s_to_%s.csv",
+                                                                                                        platform,
+                                                                                                        startDate.toString(),
+                                                                                                        endDate.toString()))
+                                                                        .send(slashCommandInteraction.getChannel()
+                                                                                        .get());
+                                                });
+
+                                        }
                                 }
                         } catch (Exception e) {
                                 LOGGER.error(e.getMessage(), e);
