@@ -78,7 +78,7 @@ public class RaidReportTool {
 
     // public static void main(String[] args) throws Exception {
     // Member memberInformationWithCharacters =
-    // getMemberInformationWithCharacters("4X4Strings#4814");
+    // getMemberInformationWithCharacters("FrostyAqua#5435");
     // }
 
     public static void initializeClanIdMap() {
@@ -249,8 +249,7 @@ public class RaidReportTool {
             while ((inputLine = in.readLine()) != null) {
                 content.append(inputLine);
             }
-            // JsonObject json =
-            // JsonParser.parseString(content.toString()).getAsJsonObject();
+
             JsonArray results = (JsonArray) JsonParser.parseString(content.toString()).getAsJsonObject()
                     .getAsJsonObject("Response").get("results");
             results.forEach((entry) -> {
@@ -492,6 +491,9 @@ public class RaidReportTool {
                                 .parseInt(splitBungieId[1].trim())) {
                     user = member;
                 }
+            }
+            if (user == null) {
+                user = getMemberFromClanList(bungieId);
             }
             if (user != null) {
                 getMemberCharacters(user);
@@ -1095,6 +1097,14 @@ public class RaidReportTool {
             }
         }
         return null;
+    }
+
+    private static Member getMemberFromClanList(String userBungieId) throws InterruptedException {
+
+        List<Clan> clanList = initializeClanList();
+        HashMap<String, Member> sgcClanMembersMap = initializeClanMembersMap(clanList);
+
+        return getMemberFromMap(userBungieId, sgcClanMembersMap);
     }
 
 }
