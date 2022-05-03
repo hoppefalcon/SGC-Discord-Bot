@@ -11,6 +11,7 @@ import java.awt.Color;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.time.LocalDate;
@@ -72,29 +73,12 @@ public class RaidReportTool {
 
     /**
      * @param args the command line arguments
-     * @throws IOException
+     * @throws Exception
      */
 
-    // public static void main(String[] args) throws InterruptedException,
-    // IOException {
-    // System.out.println(System.getProperty("os.name"));
-    // Instant start = Instant.now();
-
-    // String output = getSGCWeeklyActivityReport(LocalDate.parse("20220222",
-    // DateTimeFormatter.BASIC_ISO_DATE),
-    // LocalDate.parse("20220228", DateTimeFormatter.BASIC_ISO_DATE), null);
-
-    // executorService.shutdown();
-
-    // Instant end = Instant.now();
-    // Duration timeElapsed = Duration.between(start,
-    // end);
-
-    // long hours = timeElapsed.toHours();
-    // long minutes = timeElapsed.toMinutesPart();
-    // long secounds = timeElapsed.toSecondsPart();
-    // System.out.println(String.format("DONE (%02d:%02d:%02d)", hours, minutes,
-    // secounds));
+    // public static void main(String[] args) throws Exception {
+    // Member memberInformationWithCharacters =
+    // getMemberInformationWithCharacters("4X4Strings#4814");
     // }
 
     public static void initializeClanIdMap() {
@@ -436,14 +420,23 @@ public class RaidReportTool {
             final HashMap<String, Member> searchResults = new HashMap<>();
 
             while (morePages) {
-                URL url = new URL(String.format("https://www.bungie.net/Platform/User/Search/Prefix/%s/%d/",
-                        splitBungieId[0].trim().replace(" ", "%20"), page.getAndIncrement()));
+                URL url = new URL(String.format("https://www.bungie.net/Platform/User/Search/GlobalName/%d/",
+                        page.getAndIncrement()));
 
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("GET");
+                conn.setRequestMethod("POST");
                 conn.addRequestProperty("X-API-Key", apiKey);
+                conn.addRequestProperty("Content-Type", "Application/Json");
                 conn.addRequestProperty("Accept", "Application/Json");
-                conn.connect();
+                conn.setDoOutput(true);
+
+                String jsonInputString = String.format("{\"displayNamePrefix\" : \"%s\"}",
+                        splitBungieId[0].trim().replace(" ", "%20"));
+
+                try (OutputStream os = conn.getOutputStream()) {
+                    byte[] input = jsonInputString.getBytes("utf-8");
+                    os.write(input, 0, input.length);
+                }
 
                 // Getting the response code
                 int responsecode = conn.getResponseCode();

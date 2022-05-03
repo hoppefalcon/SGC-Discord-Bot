@@ -38,7 +38,7 @@ public class BotApplication {
 	@Autowired
 	private ServerProperties serverProperties;
 
-	private static final String BOT_TOKEN = "OTA1ODY5NTI0MjQ5NzM5Mjg0.YYQWvA.NqAyNQgYABpjOefrfuT-Hrgow5A";// System.getenv("DISCORD_TOKEN");
+	private static final String BOT_TOKEN = System.getenv("DISCORD_TOKEN");
 
 	public static void main(String[] args) {
 		SpringApplication.run(BotApplication.class, args);
