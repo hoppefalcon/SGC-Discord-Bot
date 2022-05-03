@@ -1,6 +1,7 @@
 package sgc.discord.bot.commands.impl;
 
 import java.awt.Color;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
@@ -40,10 +41,10 @@ public class UserCommunityActivityReportCommand implements Command {
                         try {
                                 LocalDate startDate = LocalDate.parse(startDateStr, DateTimeFormatter.BASIC_ISO_DATE);
                                 LocalDate endDate = LocalDate.parse(endDateStr, DateTimeFormatter.BASIC_ISO_DATE);
-                                Period period = Period.between(startDate, endDate);
+                                Duration duration = Duration.between(startDate, endDate);
                                 LOGGER.info(String.format("The Period between %s and %s is %d days",
-                                                startDate, endDate, period.getDays()));
-                                if (period.getDays() > 7) {
+                                                startDate, endDate, duration.toDays()));
+                                if (duration.toDays() > 7) {
                                         interactionOriginalResponseUpdater.setContent(String.format(
                                                         "SGC activity report from %s to %s for %s",
                                                         startDate.toString(),

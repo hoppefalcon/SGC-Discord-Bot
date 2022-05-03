@@ -1,8 +1,8 @@
 package sgc.discord.bot.commands.impl;
 
 import java.awt.Color;
+import java.time.Duration;
 import java.time.LocalDate;
-import java.time.Period;
 import java.time.format.DateTimeFormatter;
 
 import org.javacord.api.entity.message.embed.EmbedBuilder;
@@ -37,8 +37,8 @@ public class UserWeeklyRaidReportCommand implements Command {
                         try {
                                 LocalDate startDate = LocalDate.parse(startDateStr, DateTimeFormatter.BASIC_ISO_DATE);
                                 LocalDate endDate = LocalDate.parse(endDateStr, DateTimeFormatter.BASIC_ISO_DATE);
-                                Period period = Period.between(startDate, endDate);
-                                if (period.getDays() > 7) {
+                                Duration duration = Duration.between(startDate, endDate);
+                                if (duration.toDays() > 7) {
                                         interactionOriginalResponseUpdater.setContent("")
                                                         .addEmbed(new EmbedBuilder()
                                                                         .setTitle(String.format(
@@ -48,7 +48,7 @@ public class UserWeeklyRaidReportCommand implements Command {
                                                                                         endDate.toString()))
                                                                         .setDescription(String.format(
                                                                                         "%d days exceeds the maximum 7 days for User Weekly Raid Reports",
-                                                                                        period.getDays()))
+                                                                                        duration.toDays()))
                                                                         .setFooter("ERROR")
                                                                         .setThumbnail(getClass()
                                                                                         .getClassLoader()
