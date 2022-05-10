@@ -17,7 +17,6 @@ import java.net.URL;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -78,18 +77,13 @@ public class RaidReportTool {
      */
 
     // public static void main(String[] args) throws Exception {
-    // LocalDate startDate = LocalDate.parse("20220501",
-    // DateTimeFormatter.BASIC_ISO_DATE);
-    // LocalDate endDate = LocalDate.parse("20220502",
-    // DateTimeFormatter.BASIC_ISO_DATE);
-    // String bungieId = "hoppefalcon#7599";
-    // Member member = RaidReportTool.getUserCommunityActivityReport(bungieId,
-    // startDate,
-    // endDate);
+    // String[] datesStrings = { "20220516", "2022516", "2022/05/16", "2022-05-16",
+    // "2022.05.16", "2022\\05\\16" };
+    // for (String dateString : datesStrings) {
     // System.out.println(String.format(
-    // "Community Activity Points: %d",
-    // member.getWeeklySGCActivity()
-    // .get("SCORE")));
+    // "%s | %s", dateString,
+    // isValidDateFormat(dateString)));
+    // }
     // }
 
     public static void initializeClanIdMap() {
@@ -1151,6 +1145,10 @@ public class RaidReportTool {
         HashMap<String, Member> sgcClanMembersMap = initializeClanMembersMap(clanList);
 
         return getMemberFromMap(userBungieId, sgcClanMembersMap);
+    }
+
+    public static boolean isValidDateFormat(String dateInput) {
+        return dateInput.matches("[0-9]{4}[0-9]{2}[0-9]{2}");
     }
 
 }
