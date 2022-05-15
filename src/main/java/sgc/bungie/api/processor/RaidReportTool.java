@@ -77,13 +77,14 @@ public class RaidReportTool {
      */
 
     // public static void main(String[] args) throws Exception {
-    // String[] datesStrings = { "20220516", "2022516", "2022/05/16", "2022-05-16",
-    // "2022.05.16", "2022\\05\\16" };
-    // for (String dateString : datesStrings) {
-    // System.out.println(String.format(
-    // "%s | %s", dateString,
-    // isValidDateFormat(dateString)));
-    // }
+    // LocalDate startDate = LocalDate.parse("20220510",
+    // DateTimeFormatter.BASIC_ISO_DATE);
+    // LocalDate endDate = LocalDate.parse("20220516",
+    // DateTimeFormatter.BASIC_ISO_DATE);
+    // Member userCommunityActivityReport = getUserCommunityActivityReport("I pvp'd
+    // my pants#6272", startDate,
+    // endDate);
+    // System.out.println();
     // }
 
     public static void initializeClanIdMap() {

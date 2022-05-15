@@ -21,6 +21,10 @@ public class UserCommunityActivityReportCommand implements Command {
 
         @Override
         public void handle(SlashCommandInteraction slashCommandInteraction) {
+                LOGGER.info(slashCommandInteraction.getOptionByName("BungieID").get().getStringRepresentationValue()
+                                .get());
+                LOGGER.info(slashCommandInteraction.getOptionByName("BungieID").get().getStringValue()
+                                .get());
                 String userBungieId = slashCommandInteraction.getOptionByName("BungieID").get().getStringValue().get();
                 String startDateStr = slashCommandInteraction.getOptionByName("StartDate").get().getStringValue().get();
                 String endDateStr = slashCommandInteraction.getOptionByName("EndDate").get().getStringValue().get();
