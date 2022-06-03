@@ -91,11 +91,13 @@ public enum Mode {
     TRIALS_OF_OSIRIS("TrialsOfOsiris", 84, 1.0),
     DARES("Dares", 85, 1.0),
     OFFENSIVE("Offensive", 86, 1.0),
-    LOST_SECTOR("LostSector", 87, 1.0);
+    LOST_SECTOR("LostSector", 87, 1.0),
+    IRON_BANNER_RIFT("IronBannerRift", 90, 1.0);
 
     public final String name;
     private final int value;
     private final double weeklyActivityWeight;
+    private static List<Integer> invalidModesForPOTW;
 
     private Mode(String name, int value, double weeklyActivityWeight) {
         this.name = name;
@@ -157,42 +159,16 @@ public enum Mode {
     }
 
     public static List<Integer> validModesWithTeamsForPOTW() {
-        ArrayList<Integer> list = new ArrayList<>();
+        ArrayList<Integer> validList = new ArrayList<>();
 
-        list.add(Mode.ALL_PVP.getValue());
-        list.add(Mode.ALL_MAYHEM.getValue());
-        list.add(Mode.ALL_DOUBLES.getValue());
-        list.add(Mode.CLASH.getValue());
-        list.add(Mode.CLASH_COMPETITIVE.getValue());
-        list.add(Mode.CLASH_QUICKPLAY.getValue());
-        list.add(Mode.CONTROL.getValue());
-        list.add(Mode.CONTROL_COMPETITIVE.getValue());
-        list.add(Mode.CONTROL_QUICKPLAY.getValue());
-        list.add(Mode.COUNTDOWN.getValue());
-        list.add(Mode.CRIMSON_DOUBLES.getValue());
-        list.add(Mode.DOUBLES.getValue());
-        list.add(Mode.ELIMINATION.getValue());
-        list.add(Mode.GAMBIT.getValue());
-        list.add(Mode.GAMBIT_PRIME.getValue());
-        list.add(Mode.IRON_BANNER.getValue());
-        list.add(Mode.IRON_BANNER_CLASH.getValue());
-        list.add(Mode.IRON_BANNER_CONTROL.getValue());
-        list.add(Mode.IRON_BANNER_SALVAGE.getValue());
-        list.add(Mode.IRON_BANNER_SUPREMACY.getValue());
-        list.add(Mode.MOMENTUM.getValue());
-        list.add(Mode.PVP_COMPETITIVE.getValue());
-        list.add(Mode.PVP_QUICKPLAY.getValue());
-        list.add(Mode.RUMBLE.getValue());
-        list.add(Mode.SCORCHED.getValue());
-        list.add(Mode.SCORCHED_TEAM.getValue());
-        list.add(Mode.SHOWDOWN.getValue());
-        list.add(Mode.SUPREMACY.getValue());
-        list.add(Mode.SURVIVAL.getValue());
-        list.add(Mode.TRIALS_COUNTDOWN.getValue());
-        list.add(Mode.TRIALS_OF_OSIRIS.getValue());
-        list.add(Mode.TRIALS_OF_THE_NINE.getValue());
-        list.add(Mode.TRIALS_SURVIVAL.getValue());
+        List<Integer> invalidModesForPOTW = invalidModesForPOTW();
 
-        return list;
+        for (Mode mode : Mode.values()) {
+            if (!invalidModesForPOTW.contains(mode)) {
+                validList.add(mode.getValue());
+            }
+        }
+
+        return validList;
     }
 }
