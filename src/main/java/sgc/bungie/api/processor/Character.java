@@ -6,6 +6,7 @@
 package sgc.bungie.api.processor;
 
 import java.util.HashMap;
+import java.util.stream.Collectors;
 
 /**
  * @author chris hoppe
@@ -16,14 +17,17 @@ public class Character {
     private final DestinyClassType classType;
     private final HashMap<Raid, RaidActivity> raidActivities = new HashMap<>();
     private final HashMap<Raid, RaidActivity> weeklyRaidActivities = new HashMap<>();
+    private final HashMap<Mode, Integer> activitiesWithSGCMembersByMode = new HashMap<>();
     private int activitiesWithSGCMembersScore = 0;
-    private int activitiesWithSGCMembersCount = 0;
 
     public Character(String UID, DestinyClassType classType) {
         this.UID = UID;
         this.classType = classType;
         Raid.getRaidsOrdered().forEach((Raid raid) -> {
             raidActivities.put(raid, new RaidActivity(raid));
+        });
+        Mode.validModesForCPOTW().forEach((mode) -> {
+            activitiesWithSGCMembersByMode.put(mode, 0);
         });
     }
 
@@ -51,7 +55,8 @@ public class Character {
     public void addClearedActivitiesWithSGCMembers(GenericActivity activity) {
         if (activity != null && activity.getEarnedPoints() > 0) {
             activitiesWithSGCMembersScore += activity.getEarnedPoints();
-            activitiesWithSGCMembersCount++;
+            activitiesWithSGCMembersByMode.put(activity.getMODE(),
+                    activitiesWithSGCMembersByMode.get(activity.getMODE()) + 1);
         }
     }
 
@@ -60,7 +65,13 @@ public class Character {
     }
 
     public int getActivitiesWithSGCMembersCount() {
-        return activitiesWithSGCMembersCount;
+        Integer total = activitiesWithSGCMembersByMode.values().stream()
+                .collect(Collectors.summingInt(Integer::intValue));
+        return total;
+    }
+
+    public HashMap<Mode, Integer> getActivitiesWithSGCMembersByMode() {
+        return activitiesWithSGCMembersByMode;
     }
 
     public DestinyClassType getClassType() {

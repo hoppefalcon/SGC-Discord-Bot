@@ -753,7 +753,7 @@ public class RaidReportTool {
 
         LOGGER.info("Finished processing All Clans for SGC Activity Report");
 
-        HashMap<Platform, String> potwActivityReportAsCsv = getFullActivityReportAsCsv(clanList);
+        HashMap<Platform, String> potwActivityReportAsCsv = getPlatformActivityReportsAsCsv(clanList);
         LOGGER.info("SGC Activity Report Complete");
         return potwActivityReportAsCsv;
     }
@@ -850,7 +850,7 @@ public class RaidReportTool {
                             results.forEach((result) -> {
                                 int mode = result.getAsJsonObject().getAsJsonObject("activityDetails")
                                         .getAsJsonPrimitive("mode").getAsInt();
-                                if (!Mode.invalidModesForPOTW().contains(mode)) {
+                                if (!Mode.validModeValuesForCPOTW().contains(mode)) {
                                     String activityDateStr = result.getAsJsonObject().getAsJsonPrimitive("period")
                                             .getAsString();
                                     LocalDate dateCompleted = ZonedDateTime.parse(activityDateStr)
@@ -1007,9 +1007,7 @@ public class RaidReportTool {
     public static String getClanActivityReportAsCsv(Clan clan) {
         final StringBuilder stringBuilder = new StringBuilder();
 
-        stringBuilder.append("\"Gamertag\",").append("\"BungieDisplayName\",").append("\"Clan\",")
-                .append("\"Community POTW Points\",").append("\"Titan Clears\",").append("\"Hunter Clears\",")
-                .append("\"Warlock Clears\"").append("\n");
+        stringBuilder.append(getActivityReportCsvHeader());
 
         stringBuilder.append(getClanActivityCsvPart(clan));
 
@@ -1018,7 +1016,7 @@ public class RaidReportTool {
 
     private static String getClanActivityCsvPart(Clan clan) {
         final StringBuilder csvPart = new StringBuilder();
-
+        List<Mode> validModesForCPOTW = Mode.validModesForCPOTW();
         clan.getMembers()
                 .forEach((memberId, member) -> {
                     Character titanCharacter = member.getCharacterByDestinyClassType(DestinyClassType.TITAN);
@@ -1032,6 +1030,9 @@ public class RaidReportTool {
                     int warlockClears = warlockCharacter != null ? warlockCharacter.getActivitiesWithSGCMembersCount()
                             : 0;
 
+                    HashMap<Mode, Integer> totalActivitiesWithSGCMembersByMode = member
+                            .getTotalActivitiesWithSGCMembersByMode();
+
                     if (member.hasNewBungieName()) {
                         csvPart.append("\"").append(member.getDisplayName()).append("\",")
                                 .append("\"").append(member.getCombinedBungieGlobalDisplayName()).append("\",")
@@ -1039,23 +1040,24 @@ public class RaidReportTool {
                                 .append("\"").append(member.getWeeklySGCActivity().get("SCORE")).append("\",")
                                 .append("\"").append(titanClears).append("\",")
                                 .append("\"").append(hunterClears).append("\",")
-                                .append("\"").append(warlockClears).append("\"\n");
+                                .append("\"").append(warlockClears).append("\"");
+                        for (Mode mode : validModesForCPOTW) {
+                            csvPart.append("\"").append(totalActivitiesWithSGCMembersByMode.get(mode)).append("\"");
+                        }
                     }
                 });
 
         return csvPart.toString();
     }
 
-    public static HashMap<Platform, String> getFullActivityReportAsCsv(List<Clan> clanList) {
+    public static HashMap<Platform, String> getPlatformActivityReportsAsCsv(List<Clan> clanList) {
         HashMap<Platform, StringBuilder> platformToReportBuilderMap = new HashMap<>();
         platformToReportBuilderMap.put(Platform.PC, new StringBuilder());
         platformToReportBuilderMap.put(Platform.XBOX, new StringBuilder());
         platformToReportBuilderMap.put(Platform.PSN, new StringBuilder());
 
         platformToReportBuilderMap.values().forEach((strBuilder) -> {
-            strBuilder.append("\"Gamertag\",").append("\"BungieDisplayName\",").append("\"Clan\",")
-                    .append("\"Community POTW Points\",").append("\"Titan Clears\",").append("\"Hunter Clears\",")
-                    .append("\"Warlock Clears\"").append("\n");
+            strBuilder.append(getActivityReportCsvHeader());
         });
 
         clanList.forEach((clan) -> {
@@ -1150,6 +1152,21 @@ public class RaidReportTool {
 
     public static boolean isValidDateFormat(String dateInput) {
         return dateInput.matches("[0-9]{4}[0-9]{2}[0-9]{2}");
+    }
+
+    private static String getActivityReportCsvHeader() {
+        final StringBuilder stringBuilder = new StringBuilder();
+
+        stringBuilder.append("\"Gamertag\",").append("\"BungieDisplayName\",").append("\"Clan\",")
+                .append("\"Community POTW Points\",").append("\"Titan Clears\",").append("\"Hunter Clears\",")
+                .append("\"Warlock Clears\",");
+
+        List<Mode> validModesForCPOTW = Mode.validModesForCPOTW();
+        for (Mode mode : validModesForCPOTW) {
+            stringBuilder.append("\"").append(mode.getName()).append("\",");
+        }
+
+        return stringBuilder.append("\n").toString();
     }
 
 }

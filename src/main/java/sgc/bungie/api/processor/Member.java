@@ -158,4 +158,20 @@ public class Member {
         }
         return null;
     }
+
+    public HashMap<Mode, Integer> getTotalActivitiesWithSGCMembersByMode() {
+        HashMap<Mode, Integer> totalActivitiesWithSGCMembersByMode = new HashMap<>();
+        Mode.validModesForCPOTW().forEach((mode) -> {
+            totalActivitiesWithSGCMembersByMode.put(mode, 0);
+        });
+
+        for (Character character : characters.values()) {
+            Mode.validModesForCPOTW().forEach((mode) -> {
+                totalActivitiesWithSGCMembersByMode.put(mode, totalActivitiesWithSGCMembersByMode.get(mode)
+                        + character.getActivitiesWithSGCMembersByMode().get(mode));
+            });
+
+        }
+        return totalActivitiesWithSGCMembersByMode;
+    }
 }

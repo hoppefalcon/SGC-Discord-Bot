@@ -97,7 +97,6 @@ public enum Mode {
     public final String name;
     private final int value;
     private final double weeklyActivityWeight;
-    private static List<Integer> invalidModesForPOTW;
 
     private Mode(String name, int value, double weeklyActivityWeight) {
         this.name = name;
@@ -126,42 +125,60 @@ public enum Mode {
         return weeklyActivityWeight;
     }
 
-    public static List<Integer> invalidModesForPOTW() {
-        ArrayList<Integer> list = new ArrayList<>();
+    public static List<Mode> invalidModesForCPOTW() {
+        ArrayList<Mode> list = new ArrayList<>();
 
-        list.add(Mode.NONE.getValue());
+        list.add(Mode.NONE);
 
-        list.add(Mode.PRIVATE_MATCHES_ALL.getValue());
-        list.add(Mode.PRIVATE_MATCHES_CLASH.getValue());
-        list.add(Mode.PRIVATE_MATCHES_CONTROL.getValue());
-        list.add(Mode.PRIVATE_MATCHES_COUNTDOWN.getValue());
-        list.add(Mode.PRIVATE_MATCHES_MAYHEM.getValue());
-        list.add(Mode.PRIVATE_MATCHES_RUMBLE.getValue());
-        list.add(Mode.PRIVATE_MATCHES_SUPREMACY.getValue());
-        list.add(Mode.PRIVATE_MATCHES_SURVIVAL.getValue());
+        list.add(Mode.PRIVATE_MATCHES_ALL);
+        list.add(Mode.PRIVATE_MATCHES_CLASH);
+        list.add(Mode.PRIVATE_MATCHES_CONTROL);
+        list.add(Mode.PRIVATE_MATCHES_COUNTDOWN);
+        list.add(Mode.PRIVATE_MATCHES_MAYHEM);
+        list.add(Mode.PRIVATE_MATCHES_RUMBLE);
+        list.add(Mode.PRIVATE_MATCHES_SUPREMACY);
+        list.add(Mode.PRIVATE_MATCHES_SURVIVAL);
 
-        list.add(Mode.PATROL.getValue());
+        list.add(Mode.PATROL);
 
-        list.add(Mode.RESERVED_9.getValue());
-        list.add(Mode.RESERVED_11.getValue());
-        list.add(Mode.RESERVED_13.getValue());
-        list.add(Mode.RESERVED_20.getValue());
-        list.add(Mode.RESERVED_21.getValue());
-        list.add(Mode.RESERVED_22.getValue());
-        list.add(Mode.RESERVED_24.getValue());
-        list.add(Mode.RESERVED_26.getValue());
-        list.add(Mode.RESERVED_27.getValue());
-        list.add(Mode.RESERVED_28.getValue());
-        list.add(Mode.RESERVED_29.getValue());
-        list.add(Mode.RESERVED_30.getValue());
+        list.add(Mode.RESERVED_9);
+        list.add(Mode.RESERVED_11);
+        list.add(Mode.RESERVED_13);
+        list.add(Mode.RESERVED_20);
+        list.add(Mode.RESERVED_21);
+        list.add(Mode.RESERVED_22);
+        list.add(Mode.RESERVED_24);
+        list.add(Mode.RESERVED_26);
+        list.add(Mode.RESERVED_27);
+        list.add(Mode.RESERVED_28);
+        list.add(Mode.RESERVED_29);
+        list.add(Mode.RESERVED_30);
 
         return list;
     }
 
-    public static List<Integer> validModesWithTeamsForPOTW() {
+    public static List<Mode> validModesForCPOTW() {
+        ArrayList<Mode> validList = new ArrayList<>();
+
+        List<Mode> invalidModesForPOTW = invalidModesForCPOTW();
+
+        for (Mode mode : Mode.values()) {
+            if (!invalidModesForPOTW.contains(mode)) {
+                validList.add(mode);
+            }
+        }
+
+        validList.sort((m1, m2) -> {
+            return Integer.compare(m1.value, m2.value);
+        });
+
+        return validList;
+    }
+
+    public static List<Integer> validModeValuesForCPOTW() {
         ArrayList<Integer> validList = new ArrayList<>();
 
-        List<Integer> invalidModesForPOTW = invalidModesForPOTW();
+        List<Mode> invalidModesForPOTW = invalidModesForCPOTW();
 
         for (Mode mode : Mode.values()) {
             if (!invalidModesForPOTW.contains(mode)) {
