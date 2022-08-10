@@ -850,7 +850,7 @@ public class RaidReportTool {
                             results.forEach((result) -> {
                                 int mode = result.getAsJsonObject().getAsJsonObject("activityDetails")
                                         .getAsJsonPrimitive("mode").getAsInt();
-                                if (!Mode.validModeValuesForCPOTW().contains(mode)) {
+                                if (Mode.validModeValuesForCPOTW().contains(mode)) {
                                     String activityDateStr = result.getAsJsonObject().getAsJsonPrimitive("period")
                                             .getAsString();
                                     LocalDate dateCompleted = ZonedDateTime.parse(activityDateStr)
