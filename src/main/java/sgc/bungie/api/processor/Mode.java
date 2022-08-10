@@ -178,12 +178,10 @@ public enum Mode {
     public static List<Integer> validModeValuesForCPOTW() {
         ArrayList<Integer> validList = new ArrayList<>();
 
-        List<Mode> invalidModesForPOTW = invalidModesForCPOTW();
+        List<Mode> validModesForCPOTW = validModesForCPOTW();
 
-        for (Mode mode : Mode.values()) {
-            if (!invalidModesForPOTW.contains(mode)) {
-                validList.add(mode.getValue());
-            }
+        for (Mode mode : validModesForCPOTW) {
+            validList.add(mode.getValue());
         }
 
         return validList;
