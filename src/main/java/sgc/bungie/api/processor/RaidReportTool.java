@@ -1044,10 +1044,11 @@ public class RaidReportTool {
                         for (Mode mode : validModesForCPOTW) {
                             csvPart.append("\"").append(totalActivitiesWithSGCMembersByMode.get(mode)).append("\",");
                         }
+                        csvPart.append("\n");
                     }
                 });
 
-        return csvPart.append("\n").toString();
+        return csvPart.toString();
     }
 
     public static HashMap<Platform, String> getPlatformActivityReportsAsCsv(List<Clan> clanList) {
