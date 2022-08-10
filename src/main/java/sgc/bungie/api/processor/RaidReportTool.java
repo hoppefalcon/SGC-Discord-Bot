@@ -1040,14 +1040,14 @@ public class RaidReportTool {
                                 .append("\"").append(member.getWeeklySGCActivity().get("SCORE")).append("\",")
                                 .append("\"").append(titanClears).append("\",")
                                 .append("\"").append(hunterClears).append("\",")
-                                .append("\"").append(warlockClears).append("\"");
+                                .append("\"").append(warlockClears).append("\",");
                         for (Mode mode : validModesForCPOTW) {
-                            csvPart.append("\"").append(totalActivitiesWithSGCMembersByMode.get(mode)).append("\"");
+                            csvPart.append("\"").append(totalActivitiesWithSGCMembersByMode.get(mode)).append("\",");
                         }
                     }
                 });
 
-        return csvPart.toString();
+        return csvPart.append("\n").toString();
     }
 
     public static HashMap<Platform, String> getPlatformActivityReportsAsCsv(List<Clan> clanList) {

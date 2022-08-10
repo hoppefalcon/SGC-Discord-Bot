@@ -11,7 +11,7 @@
 	</parent>
 	<groupId>sgc.discord.bot</groupId>
 	<artifactId>sgc-discord-bot</artifactId>
-	<version>3.8.0</version>
+	<version>3.8.1</version>
 	<name>sgc-discord-bot</name>
 	<description>Discord Bot for Shrouded Gaming Community</description>
 	<properties>
