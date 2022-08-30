@@ -18,7 +18,7 @@ public enum Raid {
     DEEP_STONE_CRYPT("Deep Stone Crypt", Arrays.asList("910380154", "3976949817")),
     VAULT_OF_GLASS("Vault of Glass", Arrays.asList("3881495763", "1485585878", "1681562271", "3711931140")),
     VOW_OF_THE_DISCIPLE("Vow of the Disciple", Arrays.asList("1441982566", "4156879541", "4217492330")),
-    KINGSFALL("Kingsfall", Arrays.asList("1374392663", "1063970578"));
+    KINGS_FALL("King's Fall", Arrays.asList("1374392663", "1063970578"));
 
     public final String name;
     private final List<String> validHashes;
@@ -55,7 +55,7 @@ public enum Raid {
 
     public static List<Raid> getRaidsOrdered() {
         List<Raid> raids = new ArrayList<>();
-        raids.add(KINGSFALL);
+        raids.add(KINGS_FALL);
         raids.add(VOW_OF_THE_DISCIPLE);
         raids.add(VAULT_OF_GLASS);
         raids.add(DEEP_STONE_CRYPT);
