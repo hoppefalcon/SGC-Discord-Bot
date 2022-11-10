@@ -1,6 +1,7 @@
 package sgc.discord.bot;
 
-import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;
@@ -51,7 +52,8 @@ public class BotApplication {
 				serverProperties.getAddress(), serverProperties.getPort()));
 
 		RaidReportTool.initializeClanIdMap();
-		DiscordApi api = new DiscordApiBuilder().setToken(BOT_TOKEN).login().join();
+		DiscordApi api = new DiscordApiBuilder().setToken(BOT_TOKEN)
+				.setAllNonPrivilegedIntents().login().join();
 
 		final SlashCommandOptionBuilder pcClanOption = new SlashCommandOptionBuilder().setName("Clan")
 				.setType(SlashCommandOptionType.STRING).setRequired(true).setDescription("Clan for Raid Report");
@@ -89,37 +91,46 @@ public class BotApplication {
 		final SlashCommandOptionBuilder carnageIdOption = new SlashCommandOptionBuilder().setName("ID")
 				.setType(SlashCommandOptionType.STRING).setRequired(true).setDescription("Postgame Carnage Report ID");
 
-		api.bulkOverwriteGlobalApplicationCommands(Arrays.asList(
-				new SlashCommandBuilder().setName("user-raid-report")
-						.setDescription("Pulls the Raid Report of the user. (Requires full Bungie ID)")
-						.addOption(bungieIdOption.build()),
-				new SlashCommandBuilder().setName("pc-clan-raid-report")
-						.setDescription("Pulls a full PC clan raid report.")
-						.addOption(pcClanOption.build()),
-				new SlashCommandBuilder().setName("xbox-clan-raid-report")
-						.setDescription("Pulls a full Xbox clan raid report.")
-						.addOption(xbClanOption.build()),
-				new SlashCommandBuilder().setName("psn-clan-raid-report")
-						.setDescription("Pulls a full Playstation clan raid report.")
-						.addOption(psClanOption.build()),
-				new SlashCommandBuilder().setName("user-weekly-raid-report").setDescription(
-						"Pulls the Weekly Raid Report of the user. (Requires full Bungie ID, Start Date, and End Date)")
-						.addOption(bungieIdOption.build())
-						.addOption(userWeeklyClearStartOption.build())
-						.addOption(userWeeklyClearEndOption.build()),
-				new SlashCommandBuilder().setName("sgc-activity-report").setDescription(
-						"Pulls the a Community Activity Report for the SGC. (Requires Start Date, and End Date)")
-						.addOption(userWeeklyClearStartOption.build())
-						.addOption(userWeeklyClearEndOption.build()),
-				new SlashCommandBuilder().setName("user-activity-report").setDescription(
-						"Pulls the a Community Activity Report for the User. (Requires Start Date, and End Date)")
-						.addOption(bungieIdOption.build())
-						.addOption(userWeeklyClearStartOption.build())
-						.addOption(userWeeklyClearEndOption.build()),
-				new SlashCommandBuilder().setName("raid-carnage-report")
-						.setDescription("Pulls a Full Raid Carnage Report.")
-						.addOption(carnageIdOption.build())))
-				.join();
+		Set<SlashCommandBuilder> commandList = new HashSet<>();
+
+		commandList.add(new SlashCommandBuilder().setName("user-raid-report")
+				.setDescription("Pulls the Raid Report of the user. (Requires full Bungie ID)")
+				.addOption(bungieIdOption.build()));
+
+		commandList.add(new SlashCommandBuilder().setName("pc-clan-raid-report")
+				.setDescription("Pulls a full PC clan raid report.")
+				.addOption(pcClanOption.build()));
+
+		commandList.add(new SlashCommandBuilder().setName("xbox-clan-raid-report")
+				.setDescription("Pulls a full Xbox clan raid report.")
+				.addOption(xbClanOption.build()));
+
+		commandList.add(new SlashCommandBuilder().setName("psn-clan-raid-report")
+				.setDescription("Pulls a full Playstation clan raid report.")
+				.addOption(psClanOption.build()));
+
+		commandList.add(new SlashCommandBuilder().setName("user-weekly-raid-report").setDescription(
+				"Pulls the Weekly Raid Report of the user. (Requires full Bungie ID, Start Date, and End Date)")
+				.addOption(bungieIdOption.build())
+				.addOption(userWeeklyClearStartOption.build())
+				.addOption(userWeeklyClearEndOption.build()));
+
+		commandList.add(new SlashCommandBuilder().setName("sgc-activity-report").setDescription(
+				"Pulls the a Community Activity Report for the SGC. (Requires Start Date, and End Date)")
+				.addOption(userWeeklyClearStartOption.build())
+				.addOption(userWeeklyClearEndOption.build()));
+
+		commandList.add(new SlashCommandBuilder().setName("user-activity-report").setDescription(
+				"Pulls the a Community Activity Report for the User. (Requires Start Date, and End Date)")
+				.addOption(bungieIdOption.build())
+				.addOption(userWeeklyClearStartOption.build())
+				.addOption(userWeeklyClearEndOption.build()));
+
+		commandList.add(new SlashCommandBuilder().setName("raid-carnage-report")
+				.setDescription("Pulls a Full Raid Carnage Report.")
+				.addOption(carnageIdOption.build()));
+
+		api.bulkOverwriteGlobalApplicationCommands(commandList).join();
 
 		api.addSlashCommandCreateListener(slashCommandListener);
 
