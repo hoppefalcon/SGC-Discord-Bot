@@ -7,6 +7,8 @@ package sgc.bungie.api.processor;
 
 import java.util.HashMap;
 
+import sgc.Platform;
+
 /**
  * @author chris hoppe
  */

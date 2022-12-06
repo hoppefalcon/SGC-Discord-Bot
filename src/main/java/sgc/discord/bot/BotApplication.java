@@ -1,10 +1,20 @@
 package sgc.discord.bot;
 
+import java.time.Duration;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.TextStyle;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;
+import org.javacord.api.entity.server.Server;
 import org.javacord.api.interaction.SlashCommandBuilder;
 import org.javacord.api.interaction.SlashCommandOptionBuilder;
 import org.javacord.api.interaction.SlashCommandOptionType;
@@ -19,6 +29,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Controller;
 
 import sgc.bungie.api.processor.RaidReportTool;
+import sgc.bungie.api.processor.activity.ActivityReportTool;
 import sgc.discord.bot.listeners.interfaces.SlashCommandListener;
 
 @Controller
@@ -41,8 +52,88 @@ public class BotApplication {
 
 	private static final String BOT_TOKEN = System.getenv("DISCORD_TOKEN");
 
+	private static final DiscordApi API = new DiscordApiBuilder().setToken(BOT_TOKEN).setAllIntents().login().join();
+
+	public static Server SGC_SERVER = API.getServerById("100291727209807872").get();
+
+	private static final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
+
+	public static final DateTimeFormatter DATE_TIME_FORMATTER = new DateTimeFormatterBuilder()
+			.appendPattern("MMM dd, yyyy HH:mm:ss a")
+			.appendPattern(" ")
+			.appendZoneText(TextStyle.SHORT)
+			.toFormatter();
+	public static final ZoneId ZID = ZoneId.of("US/Eastern");
+	private static boolean firstRun = true;
+
 	public static void main(String[] args) {
 		SpringApplication.run(BotApplication.class, args);
+		scheduleActivitySheetUpdate(2, 6);
+	}
+
+	private static void scheduleActivitySheetUpdate(int targetHour, int increment) {
+		long delay = 0;
+		Runnable taskWrapper;
+
+		if (firstRun) {
+			int checks = 24 / increment;
+			long shortestDelay = 0;
+			int nextTarget = targetHour;
+			for (int index = 0; index < checks; index++) {
+				long newDelay = computeNextDelay(nextTarget);
+				if (index == 0) {
+					shortestDelay = newDelay;
+				} else {
+					if (newDelay < shortestDelay) {
+						shortestDelay = newDelay;
+						targetHour = nextTarget;
+					}
+				}
+				nextTarget += increment;
+			}
+			delay = 0;
+			firstRun = false;
+			final int confimedTargetHour = targetHour;
+			taskWrapper = new Runnable() {
+
+				@Override
+				public void run() {
+					ActivityReportTool.runActivitySheets(API);
+					scheduleActivitySheetUpdate(confimedTargetHour, increment);
+				}
+
+			};
+		} else {
+			delay = computeNextDelay(targetHour);
+			final int confimedTargetHour = targetHour;
+			LOGGER.info(String.format("The next scheduled Actitivy Sheet Update is at %s",
+					getNextTargetTime(targetHour).format(BotApplication.DATE_TIME_FORMATTER)));
+			taskWrapper = new Runnable() {
+
+				@Override
+				public void run() {
+					ActivityReportTool.runActivitySheets(API);
+					scheduleActivitySheetUpdate((confimedTargetHour + increment) % 24, increment);
+				}
+
+			};
+		}
+
+		executorService.schedule(taskWrapper, delay, TimeUnit.SECONDS);
+	}
+
+	private static ZonedDateTime getNextTargetTime(int targetHour) {
+		ZonedDateTime zonedNow = ZonedDateTime.now(ZID);
+		ZonedDateTime zonedNextTarget = zonedNow.withHour(targetHour).withMinute(0).withSecond(0);
+		if (zonedNow.compareTo(zonedNextTarget) > 0)
+			zonedNextTarget = zonedNextTarget.plusDays(1);
+
+		return zonedNextTarget;
+	}
+
+	private static long computeNextDelay(int targetHour) {
+		Duration duration = Duration.between(ZonedDateTime.now(ZID), getNextTargetTime(targetHour));
+		return duration.getSeconds();
 	}
 
 	@Bean
@@ -52,8 +143,6 @@ public class BotApplication {
 				serverProperties.getAddress(), serverProperties.getPort()));
 
 		RaidReportTool.initializeClanIdMap();
-		DiscordApi api = new DiscordApiBuilder().setToken(BOT_TOKEN)
-				.setAllNonPrivilegedIntents().login().join();
 
 		final SlashCommandOptionBuilder pcClanOption = new SlashCommandOptionBuilder().setName("Clan")
 				.setType(SlashCommandOptionType.STRING).setRequired(true).setDescription("Clan for Raid Report");
@@ -130,10 +219,10 @@ public class BotApplication {
 				.setDescription("Pulls a Full Raid Carnage Report.")
 				.addOption(carnageIdOption.build()));
 
-		api.bulkOverwriteGlobalApplicationCommands(commandList).join();
+		API.bulkOverwriteGlobalApplicationCommands(commandList).join();
 
-		api.addSlashCommandCreateListener(slashCommandListener);
+		API.addSlashCommandCreateListener(slashCommandListener);
 
-		return api;
+		return API;
 	}
 }

@@ -15,14 +15,16 @@ public class Character {
 
     private final String UID;
     private final DestinyClassType classType;
+    private final String dateLastPlayed;
     private final HashMap<Raid, RaidActivity> raidActivities = new HashMap<>();
     private final HashMap<Raid, RaidActivity> weeklyRaidActivities = new HashMap<>();
     private final HashMap<Mode, Integer> activitiesWithSGCMembersByMode = new HashMap<>();
     private int activitiesWithSGCMembersScore = 0;
 
-    public Character(String UID, DestinyClassType classType) {
+    public Character(String UID, DestinyClassType classType, String dateLastPlayed) {
         this.UID = UID;
         this.classType = classType;
+        this.dateLastPlayed = dateLastPlayed;
         Raid.getRaidsOrdered().forEach((Raid raid) -> {
             raidActivities.put(raid, new RaidActivity(raid));
         });
@@ -36,6 +38,20 @@ public class Character {
      */
     public String getUID() {
         return UID;
+    }
+
+    /**
+     * @return the classType
+     */
+    public DestinyClassType getClassType() {
+        return classType;
+    }
+
+    /**
+     * @return the dateLastPlayed
+     */
+    public String getDateLastPlayed() {
+        return dateLastPlayed;
     }
 
     /**
@@ -72,10 +88,6 @@ public class Character {
 
     public HashMap<Mode, Integer> getActivitiesWithSGCMembersByMode() {
         return activitiesWithSGCMembersByMode;
-    }
-
-    public DestinyClassType getClassType() {
-        return classType;
     }
 
 }

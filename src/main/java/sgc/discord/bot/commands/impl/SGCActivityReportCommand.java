@@ -13,7 +13,7 @@ import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.interaction.SlashCommandInteraction;
 import org.slf4j.Logger;
 
-import sgc.bungie.api.processor.Platform;
+import sgc.Platform;
 import sgc.bungie.api.processor.RaidReportTool;
 import sgc.discord.bot.BotApplication;
 import sgc.discord.bot.commands.Command;
