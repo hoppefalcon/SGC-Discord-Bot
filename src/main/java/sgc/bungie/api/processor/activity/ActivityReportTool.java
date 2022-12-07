@@ -85,6 +85,19 @@ public class ActivityReportTool {
         }
     }
 
+    public static void initiateGoogleSheetsAuth() {
+        try {
+            LOGGER.info("Initiating Google Sheet Auth");
+            final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
+            Sheets service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY,
+                    getGoogleSheetsCredentials(HTTP_TRANSPORT))
+                    .setApplicationName(APPLICATION_NAME)
+                    .build();
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+    }
+
     /**
      * @param API
      * @param members

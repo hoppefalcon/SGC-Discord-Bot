@@ -67,6 +67,7 @@ public class BotApplication {
 	private static boolean firstRun = true;
 
 	public static void main(String[] args) {
+		ActivityReportTool.initiateGoogleSheetsAuth();
 		SpringApplication.run(BotApplication.class, args);
 		scheduleActivitySheetUpdate(2, 6);
 	}
