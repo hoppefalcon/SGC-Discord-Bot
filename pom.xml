@@ -11,7 +11,7 @@
 	</parent>
 	<groupId>sgc.discord.bot</groupId>
 	<artifactId>sgc-discord-bot</artifactId>
-	<version>4.0.4</version>
+	<version>4.1.0</version>
 	<name>sgc-discord-bot</name>
 	<description>Discord Bot for Shrouded Gaming Community</description>
 	<properties>
@@ -47,6 +47,11 @@
 			<groupId>com.google.api-client</groupId>
 			<artifactId>google-api-client</artifactId>
 			<version>2.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.auth</groupId>
+			<artifactId>google-auth-library-oauth2-http</artifactId>
+			<version>1.13.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.oauth-client</groupId>
