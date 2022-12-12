@@ -8,6 +8,7 @@ import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -108,7 +109,7 @@ public class ActivityReportTool {
      */
     private static void getAllClansDiscordActivity(DiscordApi API,
             HashMap<SGC_Clan, ArrayList<SGC_Member>> members) {
-        HashMap<User, SGC_Member> allUsers = new HashMap<>();
+        HashMap<User, List<SGC_Member>> allUsers = new HashMap<>();
         for (SGC_Clan clan : SGC_Clan.values()) {
             LOGGER.info("Processing the Discord Activity for " + clan.name());
             Optional<Role> roleById = API.getRoleById(clan.Discord_Role_ID);
@@ -117,7 +118,9 @@ public class ActivityReportTool {
                 SGC_Member sgc_Member = new SGC_Member(clan);
                 sgc_Member.setDiscordDisplayName(user.getDisplayName(BotApplication.SGC_SERVER));
                 members.get(clan).add(sgc_Member);
-                allUsers.put(user, sgc_Member);
+                if (allUsers.get(user) != null) {
+                    allUsers.put(user, Arrays.asList(sgc_Member));
+                }
             });
         }
 
@@ -134,7 +137,9 @@ public class ActivityReportTool {
                         Optional<User> userAuthor = message.getUserAuthor();
                         if (userAuthor.isPresent()) {
                             if (allUsers.containsKey(userAuthor.get())) {
-                                allUsers.get(userAuthor.get()).setDiscord_activity(true);
+                                for (SGC_Member member : allUsers.get(userAuthor.get())) {
+                                    member.setDiscord_activity(true);
+                                }
                             }
                         }
                     });
