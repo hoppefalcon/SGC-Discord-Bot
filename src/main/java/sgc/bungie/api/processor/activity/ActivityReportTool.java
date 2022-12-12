@@ -109,7 +109,7 @@ public class ActivityReportTool {
      */
     private static void getAllClansDiscordActivity(DiscordApi API,
             HashMap<SGC_Clan, ArrayList<SGC_Member>> members) {
-        HashMap<User, List<SGC_Member>> allUsers = new HashMap<>();
+        HashMap<User, ArrayList<SGC_Member>> allUsers = new HashMap<>();
         for (SGC_Clan clan : SGC_Clan.values()) {
             LOGGER.info("Processing the Discord Activity for " + clan.name());
             Optional<Role> roleById = API.getRoleById(clan.Discord_Role_ID);
@@ -118,11 +118,11 @@ public class ActivityReportTool {
                 SGC_Member sgc_Member = new SGC_Member(clan);
                 sgc_Member.setDiscordDisplayName(user.getDisplayName(BotApplication.SGC_SERVER));
                 members.get(clan).add(sgc_Member);
-                if (allUsers.get(user) != null) {
-                    allUsers.get(user).add(sgc_Member);
-                } else {
-                    allUsers.put(user, Arrays.asList(sgc_Member));
+                if (allUsers.get(user) == null) {
+                    ArrayList<SGC_Member> newList = new ArrayList<>();
+                    allUsers.put(user, newList);
                 }
+                allUsers.get(user).add(sgc_Member);
             });
         }
 
