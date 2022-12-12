@@ -119,6 +119,8 @@ public class ActivityReportTool {
                 sgc_Member.setDiscordDisplayName(user.getDisplayName(BotApplication.SGC_SERVER));
                 members.get(clan).add(sgc_Member);
                 if (allUsers.get(user) != null) {
+                    allUsers.get(user).add(sgc_Member);
+                } else {
                     allUsers.put(user, Arrays.asList(sgc_Member));
                 }
             });
