@@ -36,6 +36,7 @@ import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -43,8 +44,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import sgc.Platform;
-import sgc.SGC_Clan;
-import sgc.discord.bot.BotApplication;;
+import sgc.SGC_Clan;;
 
 /**
  * @author chris hoppe
@@ -52,7 +52,7 @@ import sgc.discord.bot.BotApplication;;
 
 public class RaidReportTool {
 
-    private static final Logger LOGGER = BotApplication.getLogger();
+    private static final Logger LOGGER = LoggerFactory.getLogger(RaidReportTool.class);
 
     private static String apiKey = System.getenv("BUNGIE_TOKEN");
 
