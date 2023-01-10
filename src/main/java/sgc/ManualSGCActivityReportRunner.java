@@ -21,7 +21,7 @@ import sgc.bungie.api.processor.Clan;
 import sgc.bungie.api.processor.Member;
 import sgc.bungie.api.processor.RaidReportTool;
 
-public class Manual {
+public class ManualSGCActivityReportRunner {
     private static final Logger LOGGER = LoggerFactory.getLogger(Manual.class);
     private static ExecutorService executorService = Executors.newFixedThreadPool(15);
 
