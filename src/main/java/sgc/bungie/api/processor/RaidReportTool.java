@@ -711,7 +711,10 @@ public class RaidReportTool {
                             LOGGER.debug("Starting to process " + member.getDisplayName());
                             TOTAL_PGCR_COUNT.addAndGet(
                                     getMembersClearedActivities(member, startDate, endDate,
-                                            sgcClanMembersMap));
+                                            sgcClanMembersMap, 0));
+                            TOTAL_PGCR_COUNT.addAndGet(
+                                    getMembersClearedActivities(member, startDate, endDate,
+                                            sgcClanMembersMap, 91)); // TEMP FIX
                             SCORED_PGCR_COUNT.addAndGet(member.getWeeklySGCActivity().get("COUNT"));
                             LOGGER.debug("Finished processing " + member.getDisplayName());
                         } catch (IOException ex) {
@@ -788,7 +791,7 @@ public class RaidReportTool {
     }
 
     public static int getMembersClearedActivities(Member member, LocalDate startDate, LocalDate endDate,
-            HashMap<String, Member> sgcClanMembersMap) throws IOException {
+            HashMap<String, Member> sgcClanMembersMap, int mode) throws IOException {
         LOGGER.debug(String.format("Getting Cleared Activities for %s", member.getCombinedBungieGlobalDisplayName()));
         AtomicInteger PGCR_COUNT = new AtomicInteger(0);
         getMembersActiveCharacters(member);
@@ -799,8 +802,8 @@ public class RaidReportTool {
 
                 for (int page = 0; !next; page++) {
                     URL url = new URL(String.format(
-                            "https://www.bungie.net/Platform/Destiny2/%s/Account/%s/Character/%s/Stats/Activities/?page=%d&mode=0&count=250",
-                            member.getMemberType(), member.getUID(), character.getUID(), page));
+                            "https://www.bungie.net/Platform/Destiny2/%s/Account/%s/Character/%s/Stats/Activities/?page=%d&mode=%d&count=250",
+                            member.getMemberType(), member.getUID(), character.getUID(), page, mode));
 
                     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                     conn.setRequestMethod("GET");
@@ -827,9 +830,9 @@ public class RaidReportTool {
                             AtomicInteger recordsAfterEndDate = new AtomicInteger(0);
 
                             results.forEach((result) -> {
-                                int mode = result.getAsJsonObject().getAsJsonObject("activityDetails")
+                                int activityMode = result.getAsJsonObject().getAsJsonObject("activityDetails")
                                         .getAsJsonPrimitive("mode").getAsInt();
-                                if (Mode.validModeValuesForCPOTW().contains(mode)) {
+                                if (Mode.validModeValuesForCPOTW().contains(activityMode)) {
                                     String activityDateStr = result.getAsJsonObject().getAsJsonPrimitive("period")
                                             .getAsString();
                                     LocalDate dateCompleted = ZonedDateTime.parse(activityDateStr)
@@ -853,7 +856,8 @@ public class RaidReportTool {
                                             } catch (NullPointerException ex) {
                                             }
                                             GenericActivity genericActivity = new GenericActivity(instanceId,
-                                                    Mode.getFromValue(mode), member.getClan().getClanPlatform());
+                                                    Mode.getFromValue(activityMode),
+                                                    member.getClan().getClanPlatform());
                                             genericActivity.setTeam(team);
                                             genericActivitiesToProcess.add(genericActivity);
                                         }
@@ -1103,7 +1107,9 @@ public class RaidReportTool {
             try {
                 LOGGER.debug("Starting to process " + member.getDisplayName());
                 getMembersClearedActivities(member, startDate, endDate,
-                        sgcClanMembersMap);
+                        sgcClanMembersMap, 0);
+                getMembersClearedActivities(member, startDate, endDate,
+                        sgcClanMembersMap, 91); // TEMP FIX
                 LOGGER.debug("Finished processing " + member.getDisplayName());
             } catch (IOException ex) {
                 LOGGER.error("Error processing " + member.getDisplayName(), ex);

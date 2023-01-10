@@ -49,7 +49,7 @@ public class ManualSGCActivityReportRunner {
                             RaidReportTool.getMembersClearedActivities(member,
                                     firstOfYear,
                                     endOfYear,
-                                    sgcClanMembersMap);
+                                    sgcClanMembersMap, 0);
                             LOGGER.debug("Finished processing " + member.getDisplayName());
                         } catch (IOException ex) {
                             LOGGER.error("Error processing " + member.getDisplayName(), ex);
