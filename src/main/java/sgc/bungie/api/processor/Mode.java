@@ -92,6 +92,8 @@ public enum Mode {
     DARES("Dares", 85, 1.0),
     OFFENSIVE("Offensive", 86, 1.0),
     LOST_SECTOR("LostSector", 87, 1.0),
+    RIFT("Rift", 88, 1.0),
+    ZONE_CONTROL("ZoneControl", 89, 1.0),
     IRON_BANNER_RIFT("IronBannerRift", 90, 1.0),
     IRON_BANNER_ZONE_CONTROL("IronBannerZoneControl", 91, 1.0);
 
