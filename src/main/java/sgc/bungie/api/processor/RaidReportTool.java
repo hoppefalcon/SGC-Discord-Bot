@@ -712,9 +712,7 @@ public class RaidReportTool {
                             TOTAL_PGCR_COUNT.addAndGet(
                                     getMembersClearedActivities(member, startDate, endDate,
                                             sgcClanMembersMap, 0));
-                            TOTAL_PGCR_COUNT.addAndGet(
-                                    getMembersClearedActivities(member, startDate, endDate,
-                                            sgcClanMembersMap, 91)); // TEMP FIX
+                           
                             SCORED_PGCR_COUNT.addAndGet(member.getWeeklySGCActivity().get("COUNT"));
                             LOGGER.debug("Finished processing " + member.getDisplayName());
                         } catch (IOException ex) {
