@@ -1179,7 +1179,7 @@ public class RaidReportTool {
                             return member;
                         });
                     } catch (Exception ex) {
-                        LOGGER.error("Error processing Clan Raid Report for " + clan.getName(), ex);
+                        LOGGER.error("Error processing Clan Last Played Report for " + clan.getName(), ex);
                     }
                 });
                 executorService.invokeAll(tasks);
