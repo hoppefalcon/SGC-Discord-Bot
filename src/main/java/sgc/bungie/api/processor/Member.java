@@ -21,6 +21,7 @@ public class Member {
     private final String MemberType;
     private final Clan clan;
     private final HashMap<String, Character> characters = new HashMap<>();
+    private final HashMap<String, Boolean> collectibles = new HashMap<>();
 
     public Member(String UID, String DisplayName, String MemberType, String bungieGlobalDisplayName,
             String bungieGlobalDisplayNameCode, Clan clan) {
@@ -173,5 +174,9 @@ public class Member {
 
         }
         return totalActivitiesWithSGCMembersByMode;
+    }
+
+    public HashMap<String, Boolean> getCollectibles() {
+        return collectibles;
     }
 }

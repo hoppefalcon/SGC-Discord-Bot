@@ -94,7 +94,7 @@ public class ActivityReportTool {
             final String spreadsheetId = "1R0RkQYKVWcy6DA71xNkoDU-XIc14UjXuD7M05H2VHPk";
             BatchClearValuesRequest batchClearValuesRequest = new BatchClearValuesRequest();
             List<String> ranges = new ArrayList<>();
-            ranges.add("VOID!A2:D");
+            ranges.add("SOL!A2:D");
             batchClearValuesRequest.setRanges(ranges);
             service.spreadsheets().values().batchClear(spreadsheetId, batchClearValuesRequest).execute();
         } catch (Exception e) {

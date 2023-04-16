@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -172,8 +174,8 @@ public class RaidReportTool {
         LOGGER.trace("Finished Processing " + member.getDisplayName());
     }
 
-    public static void getClanInfo(Clan clan) throws IOException {
-        URL url = new URL(String.format("https://www.bungie.net/Platform/GroupV2/%s/", clan.getClanId()));
+    public static void getClanInfo(Clan clan) throws IOException, URISyntaxException {
+        URL url = new URI(String.format("https://www.bungie.net/Platform/GroupV2/%s/", clan.getClanId())).toURL();
 
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
@@ -201,8 +203,9 @@ public class RaidReportTool {
         conn.disconnect();
     }
 
-    public static void getClanMembers(Clan clan) throws IOException {
-        URL url = new URL(String.format("https://www.bungie.net/Platform/GroupV2/%s/Members/", clan.getClanId()));
+    public static void getClanMembers(Clan clan) throws IOException, URISyntaxException {
+        URL url = new URI(String.format("https://www.bungie.net/Platform/GroupV2/%s/Members/", clan.getClanId()))
+                .toURL();
 
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
@@ -247,14 +250,14 @@ public class RaidReportTool {
         conn.disconnect();
     }
 
-    public static void getAllMembersCharacters(Member member) throws IOException {
+    public static void getAllMembersCharacters(Member member) throws IOException, URISyntaxException {
         getMembersActiveCharacters(member);
         getMembersDeletedCharacters(member);
     }
 
-    public static void getMembersActiveCharacters(Member member) throws IOException {
-        URL url = new URL(String.format("https://www.bungie.net/Platform/Destiny2/%s/Profile/%s/?components=Characters",
-                member.getMemberType(), member.getUID()));
+    public static void getMembersActiveCharacters(Member member) throws IOException, URISyntaxException {
+        URL url = new URI(String.format("https://www.bungie.net/Platform/Destiny2/%s/Profile/%s/?components=Characters",
+                member.getMemberType(), member.getUID())).toURL();
 
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
@@ -295,9 +298,9 @@ public class RaidReportTool {
         conn.disconnect();
     }
 
-    public static void getMembersDeletedCharacters(Member member) throws IOException {
-        URL url = new URL(String.format("https://www.bungie.net/Platform/Destiny2/%s/Account/%s/Stats",
-                member.getMemberType(), member.getUID()));
+    public static void getMembersDeletedCharacters(Member member) throws IOException, URISyntaxException {
+        URL url = new URI(String.format("https://www.bungie.net/Platform/Destiny2/%s/Account/%s/Stats",
+                member.getMemberType(), member.getUID())).toURL();
 
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
@@ -338,9 +341,9 @@ public class RaidReportTool {
         List<String> validRaidHashes = Raid.getAllValidRaidHashes();
         member.getCharacters().forEach((characterId, character) -> {
             try {
-                URL url = new URL(String.format(
+                URL url = new URI(String.format(
                         "https://www.bungie.net/Platform/Destiny2/%s/Account/%s/Character/%s/Stats/AggregateActivityStats",
-                        member.getMemberType(), member.getUID(), character.getUID()));
+                        member.getMemberType(), member.getUID(), character.getUID())).toURL();
 
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("GET");
@@ -438,8 +441,8 @@ public class RaidReportTool {
             final HashMap<String, Member> searchResults = new HashMap<>();
 
             while (morePages) {
-                URL url = new URL(String.format("https://www.bungie.net/Platform/User/Search/GlobalName/%d/",
-                        page.getAndIncrement()));
+                URL url = new URI(String.format("https://www.bungie.net/Platform/User/Search/GlobalName/%d/",
+                        page.getAndIncrement())).toURL();
 
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
@@ -546,9 +549,9 @@ public class RaidReportTool {
             try {
                 boolean next = false;
                 for (int page = 0; !next; page++) {
-                    URL url = new URL(String.format(
+                    URL url = new URI(String.format(
                             "https://www.bungie.net/Platform/Destiny2/%s/Account/%s/Character/%s/Stats/Activities/?page=%d&mode=4&count=250",
-                            member.getMemberType(), member.getUID(), character.getUID(), page));
+                            member.getMemberType(), member.getUID(), character.getUID(), page)).toURL();
 
                     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                     conn.setRequestMethod("GET");
@@ -613,9 +616,10 @@ public class RaidReportTool {
         return member;
     }
 
-    public static RaidCarnageReport getRaidCarnageReport(String carnageReportId) throws IOException {
-        URL url = new URL(String.format("https://stats.bungie.net/Platform/Destiny2/Stats/PostGameCarnageReport/%s/",
-                carnageReportId));
+    public static RaidCarnageReport getRaidCarnageReport(String carnageReportId)
+            throws IOException, URISyntaxException {
+        URL url = new URI(String.format("https://stats.bungie.net/Platform/Destiny2/Stats/PostGameCarnageReport/%s/",
+                carnageReportId)).toURL();
 
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
@@ -712,7 +716,7 @@ public class RaidReportTool {
                             TOTAL_PGCR_COUNT.addAndGet(
                                     getMembersClearedActivities(member, startDate, endDate,
                                             sgcClanMembersMap, 0));
-                           
+
                             SCORED_PGCR_COUNT.addAndGet(member.getWeeklySGCActivity().get("COUNT"));
                             LOGGER.debug("Finished processing " + member.getDisplayName());
                         } catch (IOException ex) {
@@ -789,7 +793,7 @@ public class RaidReportTool {
     }
 
     public static int getMembersClearedActivities(Member member, LocalDate startDate, LocalDate endDate,
-            HashMap<String, Member> sgcClanMembersMap, int mode) throws IOException {
+            HashMap<String, Member> sgcClanMembersMap, int mode) throws IOException, URISyntaxException {
         LOGGER.debug(String.format("Getting Cleared Activities for %s", member.getCombinedBungieGlobalDisplayName()));
         AtomicInteger PGCR_COUNT = new AtomicInteger(0);
         getMembersActiveCharacters(member);
@@ -799,9 +803,9 @@ public class RaidReportTool {
                 List<GenericActivity> genericActivitiesToProcess = new ArrayList<>();
 
                 for (int page = 0; !next; page++) {
-                    URL url = new URL(String.format(
+                    URL url = new URI(String.format(
                             "https://www.bungie.net/Platform/Destiny2/%s/Account/%s/Character/%s/Stats/Activities/?page=%d&mode=%d&count=250",
-                            member.getMemberType(), member.getUID(), character.getUID(), page, mode));
+                            member.getMemberType(), member.getUID(), character.getUID(), page, mode)).toURL();
 
                     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                     conn.setRequestMethod("GET");
@@ -915,11 +919,11 @@ public class RaidReportTool {
     }
 
     public static void getSGCMemberCarnageReport(Member member, GenericActivity activityWithSGCMembers,
-            HashMap<String, Member> sgcClanMembersMap) throws IOException {
+            HashMap<String, Member> sgcClanMembersMap) throws IOException, URISyntaxException {
         LOGGER.debug(String.format("Processing PGCR %s for %s", activityWithSGCMembers.getUID(),
                 member.getCombinedBungieGlobalDisplayName()));
-        URL url = new URL(String.format("https://stats.bungie.net/Platform/Destiny2/Stats/PostGameCarnageReport/%s/",
-                activityWithSGCMembers.getUID()));
+        URL url = new URI(String.format("https://stats.bungie.net/Platform/Destiny2/Stats/PostGameCarnageReport/%s/",
+                activityWithSGCMembers.getUID())).toURL();
 
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
@@ -1093,7 +1097,7 @@ public class RaidReportTool {
 
     public static Member getUserCommunityActivityReport(String userBungieId, LocalDate startDate,
             LocalDate endDate)
-            throws IOException, InterruptedException {
+            throws IOException, InterruptedException, URISyntaxException {
         LOGGER.info("Starting User SGC Activity Report");
 
         List<Clan> clanList = initializeClanList();
@@ -1187,5 +1191,51 @@ public class RaidReportTool {
             LOGGER.error("Error processing getAllMembersLastDatePlayed", ex);
         }
         return members;
+    }
+
+    public static HashMap<String, Boolean> getMembersCollections(Member member, List<String> collectibleHashIntegers)
+            throws IOException, URISyntaxException {
+        URL url = new URI(String.format("https://www.bungie.net/Platform/Destiny2/%s/Profile/%s/?components=800",
+                member.getMemberType(), member.getUID())).toURL();
+
+        HashMap<String, Boolean> response = new HashMap<>();
+
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.addRequestProperty("X-API-Key", apiKey);
+        conn.addRequestProperty("Accept", "Application/Json");
+        conn.connect();
+
+        // Getting the response code
+        int responsecode = conn.getResponseCode();
+        if (responsecode == 200) {
+            BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            String inputLine;
+            StringBuffer content = new StringBuffer();
+            while ((inputLine = in.readLine()) != null) {
+                content.append(inputLine);
+            }
+            JsonObject results = JsonParser.parseString(content.toString()).getAsJsonObject()
+                    .getAsJsonObject("Response").getAsJsonObject("profileCollectibles").getAsJsonObject("data")
+                    .getAsJsonObject("collectibles");
+            collectibleHashIntegers.forEach((hash) -> {
+                try {
+                    JsonObject collectible = results.getAsJsonObject(hash);
+                    int state = collectible.get("state").getAsInt();
+                    if (state % 2 == 0) {
+                        response.put(hash, true);
+                    } else {
+                        response.put(hash, false);
+                    }
+                } catch (Exception ex) {
+                    LOGGER.error("Error processing JSON result from "
+                            + url.toExternalForm(), ex);
+                    response.put(hash, null);
+                }
+            });
+            in.close();
+        }
+        conn.disconnect();
+        return response;
     }
 }
