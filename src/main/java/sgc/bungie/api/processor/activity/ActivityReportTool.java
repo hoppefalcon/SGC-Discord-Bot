@@ -13,7 +13,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.channel.Channel;
@@ -54,6 +57,8 @@ public class ActivityReportTool {
 
     private static DiscordApi API = null;
 
+    private static ExecutorService executorService = Executors.newFixedThreadPool(2);
+
     public static void setDiscordAPI(DiscordApi api) {
         API = api;
     }
@@ -70,9 +75,18 @@ public class ActivityReportTool {
             for (SGC_Clan clan : SGC_Clan.values()) {
                 members.put(clan, new ArrayList<>());
             }
-
-            getAllClansDiscordActivity(members);
-            getAllClansGameActivity(members);
+            List<Callable<Object>> tasks = new ArrayList<>();
+            tasks.add(() -> {
+                getAllClansDiscordActivity(members);
+                return null;
+            });
+            tasks.add(() -> {
+                getAllClansGameActivity(members);
+                return null;
+            });
+            executorService.invokeAll(tasks);
+            // getAllClansDiscordActivity(members);
+            // getAllClansGameActivity(members);
             writeActivityToGoogleSheet(members);
 
             sendLogMessage(String.format("Completed the SGC Activity sheet update at %s",
