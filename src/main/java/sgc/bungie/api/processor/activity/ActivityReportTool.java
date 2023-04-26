@@ -222,7 +222,7 @@ public class ActivityReportTool {
             List<Update> updates = new ArrayList<>();
 
             for (SGC_Clan clan : members.keySet()) {
-                final String range = String.format("%s!A2:D", clan);
+                final String range = String.format("%s!A2:F", clan);
                 ranges.add(range);
 
                 ValueRange valueRange = new ValueRange();
