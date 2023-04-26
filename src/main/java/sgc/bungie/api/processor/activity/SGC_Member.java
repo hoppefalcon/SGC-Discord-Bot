@@ -7,6 +7,7 @@ import sgc.SGC_Clan;
 public class SGC_Member {
     private final SGC_Clan clan;
     private String discordDisplayName = "";
+    private String discordUserName = "";
     private String bungieDisplayName = "";
     private boolean discord_activity = false;
     private boolean game_activity = false;
@@ -38,6 +39,20 @@ public class SGC_Member {
      */
     public void setDiscordDisplayName(final String discordDisplayName) {
         this.discordDisplayName = discordDisplayName;
+    }
+
+    /**
+     * @return the discordUserName
+     */
+    public String getDiscordUserName() {
+        return discordUserName;
+    }
+
+    /**
+     * @param discordUserName the discordUserName to set
+     */
+    public void setDiscordUserName(final String discordUserName) {
+        this.discordUserName = discordUserName;
     }
 
     /**

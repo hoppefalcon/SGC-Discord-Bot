@@ -118,6 +118,8 @@ public class ActivityReportTool {
             users.forEach(user -> {
                 SGC_Member sgc_Member = new SGC_Member(clan);
                 sgc_Member.setDiscordDisplayName(user.getDisplayName(BotApplication.SGC_SERVER));
+                sgc_Member.getDiscord_message_counts().put("TOTAL", 0);
+                sgc_Member.setDiscordUserName(user.getName());
                 members.get(clan).add(sgc_Member);
                 if (allUsers.get(user) == null) {
                     ArrayList<SGC_Member> newList = new ArrayList<>();
@@ -141,6 +143,8 @@ public class ActivityReportTool {
                         if (userAuthor.isPresent()) {
                             if (allUsers.containsKey(userAuthor.get())) {
                                 for (SGC_Member member : allUsers.get(userAuthor.get())) {
+                                    member.getDiscord_message_counts().put("TOTAL",
+                                            member.getDiscord_message_counts().get("TOTAL") + 1);
                                     member.setDiscord_activity(true);
                                 }
                             }
@@ -230,6 +234,7 @@ public class ActivityReportTool {
                     row.add(member.getBungieDisplayName());
                     row.add(member.isDiscord_activity());
                     row.add(member.isGame_activity());
+                    row.add(member.getDiscord_message_counts().get("TOTAL"));
                     values.add(row);
                 }
                 valueRange.setValues(values);
@@ -381,7 +386,7 @@ public class ActivityReportTool {
             Set<User> users = roleById.get().getUsers();
             StringBuilder sb = new StringBuilder();
             users.forEach(user -> {
-                sb.append(user.getDisplayName(BotApplication.SGC_SERVER)).append(",");
+                sb.append(user.getDisplayName(BotApplication.SGC_SERVER)).append("\n");
             });
             return sb.toString();
         } else {

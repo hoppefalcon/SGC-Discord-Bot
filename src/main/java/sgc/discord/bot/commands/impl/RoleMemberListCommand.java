@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 
 import sgc.discord.bot.BotApplication;
 import sgc.discord.bot.commands.Command;
-import sgc.bungie.api.processor.*;
 import sgc.bungie.api.processor.activity.ActivityReportTool;
 
 public class RoleMemberListCommand implements Command {
@@ -20,7 +19,8 @@ public class RoleMemberListCommand implements Command {
 
         @Override
         public void handle(SlashCommandInteraction slashCommandInteraction) {
-                String discordRoleID = slashCommandInteraction.getOptionByName("DiscordRoleID").get().getStringValue().get();
+                String discordRoleID = slashCommandInteraction.getOptionByName("DiscordRoleID").get().getStringValue()
+                                .get();
                 LOGGER.info("Running RoleMemberListCommand with option " + discordRoleID);
 
                 slashCommandInteraction.respondLater().thenAccept(interactionOriginalResponseUpdater -> {
