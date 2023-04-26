@@ -1,5 +1,7 @@
 package sgc.bungie.api.processor.activity;
 
+import java.util.HashMap;
+
 import sgc.SGC_Clan;
 
 public class SGC_Member {
@@ -8,6 +10,7 @@ public class SGC_Member {
     private String bungieDisplayName = "";
     private boolean discord_activity = false;
     private boolean game_activity = false;
+    private HashMap<String, Integer> discord_message_counts = new HashMap<>();
 
     /**
      * @param clan
@@ -88,4 +91,10 @@ public class SGC_Member {
         return this.discordDisplayName.toLowerCase().endsWith(bungieDisplayName.toLowerCase());
     }
 
+    /**
+     * @return the discord_message_counts
+     */
+    public HashMap<String, Integer> getDiscord_message_counts() {
+        return discord_message_counts;
+    }
 }

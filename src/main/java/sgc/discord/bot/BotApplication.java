@@ -69,6 +69,7 @@ public class BotApplication {
 	public static void main(String[] args) {
 		ActivityReportTool.initiateGoogleSheetsAuth();
 		SpringApplication.run(BotApplication.class, args);
+		ActivityReportTool.setDiscordAPI(API);
 		scheduleActivitySheetUpdate(2, 6);
 	}
 
@@ -99,7 +100,7 @@ public class BotApplication {
 
 				@Override
 				public void run() {
-					ActivityReportTool.runActivitySheets(API);
+					ActivityReportTool.runActivitySheets();
 					scheduleActivitySheetUpdate(confimedTargetHour, increment);
 				}
 
@@ -113,7 +114,7 @@ public class BotApplication {
 
 				@Override
 				public void run() {
-					ActivityReportTool.runActivitySheets(API);
+					ActivityReportTool.runActivitySheets();
 					scheduleActivitySheetUpdate((confimedTargetHour + increment) % 24, increment);
 				}
 
@@ -181,6 +182,10 @@ public class BotApplication {
 		final SlashCommandOptionBuilder carnageIdOption = new SlashCommandOptionBuilder().setName("ID")
 				.setType(SlashCommandOptionType.STRING).setRequired(true).setDescription("Postgame Carnage Report ID");
 
+		final SlashCommandOptionBuilder discordRoleIdOption = new SlashCommandOptionBuilder().setName("DiscordRoleID")
+				.setType(SlashCommandOptionType.STRING).setRequired(true)
+				.setDescription("The Discord Role ID (Must Enable Developer Mode)");
+
 		Set<SlashCommandBuilder> commandList = new HashSet<>();
 
 		commandList.add(new SlashCommandBuilder().setName("user-raid-report")
@@ -219,6 +224,11 @@ public class BotApplication {
 		commandList.add(new SlashCommandBuilder().setName("raid-carnage-report")
 				.setDescription("Pulls a Full Raid Carnage Report.")
 				.addOption(carnageIdOption.build()));
+
+				
+		commandList.add(new SlashCommandBuilder().setName("discord-role-member-list")
+		.setDescription("Pulls a list of members with the given Discord Role.")
+		.addOption(discordRoleIdOption.build()));
 
 		API.bulkOverwriteGlobalApplicationCommands(commandList).join();
 
