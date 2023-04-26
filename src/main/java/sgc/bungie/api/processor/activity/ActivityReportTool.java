@@ -95,11 +95,7 @@ public class ActivityReportTool {
                     .build();
 
             final String spreadsheetId = "1R0RkQYKVWcy6DA71xNkoDU-XIc14UjXuD7M05H2VHPk";
-            BatchClearValuesRequest batchClearValuesRequest = new BatchClearValuesRequest();
-            List<String> ranges = new ArrayList<>();
-            ranges.add("SOL!A2:D");
-            batchClearValuesRequest.setRanges(ranges);
-            service.spreadsheets().values().batchClear(spreadsheetId, batchClearValuesRequest).execute();
+            service.spreadsheets().values().get(spreadsheetId, "SOL!A2:F").execute();
         } catch (Exception e) {
             LOGGER.error(e.getMessage(), e);
         }
@@ -119,7 +115,7 @@ public class ActivityReportTool {
                 SGC_Member sgc_Member = new SGC_Member(clan);
                 sgc_Member.setDiscordDisplayName(user.getDisplayName(BotApplication.SGC_SERVER));
                 sgc_Member.getDiscord_message_counts().put("TOTAL", 0);
-                sgc_Member.setDiscordUserName(user.getName());
+                sgc_Member.setDiscordUserName(user.getDiscriminatedName());
                 members.get(clan).add(sgc_Member);
                 if (allUsers.get(user) == null) {
                     ArrayList<SGC_Member> newList = new ArrayList<>();
