@@ -235,6 +235,7 @@ public class ActivityReportTool {
                     row.add(member.isDiscord_activity());
                     row.add(member.isGame_activity());
                     row.add(member.getDiscord_message_counts().get("TOTAL"));
+                    row.add(member.getDiscordUserName());
                     values.add(row);
                 }
                 valueRange.setValues(values);
