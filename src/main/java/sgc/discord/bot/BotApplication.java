@@ -186,6 +186,15 @@ public class BotApplication {
 				.setType(SlashCommandOptionType.STRING).setRequired(true)
 				.setDescription("The Discord Role ID (Must Enable Developer Mode)");
 
+		final SlashCommandOptionBuilder discordChannelIdOption = new SlashCommandOptionBuilder()
+				.setName("DiscordChannelID")
+				.setType(SlashCommandOptionType.STRING).setRequired(true)
+				.setDescription("The Discord Channel ID (Must Enable Developer Mode)");
+
+		final SlashCommandOptionBuilder daysOption = new SlashCommandOptionBuilder()
+				.setName("Days").setType(SlashCommandOptionType.STRING).setRequired(true)
+				.setDescription("Days to look back in history");
+
 		Set<SlashCommandBuilder> commandList = new HashSet<>();
 
 		commandList.add(new SlashCommandBuilder().setName("user-raid-report")
@@ -225,10 +234,15 @@ public class BotApplication {
 				.setDescription("Pulls a Full Raid Carnage Report.")
 				.addOption(carnageIdOption.build()));
 
-				
 		commandList.add(new SlashCommandBuilder().setName("discord-role-member-list")
-		.setDescription("Pulls a list of members with the given Discord Role.")
-		.addOption(discordRoleIdOption.build()));
+				.setDescription("Pulls a list of members with the given Discord Role.")
+				.addOption(discordRoleIdOption.build()));
+
+		commandList.add(new SlashCommandBuilder().setName("discord-clan-chat-report")
+				.setDescription("Pulls a list of members with the given Discord Role.")
+				.addOption(discordRoleIdOption.build())
+				.addOption(discordChannelIdOption.build())
+				.addOption(daysOption.build()));
 
 		API.bulkOverwriteGlobalApplicationCommands(commandList).join();
 

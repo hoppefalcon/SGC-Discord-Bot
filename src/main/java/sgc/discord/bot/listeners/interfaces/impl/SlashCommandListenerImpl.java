@@ -4,6 +4,7 @@ import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 import org.javacord.api.interaction.SlashCommandInteraction;
 import org.springframework.stereotype.Component;
 
+import sgc.discord.bot.commands.impl.ClanChatReportCommand;
 import sgc.discord.bot.commands.impl.ClanRaidReportCommand;
 import sgc.discord.bot.commands.impl.RaidCarnageReportCommand;
 import sgc.discord.bot.commands.impl.RoleMemberListCommand;
@@ -54,6 +55,10 @@ public class SlashCommandListenerImpl implements SlashCommandListener {
 
             case "discord-role-member-list":
                 new RoleMemberListCommand().handle(slashCommandInteraction);
+                break;
+
+            case "discord-clan-chat-report":
+                new ClanChatReportCommand().handle(slashCommandInteraction);
                 break;
 
             default:

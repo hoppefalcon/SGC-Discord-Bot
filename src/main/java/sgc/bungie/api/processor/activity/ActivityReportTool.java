@@ -304,8 +304,9 @@ public class ActivityReportTool {
     /**
      * @param API
      * @param members
+     * @throws Exception
      */
-    public static String getClansDiscordActivityForChannels(SGC_Clan clan, List<String> channelIDs, int days) {
+    public static String getClanDiscordActivityForForum(SGC_Clan clan, String channelID, int days) throws Exception {
         HashMap<User, ArrayList<SGC_Member>> allUsers = new HashMap<>();
         HashMap<String, String> channels = new HashMap<>();
 
@@ -322,8 +323,8 @@ public class ActivityReportTool {
             allUsers.get(user).add(sgc_Member);
         });
 
-        channelIDs.forEach(channelID -> {
-            Optional<Channel> channel = API.getChannelById(channelID);
+        Optional<Channel> channel = API.getChannelById(channelID);
+        if (channel.isPresent()) {
             API.getServerThreadChannels().forEach(thread -> {
                 if (thread.getParent().getIdAsString().equals(channelID)) {
                     try {
@@ -351,35 +352,34 @@ public class ActivityReportTool {
                     }
                 }
             });
-            if (channel.isPresent()) {
-                channels.put(channelID, channel.get().asServerChannel().get().getName());
-            }
-        });
 
-        final StringBuilder stringBuilder = new StringBuilder();
+            final StringBuilder stringBuilder = new StringBuilder();
 
-        stringBuilder.append("\"Discord Name\",");
-        channels.keySet().forEach(id -> {
-            stringBuilder.append("\"").append(channels.get(id)).append("\",");
-        });
-        stringBuilder.append("\n");
-        allUsers.keySet().forEach(user -> {
-            stringBuilder.append("\"").append(allUsers.get(user).get(0).getDiscordDisplayName())
-                    .append("\",");
+            stringBuilder.append("\"Discord Name\",");
             channels.keySet().forEach(id -> {
-                int count = 0;
-                for (SGC_Member member : allUsers.get(user)) {
-                    if (member.getDiscord_message_counts().get(id) != null) {
-                        count += member.getDiscord_message_counts().get(id);
-                    }
-                }
-                stringBuilder.append("\"").append(count)
-                        .append("\",");
+                stringBuilder.append("\"").append(channels.get(id)).append("\",");
             });
             stringBuilder.append("\n");
-        });
+            allUsers.keySet().forEach(user -> {
+                stringBuilder.append("\"").append(allUsers.get(user).get(0).getDiscordDisplayName())
+                        .append("\",");
+                channels.keySet().forEach(id -> {
+                    int count = 0;
+                    for (SGC_Member member : allUsers.get(user)) {
+                        if (member.getDiscord_message_counts().get(id) != null) {
+                            count += member.getDiscord_message_counts().get(id);
+                        }
+                    }
+                    stringBuilder.append("\"").append(count)
+                            .append("\",");
+                });
+                stringBuilder.append("\n");
+            });
 
-        return stringBuilder.toString();
+            return stringBuilder.toString();
+        } else {
+            throw new Exception("Channel not found with ID: " + channelID);
+        }
     }
 
     public static String getDiscordRoleName(String discordRoleID) {

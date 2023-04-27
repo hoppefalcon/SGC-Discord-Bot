@@ -47,4 +47,13 @@ public enum SGC_Clan {
         return null;
     }
 
+    public static SGC_Clan getGetClanByRoleId(String discordRoleID) {
+        for (SGC_Clan clan : SGC_Clan.values()) {
+            if (clan.Discord_Role_ID.equals(discordRoleID)) {
+                return clan;
+            }
+        }
+        return null;
+    }
+
 }
