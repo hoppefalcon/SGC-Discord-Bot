@@ -308,7 +308,6 @@ public class ActivityReportTool {
      */
     public static String getClanDiscordActivityForForum(SGC_Clan clan, String channelID, int days) throws Exception {
         HashMap<User, ArrayList<SGC_Member>> allUsers = new HashMap<>();
-        HashMap<String, String> channels = new HashMap<>();
 
         LOGGER.info("Processing the Discord Activity for " + clan.name());
         Optional<Role> roleById = API.getRoleById(clan.Discord_Role_ID);
@@ -356,23 +355,20 @@ public class ActivityReportTool {
             final StringBuilder stringBuilder = new StringBuilder();
 
             stringBuilder.append("\"Discord Name\",");
-            channels.keySet().forEach(id -> {
-                stringBuilder.append("\"").append(channels.get(id)).append("\",");
-            });
+            stringBuilder.append("\"").append(channel.get().asServerChannel().get().getName()).append("\",");
+
             stringBuilder.append("\n");
             allUsers.keySet().forEach(user -> {
                 stringBuilder.append("\"").append(allUsers.get(user).get(0).getDiscordDisplayName())
                         .append("\",");
-                channels.keySet().forEach(id -> {
-                    int count = 0;
-                    for (SGC_Member member : allUsers.get(user)) {
-                        if (member.getDiscord_message_counts().get(id) != null) {
-                            count += member.getDiscord_message_counts().get(id);
-                        }
+                int count = 0;
+                for (SGC_Member member : allUsers.get(user)) {
+                    if (member.getDiscord_message_counts().get(channelID) != null) {
+                        count += member.getDiscord_message_counts().get(channelID);
                     }
-                    stringBuilder.append("\"").append(count)
-                            .append("\",");
-                });
+                }
+                stringBuilder.append("\"").append(count)
+                        .append("\",");
                 stringBuilder.append("\n");
             });
 
