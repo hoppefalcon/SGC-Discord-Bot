@@ -1110,8 +1110,6 @@ public class RaidReportTool {
                 LOGGER.debug("Starting to process " + member.getDisplayName());
                 getMembersClearedActivities(member, startDate, endDate,
                         sgcClanMembersMap, 0);
-                getMembersClearedActivities(member, startDate, endDate,
-                        sgcClanMembersMap, 91); // TEMP FIX
                 LOGGER.debug("Finished processing " + member.getDisplayName());
             } catch (IOException ex) {
                 LOGGER.error("Error processing " + member.getDisplayName(), ex);
