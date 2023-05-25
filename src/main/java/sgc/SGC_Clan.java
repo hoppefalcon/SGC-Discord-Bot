@@ -1,7 +1,7 @@
 package sgc;
 
 public enum SGC_Clan {
-    ANRC("456910898838241280", "3076620", Platform.PC),
+    APEX("456910898838241280", "3076620", Platform.PC),
     BOOP("456911177625108492", "3063489", Platform.PC),
     CATS("908058949914329148", "3884528", Platform.PC),
     DAWN("1020330250124660856", "4327418", Platform.XBOX),
