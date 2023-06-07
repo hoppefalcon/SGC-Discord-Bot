@@ -744,6 +744,48 @@ public class RaidReportTool {
         return potwActivityReportAsCsv;
     }
 
+    public static String getClanInternalActivityReport(SGC_Clan sgc_clan, LocalDate startDate, LocalDate endDate,
+            InteractionOriginalResponseUpdater interactionOriginalResponseUpdater)
+            throws IOException, InterruptedException, URISyntaxException {
+        LOGGER.info(String.format("Starting %s Internal Activity Report", sgc_clan.name()));
+
+        if (interactionOriginalResponseUpdater != null) {
+            interactionOriginalResponseUpdater.setContent(String
+                    .format("Building a %s internal activity report from %s to %s\nThis will take a while.",
+                            startDate,
+                            endDate))
+                    .update().join();
+        }
+        Clan clan = initializeClan(sgc_clan);
+        HashMap<String, Member> sgcClanMembersMap = initializeClanMembersMap(List.of(clan));
+
+        List<Callable<Object>> tasks = new ArrayList<>();
+        LOGGER.info("Starting to process " + clan.getCallsign());
+        clan.getMembers().forEach((memberId, member) -> {
+            tasks.add(() -> {
+                if (member.hasNewBungieName()) {
+                    try {
+                        LOGGER.debug("Starting to process " + member.getDisplayName());
+                        getMembersClearedActivities(member, startDate, endDate,
+                                sgcClanMembersMap, 0);
+                        LOGGER.debug("Finished processing " + member.getDisplayName());
+                    } catch (IOException ex) {
+                        LOGGER.error("Error processing " + member.getDisplayName(), ex);
+                    }
+                }
+                return null;
+            });
+        });
+
+        try {
+            executorService.invokeAll(tasks);
+        } finally {
+            System.gc();
+            LOGGER.info("Finished processing " + clan.getCallsign());
+        }
+        return getClanInternalActivityReportAsCsv(clan);
+    }
+
     public static List<Clan> initializeClanList() throws InterruptedException {
         LOGGER.debug("Initializing Clan List for SGC Activity Report");
         List<Callable<Object>> tasks = new ArrayList<>();
@@ -773,10 +815,16 @@ public class RaidReportTool {
             LOGGER.error(ex.getMessage(), ex);
         } finally {
             LOGGER.debug("Full Clan List Initialized");
-            // LOGGER.debug(String.format("%s Clan List Initialized", platform.getName()));
         }
 
         return clanList;
+    }
+
+    public static Clan initializeClan(SGC_Clan sgc_clan) throws IOException, URISyntaxException {
+        Clan clan = new Clan(sgc_clan.Bungie_ID, sgc_clan.Primary_Platform);
+        getClanInfo(clan);
+        getClanMembers(clan);
+        return clan;
     }
 
     public static HashMap<String, Member> initializeClanMembersMap(List<Clan> clanList) {
@@ -999,6 +1047,16 @@ public class RaidReportTool {
         return stringBuilder.toString();
     }
 
+    public static String getClanInternalActivityReportAsCsv(Clan clan) {
+        final StringBuilder stringBuilder = new StringBuilder();
+
+        stringBuilder.append(getInternalActivityReportCsvHeader());
+
+        stringBuilder.append(getClanInternalActivityCsvPart(clan));
+
+        return stringBuilder.toString();
+    }
+
     private static String getClanActivityCsvPart(Clan clan) {
         final StringBuilder csvPart = new StringBuilder();
         List<Mode> validModesForCPOTW = Mode.validModesForCPOTW();
@@ -1026,6 +1084,39 @@ public class RaidReportTool {
                                 .append("\"").append(titanClears).append("\",")
                                 .append("\"").append(hunterClears).append("\",")
                                 .append("\"").append(warlockClears).append("\",");
+                        for (Mode mode : validModesForCPOTW) {
+                            csvPart.append("\"").append(totalActivitiesWithSGCMembersByMode.get(mode)).append("\",");
+                        }
+                        csvPart.append("\n");
+                    }
+                });
+
+        return csvPart.toString();
+    }
+
+    private static String getClanInternalActivityCsvPart(Clan clan) {
+        final StringBuilder csvPart = new StringBuilder();
+        List<Mode> validModesForCPOTW = Mode.validModesForCPOTW();
+        clan.getMembers()
+                .forEach((memberId, member) -> {
+                    Character titanCharacter = member.getCharacterByDestinyClassType(DestinyClassType.TITAN);
+                    Character hunterCharacter = member.getCharacterByDestinyClassType(DestinyClassType.HUNTER);
+                    Character warlockCharacter = member.getCharacterByDestinyClassType(DestinyClassType.WARLOCK);
+
+                    int titanClears = titanCharacter != null ? titanCharacter.getActivitiesWithSGCMembersCount() : 0;
+
+                    int hunterClears = hunterCharacter != null ? hunterCharacter.getActivitiesWithSGCMembersCount() : 0;
+
+                    int warlockClears = warlockCharacter != null ? warlockCharacter.getActivitiesWithSGCMembersCount()
+                            : 0;
+
+                    HashMap<Mode, Integer> totalActivitiesWithSGCMembersByMode = member
+                            .getTotalActivitiesWithSGCMembersByMode();
+
+                    if (member.hasNewBungieName()) {
+                        csvPart.append("\"").append(member.getDisplayName()).append("\",")
+                                .append("\"").append(member.getCombinedBungieGlobalDisplayName()).append("\",")
+                                .append("\"").append(titanClears + hunterClears + warlockClears).append("\",");
                         for (Mode mode : validModesForCPOTW) {
                             csvPart.append("\"").append(totalActivitiesWithSGCMembersByMode.get(mode)).append("\",");
                         }
@@ -1146,6 +1237,19 @@ public class RaidReportTool {
         stringBuilder.append("\"Gamertag\",").append("\"BungieDisplayName\",").append("\"Clan\",")
                 .append("\"Community POTW Points\",").append("\"Titan Clears\",").append("\"Hunter Clears\",")
                 .append("\"Warlock Clears\",");
+
+        List<Mode> validModesForCPOTW = Mode.validModesForCPOTW();
+        for (Mode mode : validModesForCPOTW) {
+            stringBuilder.append("\"").append(mode.getName()).append("\",");
+        }
+
+        return stringBuilder.append("\n").toString();
+    }
+
+    private static String getInternalActivityReportCsvHeader() {
+        final StringBuilder stringBuilder = new StringBuilder();
+
+        stringBuilder.append("\"Gamertag\",").append("\"BungieDisplayName\",").append("\"Total Activities\",");
 
         List<Mode> validModesForCPOTW = Mode.validModesForCPOTW();
         for (Mode mode : validModesForCPOTW) {

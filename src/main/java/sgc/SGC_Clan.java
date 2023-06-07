@@ -38,10 +38,18 @@ public enum SGC_Clan {
         this.Primary_Platform = Primary_Platform;
     }
 
-    public static Platform getClansPrimaryPlatform(String bungie_id) {
+    public static Platform getClansPrimaryPlatform(String bugnie_id) {
+        try {
+            return getGetClanByBungieId(bugnie_id).Primary_Platform;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public static SGC_Clan getGetClanByBungieId(String bungie_id) {
         for (SGC_Clan clan : SGC_Clan.values()) {
             if (clan.Bungie_ID.equals(bungie_id)) {
-                return clan.Primary_Platform;
+                return clan;
             }
         }
         return null;

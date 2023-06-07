@@ -195,6 +195,13 @@ public class BotApplication {
 				.setName("Days").setType(SlashCommandOptionType.STRING).setRequired(true)
 				.setDescription("Days to look back in history");
 
+		final SlashCommandOptionBuilder timeframe = new SlashCommandOptionBuilder().setName("Timeframe")
+				.setType(SlashCommandOptionType.STRING).setRequired(true)
+				.setDescription("How far back should the report go?");
+		timeframe.addChoice("1 Week", "7");
+		timeframe.addChoice("2 Weeks", "14");
+		timeframe.addChoice("1 Month", "30");
+
 		Set<SlashCommandBuilder> commandList = new HashSet<>();
 
 		commandList.add(new SlashCommandBuilder().setName("user-raid-report")
@@ -243,6 +250,21 @@ public class BotApplication {
 				.addOption(discordRoleIdOption.build())
 				.addOption(discordChannelIdOption.build())
 				.addOption(daysOption.build()));
+
+		commandList.add(new SlashCommandBuilder().setName("pc-clan-internal-activity-report")
+				.setDescription("Pulls a PC clan internal activity report.")
+				.addOption(pcClanOption.build())
+				.addOption(timeframe.build()));
+
+		commandList.add(new SlashCommandBuilder().setName("xbox-clan-internal-activity-report")
+				.setDescription("Pulls a Xbox clan internal activity report.")
+				.addOption(xbClanOption.build())
+				.addOption(timeframe.build()));
+
+		commandList.add(new SlashCommandBuilder().setName("psn-clan-internal-activity-report")
+				.setDescription("Pulls a Playstation clan internal activity report.")
+				.addOption(psClanOption.build())
+				.addOption(timeframe.build()));
 
 		API.bulkOverwriteGlobalApplicationCommands(commandList).join();
 
