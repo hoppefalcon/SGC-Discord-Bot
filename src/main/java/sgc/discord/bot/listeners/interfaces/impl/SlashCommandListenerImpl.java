@@ -5,6 +5,7 @@ import org.javacord.api.interaction.SlashCommandInteraction;
 import org.springframework.stereotype.Component;
 
 import sgc.discord.bot.commands.impl.ClanChatReportCommand;
+import sgc.discord.bot.commands.impl.ClanInternalActivityReportCommand;
 import sgc.discord.bot.commands.impl.ClanRaidReportCommand;
 import sgc.discord.bot.commands.impl.RaidCarnageReportCommand;
 import sgc.discord.bot.commands.impl.RoleMemberListCommand;
@@ -61,6 +62,17 @@ public class SlashCommandListenerImpl implements SlashCommandListener {
                 new ClanChatReportCommand().handle(slashCommandInteraction);
                 break;
 
+            case "pc-clan-iar":
+                new ClanInternalActivityReportCommand().handle(slashCommandInteraction);
+                break;
+
+            case "xbox-clan-iar":
+                new ClanInternalActivityReportCommand().handle(slashCommandInteraction);
+                break;
+
+            case "psn-clan-iar":
+                new ClanInternalActivityReportCommand().handle(slashCommandInteraction);
+                break;
             default:
                 break;
         }
