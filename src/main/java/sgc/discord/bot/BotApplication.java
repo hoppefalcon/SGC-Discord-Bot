@@ -251,17 +251,17 @@ public class BotApplication {
 				.addOption(discordChannelIdOption.build())
 				.addOption(daysOption.build()));
 
-		commandList.add(new SlashCommandBuilder().setName("pc-clan-internal-activity-report")
+		commandList.add(new SlashCommandBuilder().setName("pc-clan-iar")
 				.setDescription("Pulls a PC clan internal activity report.")
 				.addOption(pcClanOption.build())
 				.addOption(timeframe.build()));
 
-		commandList.add(new SlashCommandBuilder().setName("xbox-clan-internal-activity-report")
+		commandList.add(new SlashCommandBuilder().setName("xbox-clan-iar")
 				.setDescription("Pulls a Xbox clan internal activity report.")
 				.addOption(xbClanOption.build())
 				.addOption(timeframe.build()));
 
-		commandList.add(new SlashCommandBuilder().setName("psn-clan-internal-activity-report")
+		commandList.add(new SlashCommandBuilder().setName("psn-clan-iar")
 				.setDescription("Pulls a Playstation clan internal activity report.")
 				.addOption(psClanOption.build())
 				.addOption(timeframe.build()));

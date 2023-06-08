@@ -1249,7 +1249,8 @@ public class RaidReportTool {
     private static String getInternalActivityReportCsvHeader() {
         final StringBuilder stringBuilder = new StringBuilder();
 
-        stringBuilder.append("\"Gamertag\",").append("\"BungieDisplayName\",").append("\"Total Activities\",");
+        stringBuilder.append("\"Gamertag\",").append("\"BungieDisplayName\",")
+                .append("\"Total Activities with Clan Members\",");
 
         List<Mode> validModesForCPOTW = Mode.validModesForCPOTW();
         for (Mode mode : validModesForCPOTW) {
