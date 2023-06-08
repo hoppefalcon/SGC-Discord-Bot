@@ -36,7 +36,8 @@ public class ClanInternalActivityReportCommand implements Command {
                                 LocalDate endDate = LocalDate.now();
                                 LocalDate startDate = endDate.minusDays(timeframe);
                                 interactionOriginalResponseUpdater
-                                                .setContent("Building a clan raid report for " + clan.name())
+                                                .setContent("Building a clan internal activity report for "
+                                                                + clan.name())
                                                 .update();
 
                                 new MessageBuilder()
@@ -74,8 +75,10 @@ public class ClanInternalActivityReportCommand implements Command {
                         } catch (Exception e) {
                                 LOGGER.error(e.getMessage(), e);
                                 interactionOriginalResponseUpdater.setContent("")
-                                                .addEmbed(new EmbedBuilder().setTitle(bungieClanID + " Raid Report")
-                                                                .setDescription("An error occured while building a Raid Report for "
+                                                .addEmbed(new EmbedBuilder()
+                                                                .setTitle(bungieClanID
+                                                                                + " clan internal activity report")
+                                                                .setDescription("An error occured while building a clan internal activity report for "
                                                                                 + bungieClanID)
                                                                 .setFooter("ERROR")
                                                                 .setThumbnail(getClass().getClassLoader()
