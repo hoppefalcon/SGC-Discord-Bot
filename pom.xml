@@ -14,7 +14,7 @@
 
 	<groupId>sgc.discord.bot</groupId>
 	<artifactId>sgc-discord-bot</artifactId>
-	<version>4.5.6</version>
+	<version>4.5.7</version>
 	<name>sgc-discord-bot</name>
 	<description>Discord Bot for Shrouded Gaming Community</description>
 
