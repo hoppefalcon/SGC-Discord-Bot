@@ -2,6 +2,7 @@ package sgc.discord.bot.commands.impl;
 
 import java.awt.Color;
 import java.time.LocalDate;
+import java.time.ZoneId;
 
 import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
@@ -33,7 +34,7 @@ public class ClanInternalActivityReportCommand implements Command {
 
                         try {
                                 SGC_Clan clan = SGC_Clan.getGetClanByBungieId(bungieClanID);
-                                LocalDate endDate = LocalDate.now();
+                                LocalDate endDate = LocalDate.now(ZoneId.of("EST"));
                                 LocalDate startDate = endDate.minusDays(timeframe);
                                 interactionOriginalResponseUpdater
                                                 .setContent("Building a clan internal activity report for "
