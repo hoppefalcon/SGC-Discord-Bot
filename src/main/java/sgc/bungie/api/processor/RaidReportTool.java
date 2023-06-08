@@ -752,6 +752,7 @@ public class RaidReportTool {
         if (interactionOriginalResponseUpdater != null) {
             interactionOriginalResponseUpdater.setContent(String
                     .format("Building a %s internal activity report from %s to %s\nThis will take a while.",
+                            sgc_clan.name(),
                             startDate,
                             endDate))
                     .update().join();
