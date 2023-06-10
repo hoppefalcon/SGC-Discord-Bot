@@ -64,7 +64,7 @@ public class ActivityReportTool {
             LOGGER.info("Starting the SGC Activity sheet update at " +
                     ZonedDateTime.now(BotApplication.ZID).format(BotApplication.DATE_TIME_FORMATTER));
 
-            sendErrorMessage("Starting the SGC Activity sheet update at " +
+            sendLogMessage("Starting the SGC Activity sheet update at " +
                     ZonedDateTime.now(BotApplication.ZID).format(BotApplication.DATE_TIME_FORMATTER));
 
             HashMap<SGC_Clan, ArrayList<SGC_Member>> members = initializeMembers();
@@ -72,7 +72,7 @@ public class ActivityReportTool {
             getAllClansGameActivity(members);
             writeActivityToGoogleSheet(members);
 
-            sendErrorMessage("Completed the SGC Activity sheet update at " +
+            sendLogMessage("Completed the SGC Activity sheet update at " +
                     ZonedDateTime.now(BotApplication.ZID).format(BotApplication.DATE_TIME_FORMATTER));
         } catch (Exception e) {
             LOGGER.error(e.getMessage(), e);
@@ -281,6 +281,25 @@ public class ActivityReportTool {
             for (Update update : updates) {
                 update.execute();
             }
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+    }
+
+    private static void sendLogMessage(String logMessage) {
+        try {
+            new MessageBuilder()
+                    .addEmbed(new EmbedBuilder()
+                            .setAuthor(API.getYourself())
+                            .setTitle("SGC Activity Sheets")
+                            .setDescription(logMessage)
+                            .setFooter("#AreYouShrouded")
+                            .setThumbnail(ActivityReportTool.class
+                                    .getClassLoader()
+                                    .getResourceAsStream(
+                                            "SGC.png"))
+                            .setColor(Color.BLUE))
+                    .send(API.getChannelById("629511503296593930").get().asTextChannel().get());
         } catch (Exception e) {
             LOGGER.error(e.getMessage(), e);
         }
