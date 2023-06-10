@@ -9,107 +9,141 @@ public class SGC_Member {
     private String discordDisplayName = "";
     private String discordUserName = "";
     private String bungieDisplayName = "";
-    private boolean discord_activity = false;
-    private boolean game_activity = false;
-    private HashMap<String, Integer> discord_message_counts = new HashMap<>();
+    private boolean discordActivity = false;
+    private boolean gameActivity = false;
+    private HashMap<String, Integer> discordMessageCounts = new HashMap<>();
 
     /**
-     * @param clan
+     * Constructs an instance of SGC_Member with the specified clan.
+     *
+     * @param clan The clan to which the member belongs.
      */
     public SGC_Member(final SGC_Clan clan) {
         this.clan = clan;
     }
 
     /**
-     * @return the clan
+     * Returns the clan of the member.
+     *
+     * @return The clan of the member.
      */
     public SGC_Clan getClan() {
         return clan;
     }
 
     /**
-     * @return the discordDisplayName
+     * Returns the Discord display name of the member.
+     *
+     * @return The Discord display name of the member.
      */
     public String getDiscordDisplayName() {
         return discordDisplayName;
     }
 
     /**
-     * @param discordDisplayName the discordDisplayName to set
+     * Sets the Discord display name of the member.
+     *
+     * @param discordDisplayName The Discord display name to set.
      */
     public void setDiscordDisplayName(final String discordDisplayName) {
         this.discordDisplayName = discordDisplayName;
     }
 
     /**
-     * @return the discordUserName
+     * Returns the Discord username of the member.
+     *
+     * @return The Discord username of the member.
      */
     public String getDiscordUserName() {
         return discordUserName;
     }
 
     /**
-     * @param discordUserName the discordUserName to set
+     * Sets the Discord username of the member.
+     *
+     * @param discordUserName The Discord username to set.
      */
     public void setDiscordUserName(final String discordUserName) {
         this.discordUserName = discordUserName;
     }
 
     /**
-     * @return the bungieDisplayName
+     * Returns the Bungie display name of the member.
+     *
+     * @return The Bungie display name of the member.
      */
     public String getBungieDisplayName() {
         return bungieDisplayName;
     }
 
     /**
-     * @param bungieDisplayName the bungieDisplayName to set
+     * Sets the Bungie display name of the member.
+     *
+     * @param bungieDisplayName The Bungie display name to set.
      */
     public void setBungieDisplayName(final String bungieDisplayName) {
         this.bungieDisplayName = bungieDisplayName;
     }
 
     /**
-     * @return the discord_activity
+     * Returns the Discord activity status of the member.
+     *
+     * @return The Discord activity status of the member.
      */
-    public boolean isDiscord_activity() {
-        return discord_activity;
+    public boolean isDiscordActivity() {
+        return discordActivity;
     }
 
     /**
-     * @param discord_activity the discord_activity to set
+     * Sets the Discord activity status of the member.
+     *
+     * @param discordActivity The Discord activity status to set.
      */
-    public void setDiscord_activity(final boolean discord_activity) {
-        this.discord_activity = discord_activity;
+    public void setDiscordActivity(final boolean discordActivity) {
+        this.discordActivity = discordActivity;
     }
 
     /**
-     * @return the game_activity
+     * Returns the game activity status of the member.
+     *
+     * @return The game activity status of the member.
      */
-    public boolean isGame_activity() {
-        return game_activity;
+    public boolean isGameActivity() {
+        return gameActivity;
     }
 
     /**
-     * @param game_activity the game_activity to set
+     * Sets the game activity status of the member.
+     *
+     * @param gameActivity The game activity status to set.
      */
-    public void setGame_activity(final boolean game_activity) {
-        this.game_activity = game_activity;
+    public void setGameActivity(final boolean gameActivity) {
+        this.gameActivity = gameActivity;
     }
 
     /**
-     * @param bungieDisplayName the bungieDisplayName to compare with the
-     *                          discordDisplayName
-     * @return if they are the same user
+     * Compares the Bungie display name with the Discord display name to check if
+     * they belong to the same member.
+     *
+     * @param bungieDisplayName The Bungie display name to compare with the Discord
+     *                          display name.
+     * @return true if the Bungie display name and Discord display name belong to
+     *         the same member, false otherwise.
      */
     public boolean isSameMember(final String bungieDisplayName) {
-        return this.discordDisplayName.toLowerCase().endsWith(bungieDisplayName.toLowerCase());
+        String[] split = this.discordDisplayName.toLowerCase().split("[|]");
+        if (split.length == 2) {
+            return split[1].trim().equals(bungieDisplayName.toLowerCase());
+        }
+        return false;
     }
 
     /**
-     * @return the discord_message_counts
+     * Returns the message counts for the member in Discord.
+     *
+     * @return The message counts for the member in Discord.
      */
-    public HashMap<String, Integer> getDiscord_message_counts() {
-        return discord_message_counts;
+    public HashMap<String, Integer> getDiscordMessageCounts() {
+        return discordMessageCounts;
     }
 }

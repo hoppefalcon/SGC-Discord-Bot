@@ -1,5 +1,8 @@
 package sgc;
 
+/**
+ * Enum representing the clans in the SGC Discord Bot.
+ */
 public enum SGC_Clan {
     APEX("456910898838241280", "3076620", Platform.PC),
     BOOP("456911177625108492", "3063489", Platform.PC),
@@ -32,21 +35,41 @@ public enum SGC_Clan {
     public final String Bungie_ID;
     public final Platform Primary_Platform;
 
+    /**
+     * Constructs a clan with the specified Discord Role ID, Bungie ID, and Primary
+     * Platform.
+     *
+     * @param Discord_Role_ID  the Discord Role ID of the clan
+     * @param Bungie_ID        the Bungie ID of the clan
+     * @param Primary_Platform the primary platform of the clan
+     */
     private SGC_Clan(String Discord_Role_ID, String Bungie_ID, Platform Primary_Platform) {
         this.Discord_Role_ID = Discord_Role_ID;
         this.Bungie_ID = Bungie_ID;
         this.Primary_Platform = Primary_Platform;
     }
 
-    public static Platform getClansPrimaryPlatform(String bugnie_id) {
+    /**
+     * Returns the primary platform of the clan associated with the given Bungie ID.
+     *
+     * @param bungie_id the Bungie ID
+     * @return the primary platform of the clan, or null if not found
+     */
+    public static Platform getClansPrimaryPlatform(String bungie_id) {
         try {
-            return getGetClanByBungieId(bugnie_id).Primary_Platform;
+            return getClanByBungieId(bungie_id).Primary_Platform;
         } catch (Exception e) {
             return null;
         }
     }
 
-    public static SGC_Clan getGetClanByBungieId(String bungie_id) {
+    /**
+     * Returns the clan associated with the given Bungie ID.
+     *
+     * @param bungie_id the Bungie ID
+     * @return the clan associated with the Bungie ID, or null if not found
+     */
+    public static SGC_Clan getClanByBungieId(String bungie_id) {
         for (SGC_Clan clan : SGC_Clan.values()) {
             if (clan.Bungie_ID.equals(bungie_id)) {
                 return clan;
@@ -55,7 +78,13 @@ public enum SGC_Clan {
         return null;
     }
 
-    public static SGC_Clan getGetClanByRoleId(String discordRoleID) {
+    /**
+     * Returns the clan associated with the given Discord Role ID.
+     *
+     * @param discordRoleID the Discord Role ID
+     * @return the clan associated with the Discord Role ID, or null if not found
+     */
+    public static SGC_Clan getClanByRoleId(String discordRoleID) {
         for (SGC_Clan clan : SGC_Clan.values()) {
             if (clan.Discord_Role_ID.equals(discordRoleID)) {
                 return clan;
@@ -63,5 +92,4 @@ public enum SGC_Clan {
         }
         return null;
     }
-
 }

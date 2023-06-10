@@ -53,23 +53,23 @@ public class ClanChatReportCommand implements Command {
                                         interactionOriginalResponseUpdater
                                                         .setContent(String.format(
                                                                         "Building Discord Clan Chat Activity Report for %s(%s)",
-                                                                        SGC_Clan.getGetClanByRoleId(discordRoleID)
+                                                                        SGC_Clan.getClanByBungieId(discordRoleID)
                                                                                         .name(),
                                                                         discordRoleID))
                                                         .update();
 
                                         String discordClanDiscordActivityForForum = ActivityReportTool
                                                         .getClanDiscordActivityForForum(
-                                                                        SGC_Clan.getGetClanByRoleId(discordRoleID),
+                                                                        SGC_Clan.getClanByBungieId(discordRoleID),
                                                                         discordChannelID, days);
 
                                         new MessageBuilder()
-                                                        .setContent(SGC_Clan.getGetClanByRoleId(discordRoleID).name()
+                                                        .setContent(SGC_Clan.getClanByBungieId(discordRoleID).name()
                                                                         + " Discord Clan Chat Activity")
                                                         .addEmbed(new EmbedBuilder()
                                                                         .setAuthor(slashCommandInteraction.getUser())
                                                                         .setTitle(SGC_Clan
-                                                                                        .getGetClanByRoleId(
+                                                                                        .getClanByBungieId(
                                                                                                         discordRoleID)
                                                                                         .name()
                                                                                         + " Discord Clan Chat Activity")
@@ -81,7 +81,7 @@ public class ClanChatReportCommand implements Command {
                                                                         .setColor(Color.CYAN))
                                                         .addAttachment(discordClanDiscordActivityForForum.getBytes(),
                                                                         String.format("%s [%s].csv",
-                                                                                        SGC_Clan.getGetClanByRoleId(
+                                                                                        SGC_Clan.getClanByBungieId(
                                                                                                         discordRoleID)
                                                                                                         .name(),
                                                                                         LocalDate.now().format(

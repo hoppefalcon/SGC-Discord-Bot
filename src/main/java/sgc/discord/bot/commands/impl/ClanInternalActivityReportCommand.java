@@ -33,7 +33,7 @@ public class ClanInternalActivityReportCommand implements Command {
                                         .update();
 
                         try {
-                                SGC_Clan clan = SGC_Clan.getGetClanByBungieId(bungieClanID);
+                                SGC_Clan clan = SGC_Clan.getClanByBungieId(bungieClanID);
                                 LocalDate endDate = LocalDate.now(ZoneId.of("America/New_York"));
                                 LocalDate startDate = endDate.minusDays(timeframe);
                                 interactionOriginalResponseUpdater

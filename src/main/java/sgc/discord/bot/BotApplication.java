@@ -73,16 +73,32 @@ public class BotApplication {
 		scheduleActivitySheetUpdate(2, 6);
 	}
 
+	/**
+	 * Schedules the activity sheet update task based on the target hour and
+	 * increment.
+	 * If it's the first run, it calculates the shortest delay among multiple target
+	 * hours,
+	 * executes the activity sheets, and reschedules the task accordingly.
+	 * Otherwise, it calculates the delay based on the target hour, executes the
+	 * activity sheets,
+	 * and reschedules the task with the next target hour and the given increment.
+	 *
+	 * @param targetHour The target hour for the activity sheet update.
+	 * @param increment  The increment value to determine the next target hour.
+	 */
 	private static void scheduleActivitySheetUpdate(int targetHour, int increment) {
-		long delay = 0;
+		long delay;
 		Runnable taskWrapper;
 
 		if (firstRun) {
 			int checks = 24 / increment;
 			long shortestDelay = 0;
 			int nextTarget = targetHour;
+
+			// Find the shortest delay among multiple target hours
 			for (int index = 0; index < checks; index++) {
 				long newDelay = computeNextDelay(nextTarget);
+
 				if (index == 0) {
 					shortestDelay = newDelay;
 				} else {
@@ -93,48 +109,54 @@ public class BotApplication {
 				}
 				nextTarget += increment;
 			}
+
 			delay = 0;
 			firstRun = false;
-			final int confimedTargetHour = targetHour;
-			taskWrapper = new Runnable() {
+			final int confirmedTargetHour = targetHour;
 
-				@Override
-				public void run() {
-					ActivityReportTool.runActivitySheets();
-					scheduleActivitySheetUpdate(confimedTargetHour, increment);
-				}
-
+			// Create a task wrapper to execute activity sheets and reschedule
+			taskWrapper = () -> {
+				ActivityReportTool.runActivitySheets();
+				scheduleActivitySheetUpdate(confirmedTargetHour, increment);
 			};
 		} else {
 			delay = computeNextDelay(targetHour);
-			final int confimedTargetHour = targetHour;
-			LOGGER.info(String.format("The next scheduled Actitivy Sheet Update is at %s",
-					getNextTargetTime(targetHour).format(BotApplication.DATE_TIME_FORMATTER)));
-			taskWrapper = new Runnable() {
+			final int confirmedTargetHour = targetHour;
+			LOGGER.info("The next scheduled Activity Sheet Update is at {}",
+					getNextTargetTime(targetHour).format(BotApplication.DATE_TIME_FORMATTER));
 
-				@Override
-				public void run() {
-					ActivityReportTool.runActivitySheets();
-					scheduleActivitySheetUpdate((confimedTargetHour + increment) % 24, increment);
-				}
-
+			// Create a task wrapper to execute activity sheets and reschedule
+			taskWrapper = () -> {
+				ActivityReportTool.runActivitySheets();
+				scheduleActivitySheetUpdate((confirmedTargetHour + increment) % 24, increment);
 			};
 		}
 
+		// Schedule the task with the calculated delay
 		executorService.schedule(taskWrapper, delay, TimeUnit.SECONDS);
 	}
 
+	// Calculate the next target time based on the provided target hour
 	private static ZonedDateTime getNextTargetTime(int targetHour) {
-		ZonedDateTime zonedNow = ZonedDateTime.now(ZID);
-		ZonedDateTime zonedNextTarget = zonedNow.withHour(targetHour).withMinute(0).withSecond(0);
-		if (zonedNow.compareTo(zonedNextTarget) > 0)
-			zonedNextTarget = zonedNextTarget.plusDays(1);
+		ZonedDateTime now = ZonedDateTime.now(ZID);
+		ZonedDateTime nextTarget = now.withHour(targetHour).withMinute(0).withSecond(0);
 
-		return zonedNextTarget;
+		// If the current time is already past the target hour, move to the next day
+		if (now.compareTo(nextTarget) > 0) {
+			nextTarget = nextTarget.plusDays(1);
+		}
+
+		return nextTarget;
 	}
 
+	// Compute the delay until the next target time
 	private static long computeNextDelay(int targetHour) {
-		Duration duration = Duration.between(ZonedDateTime.now(ZID), getNextTargetTime(targetHour));
+		ZonedDateTime now = ZonedDateTime.now(ZID);
+		ZonedDateTime nextTarget = getNextTargetTime(targetHour);
+
+		// Calculate the duration between the current time and the next target time
+		Duration duration = Duration.between(now, nextTarget);
+
 		return duration.getSeconds();
 	}
 

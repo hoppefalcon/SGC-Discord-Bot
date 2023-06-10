@@ -65,34 +65,33 @@ public class RaidReportTool {
     private static ExecutorService executorService = Executors.newFixedThreadPool(15);
 
     /**
-     * @param args the command line arguments
-     * @throws Exception
+     * Initializes the clan ID maps.
      */
-
-    // public static void main(String[] args) throws Exception {
-    // LocalDate startDate = LocalDate.parse("20220510",
-    // DateTimeFormatter.BASIC_ISO_DATE);
-    // LocalDate endDate = LocalDate.parse("20220516",
-    // DateTimeFormatter.BASIC_ISO_DATE);
-    // Member userCommunityActivityReport = getUserCommunityActivityReport("I pvp'd
-    // my pants#6272", startDate,
-    // endDate);
-    // System.out.println();
-    // }
-
     public static void initializeClanIdMap() {
         LOGGER.debug("Initializing Clan Map");
-        for (SGC_Clan sgc_clan : SGC_Clan.values()) {
+
+        // Clear the existing maps
+        pcClanIdMap.clear();
+        xbClanIdMap.clear();
+        psClanIdMap.clear();
+
+        // Iterate over each SGC_Clan enum value
+        for (SGC_Clan clan : SGC_Clan.values()) {
             try {
-                switch (sgc_clan.Primary_Platform) {
+                // Add the clan ID to the appropriate map based on the primary platform
+                String clanName = clan.name();
+                String bungieId = clan.Bungie_ID;
+                Platform primaryPlatform = clan.Primary_Platform;
+
+                switch (primaryPlatform) {
                     case PC:
-                        pcClanIdMap.put(sgc_clan.name(), sgc_clan.Bungie_ID);
+                        pcClanIdMap.put(clanName, bungieId);
                         break;
                     case XBOX:
-                        xbClanIdMap.put(sgc_clan.name(), sgc_clan.Bungie_ID);
+                        xbClanIdMap.put(clanName, bungieId);
                         break;
                     case PSN:
-                        psClanIdMap.put(sgc_clan.name(), sgc_clan.Bungie_ID);
+                        psClanIdMap.put(clanName, bungieId);
                         break;
                 }
             } catch (Exception e) {
@@ -103,26 +102,39 @@ public class RaidReportTool {
     }
 
     /**
-     * @return the pcclanidmap
+     * Retrieves the PC clan ID map.
+     *
+     * @return the PC clan ID map
      */
     public static HashMap<String, String> getPcClanIdMap() {
         return pcClanIdMap;
     }
 
     /**
-     * @return the xbclanidmap
+     * Retrieves the Xbox clan ID map.
+     *
+     * @return the Xbox clan ID map
      */
     public static HashMap<String, String> getXbClanIdMap() {
         return xbClanIdMap;
     }
 
     /**
-     * @return the psclanidmap
+     * Retrieves the PlayStation clan ID map.
+     *
+     * @return the PlayStation clan ID map
      */
     public static HashMap<String, String> getPsClanIdMap() {
         return psClanIdMap;
     }
 
+    /**
+     * Retrieves the clan information for the given clan ID.
+     *
+     * @param clanId the clan ID
+     * @return the Clan object containing the clan information
+     * @throws Exception if an error occurs while retrieving the clan information
+     */
     public static Clan getClanInformation(String clanId) throws Exception {
         Clan clan = new Clan(clanId, getClanPlatform(clanId));
 
@@ -132,36 +144,58 @@ public class RaidReportTool {
         return clan;
     }
 
+    /**
+     * Retrieves the primary platform for the clan with the given clan ID.
+     *
+     * @param clanId the clan ID
+     * @return the primary platform of the clan
+     */
     private static Platform getClanPlatform(String clanId) {
         return SGC_Clan.getClansPrimaryPlatform(clanId);
     }
 
+    /**
+     * Retrieves the raid report for the given clan.
+     *
+     * @param clan                               the clan for which to retrieve the
+     *                                           raid report
+     * @param interactionOriginalResponseUpdater the updater for the interaction
+     *                                           response
+     * @return the clan with the updated raid report
+     * @throws Exception if an error occurs while retrieving the raid report
+     */
     public static Clan getClanRaidReport(Clan clan,
-            InteractionOriginalResponseUpdater interactionOriginalResponseUpdater) throws Exception {
+            InteractionOriginalResponseUpdater interactionOriginalResponseUpdater)
+            throws Exception {
         LOGGER.trace("Processing " + clan.getName());
         final AtomicInteger count = new AtomicInteger(0);
 
         List<Callable<Object>> tasks = new ArrayList<>();
         clan.getMembers().forEach((memberId, member) -> {
-            try {
-                tasks.add(() -> {
+            tasks.add(() -> {
+                try {
                     getClanMemberRaidReport(member);
 
                     interactionOriginalResponseUpdater
-                            .setContent(String.format("Building a clan raid report for %s (%d/%d)", clan.getName(),
-                                    count.incrementAndGet(), clan.getMembers().size()))
+                            .setContent(String.format("Building a clan raid report for %s (%d/%d)",
+                                    clan.getName(), count.incrementAndGet(), clan.getMembers().size()))
                             .update().join();
-                    return member;
-                });
-            } catch (Exception ex) {
-                LOGGER.error("Error processing Clan Raid Report for " + clan.getName(), ex);
-            }
+                } catch (Exception ex) {
+                    LOGGER.error("Error processing Clan Raid Report for " + clan.getName(), ex);
+                }
+                return member;
+            });
         });
         executorService.invokeAll(tasks);
         LOGGER.trace("Finished Processing " + clan.getName());
         return clan;
     }
 
+    /**
+     * Retrieves the raid report for the given clan member.
+     *
+     * @param member the clan member for which to retrieve the raid report
+     */
     private static void getClanMemberRaidReport(Member member) {
         LOGGER.trace("Processing " + member.getDisplayName());
         try {
@@ -174,6 +208,13 @@ public class RaidReportTool {
         LOGGER.trace("Finished Processing " + member.getDisplayName());
     }
 
+    /**
+     * Retrieves the clan information for the given clan.
+     *
+     * @param clan the clan for which to retrieve the information
+     * @throws IOException        if an I/O error occurs while making the request
+     * @throws URISyntaxException if the URI syntax is invalid
+     */
     public static void getClanInfo(Clan clan) throws IOException, URISyntaxException {
         URL url = new URI(String.format("https://www.bungie.net/Platform/GroupV2/%s/", clan.getClanId())).toURL();
 
@@ -184,25 +225,33 @@ public class RaidReportTool {
         conn.connect();
 
         // Getting the response code
-        int responsecode = conn.getResponseCode();
+        int responseCode = conn.getResponseCode();
 
-        if (responsecode == 200) {
-            BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            String inputLine;
-            StringBuffer content = new StringBuffer();
-            while ((inputLine = in.readLine()) != null) {
-                content.append(inputLine);
+        if (responseCode == 200) {
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+                String inputLine;
+                StringBuilder content = new StringBuilder();
+                while ((inputLine = in.readLine()) != null) {
+                    content.append(inputLine);
+                }
+                JsonObject json = JsonParser.parseString(content.toString()).getAsJsonObject();
+                JsonObject response = json.getAsJsonObject("Response");
+                JsonObject detail = response.getAsJsonObject("detail");
+
+                clan.setName(detail.get("name").getAsString());
+                clan.setCallsign(detail.getAsJsonObject("clanInfo").get("clanCallsign").getAsString());
             }
-            JsonObject json = JsonParser.parseString(content.toString()).getAsJsonObject();
-            clan.setName(json.getAsJsonObject("Response")
-                    .getAsJsonObject("detail").get("name").getAsString());
-            clan.setCallsign(json.getAsJsonObject("Response")
-                    .getAsJsonObject("detail").getAsJsonObject("clanInfo").get("clanCallsign").getAsString());
-            in.close();
         }
         conn.disconnect();
     }
 
+    /**
+     * Retrieves the members of the clan.
+     *
+     * @param clan the clan for which to retrieve the members
+     * @throws IOException        if an I/O error occurs while making the request
+     * @throws URISyntaxException if the URI syntax is invalid
+     */
     public static void getClanMembers(Clan clan) throws IOException, URISyntaxException {
         URL url = new URI(String.format("https://www.bungie.net/Platform/GroupV2/%s/Members/", clan.getClanId()))
                 .toURL();
@@ -214,47 +263,63 @@ public class RaidReportTool {
         conn.connect();
 
         // Getting the response code
-        int responsecode = conn.getResponseCode();
+        int responseCode = conn.getResponseCode();
 
-        if (responsecode == 200) {
-            BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            String inputLine;
-            StringBuffer content = new StringBuffer();
-            while ((inputLine = in.readLine()) != null) {
-                content.append(inputLine);
-            }
-
-            JsonArray results = (JsonArray) JsonParser.parseString(content.toString()).getAsJsonObject()
-                    .getAsJsonObject("Response").get("results");
-            results.forEach((entry) -> {
-                try {
-                    JsonObject userInfo = entry.getAsJsonObject().getAsJsonObject("destinyUserInfo");
-                    String membershipType = userInfo.get("membershipType").getAsString();
-                    String membershipId = userInfo.get("membershipId").getAsString();
-                    String displayName = userInfo.get("displayName").getAsString();
-                    try {
-                        String bungieGlobalDisplayName = userInfo.get("bungieGlobalDisplayName").getAsString();
-                        String bungieGlobalDisplayNameCode = userInfo.get("bungieGlobalDisplayNameCode").getAsString();
-                        clan.getMembers().put(membershipId, new Member(membershipId, displayName, membershipType,
-                                bungieGlobalDisplayName, bungieGlobalDisplayNameCode, clan));
-                    } catch (NullPointerException ex) {
-                        LOGGER.info(displayName + " has yet to register for a bungieGlobalDisplayName");
-                    }
-                } catch (Exception ex) {
-                    LOGGER.error("Error processing JSON result from "
-                            + url.toExternalForm(), ex);
+        if (responseCode == 200) {
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+                String inputLine;
+                StringBuilder content = new StringBuilder();
+                while ((inputLine = in.readLine()) != null) {
+                    content.append(inputLine);
                 }
-            });
-            in.close();
+
+                JsonObject json = JsonParser.parseString(content.toString()).getAsJsonObject();
+                JsonArray results = json.getAsJsonObject("Response").getAsJsonArray("results");
+                results.forEach((entry) -> {
+                    try {
+                        JsonObject userInfo = entry.getAsJsonObject().getAsJsonObject("destinyUserInfo");
+                        String membershipType = userInfo.get("membershipType").getAsString();
+                        String membershipId = userInfo.get("membershipId").getAsString();
+                        String displayName = userInfo.get("displayName").getAsString();
+
+                        try {
+                            String bungieGlobalDisplayName = userInfo.get("bungieGlobalDisplayName").getAsString();
+                            String bungieGlobalDisplayNameCode = userInfo.get("bungieGlobalDisplayNameCode")
+                                    .getAsString();
+
+                            clan.getMembers().put(membershipId, new Member(membershipId, displayName, membershipType,
+                                    bungieGlobalDisplayName, bungieGlobalDisplayNameCode, clan));
+                        } catch (NullPointerException ex) {
+                            LOGGER.info(displayName + " has yet to register for a bungieGlobalDisplayName");
+                        }
+                    } catch (Exception ex) {
+                        LOGGER.error("Error processing JSON result from " + url.toExternalForm(), ex);
+                    }
+                });
+            }
         }
         conn.disconnect();
     }
 
+    /**
+     * Retrieves all active characters of a member.
+     *
+     * @param member the member for which to retrieve the active characters
+     * @throws IOException        if an I/O error occurs while making the request
+     * @throws URISyntaxException if the URI syntax is invalid
+     */
     public static void getAllMembersCharacters(Member member) throws IOException, URISyntaxException {
         getMembersActiveCharacters(member);
         getMembersDeletedCharacters(member);
     }
 
+    /**
+     * Retrieves the active characters of a member.
+     *
+     * @param member the member for which to retrieve the active characters
+     * @throws IOException        if an I/O error occurs while making the request
+     * @throws URISyntaxException if the URI syntax is invalid
+     */
     public static void getMembersActiveCharacters(Member member) throws IOException, URISyntaxException {
         URL url = new URI(String.format("https://www.bungie.net/Platform/Destiny2/%s/Profile/%s/?components=Characters",
                 member.getMemberType(), member.getUID())).toURL();
@@ -266,75 +331,111 @@ public class RaidReportTool {
         conn.connect();
 
         // Getting the response code
-        int responsecode = conn.getResponseCode();
-        if (responsecode == 200) {
-            BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            String inputLine;
-            StringBuffer content = new StringBuffer();
-            while ((inputLine = in.readLine()) != null) {
-                content.append(inputLine);
-            }
-            JsonObject results = JsonParser.parseString(content.toString()).getAsJsonObject()
-                    .getAsJsonObject("Response").getAsJsonObject("characters").getAsJsonObject("data");
-            results.keySet().forEach((key) -> {
-                try {
-                    JsonElement entry = results.get(key);
-                    String characterId = entry.getAsJsonObject().get("characterId").getAsString();
-                    DestinyClassType classType = DestinyClassType.getByValue(
-                            entry.getAsJsonObject().getAsJsonPrimitive("classType").getAsInt());
-
-                    String dateLastPlayed = entry.getAsJsonObject().get("dateLastPlayed").getAsString();
-
-                    if (member.getCharacters().get(characterId) == null) {
-                        member.getCharacters().put(characterId, new Character(characterId, classType, dateLastPlayed));
-                    }
-                } catch (Exception ex) {
-                    LOGGER.error("Error processing JSON result from "
-                            + url.toExternalForm(), ex);
+        int responseCode = conn.getResponseCode();
+        if (responseCode == 200) {
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+                String inputLine;
+                StringBuilder content = new StringBuilder();
+                while ((inputLine = in.readLine()) != null) {
+                    content.append(inputLine);
                 }
-            });
-            in.close();
+
+                JsonObject json = JsonParser.parseString(content.toString()).getAsJsonObject();
+                JsonObject results = json.getAsJsonObject("Response").getAsJsonObject("characters")
+                        .getAsJsonObject("data");
+                results.keySet().forEach((key) -> {
+                    try {
+                        JsonElement entry = results.get(key);
+                        String characterId = entry.getAsJsonObject().get("characterId").getAsString();
+                        DestinyClassType classType = DestinyClassType.getByValue(
+                                entry.getAsJsonObject().getAsJsonPrimitive("classType").getAsInt());
+
+                        String dateLastPlayed = entry.getAsJsonObject().get("dateLastPlayed").getAsString();
+
+                        if (member.getCharacters().get(characterId) == null) {
+                            member.getCharacters().put(characterId,
+                                    new Character(characterId, classType, dateLastPlayed));
+                        }
+                    } catch (Exception ex) {
+                        LOGGER.error("Error processing JSON result from " + url.toExternalForm(), ex);
+                    }
+                });
+            }
         }
         conn.disconnect();
     }
 
+    /**
+     * Retrieves and processes the deleted characters for a given member.
+     *
+     * This method sends a request to the Bungie API to retrieve information about
+     * the deleted characters
+     * associated with the specified member. It parses the JSON response and adds
+     * new character entries
+     * to the member's character collection if they are not already present.
+     *
+     * @param member The member object representing the player.
+     * @throws IOException        If an I/O error occurs while making the API
+     *                            request.
+     * @throws URISyntaxException If there is an error in the URI syntax for the API
+     *                            URL.
+     */
     public static void getMembersDeletedCharacters(Member member) throws IOException, URISyntaxException {
+        // Construct the API URL
         URL url = new URI(String.format("https://www.bungie.net/Platform/Destiny2/%s/Account/%s/Stats",
                 member.getMemberType(), member.getUID())).toURL();
 
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("GET");
-        conn.addRequestProperty("X-API-Key", apiKey);
-        conn.addRequestProperty("Accept", "Application/Json");
-        conn.connect();
+        HttpURLConnection conn = null;
+        BufferedReader in = null;
 
-        // Getting the response code
-        int responsecode = conn.getResponseCode();
+        try {
+            // Open connection and set request properties
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.addRequestProperty("X-API-Key", apiKey);
+            conn.addRequestProperty("Accept", "Application/Json");
+            conn.connect();
 
-        if (responsecode == 200) {
-            BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            String inputLine;
-            StringBuffer content = new StringBuffer();
-            while ((inputLine = in.readLine()) != null) {
-                content.append(inputLine);
-            }
+            // Check the response code
+            int responseCode = conn.getResponseCode();
+            if (responseCode == 200) {
+                // Read the response
+                in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                StringBuilder content = new StringBuilder();
+                String inputLine;
 
-            JsonArray results = (JsonArray) JsonParser.parseString(content.toString()).getAsJsonObject()
-                    .getAsJsonObject("Response").get("characters");
-            results.forEach((entry) -> {
-                try {
-                    String characterId = entry.getAsJsonObject().get("characterId").getAsString();
-
-                    if (member.getCharacters().get(characterId) == null) {
-                        member.getCharacters().put(characterId, new Character(characterId, null, null));
-                    }
-                } catch (Exception ex) {
-                    LOGGER.error(ex.getMessage(), ex);
+                while ((inputLine = in.readLine()) != null) {
+                    content.append(inputLine);
                 }
-            });
-            in.close();
+
+                // Parse the JSON response
+                JsonObject response = JsonParser.parseString(content.toString()).getAsJsonObject()
+                        .getAsJsonObject("Response");
+                JsonArray characters = response.getAsJsonArray("characters");
+
+                // Process each character entry
+                characters.forEach(entry -> {
+                    try {
+                        String characterId = entry.getAsJsonObject().get("characterId").getAsString();
+
+                        // Add new character entry if not already present
+                        if (member.getCharacters().get(characterId) == null) {
+                            member.getCharacters().put(characterId, new Character(characterId, null, null));
+                        }
+                    } catch (Exception ex) {
+                        LOGGER.error(ex.getMessage(), ex);
+                    }
+                });
+            }
+        } finally {
+            // Close resources in the finally block
+            if (in != null) {
+                in.close();
+            }
+            if (conn != null) {
+                conn.disconnect();
+            }
         }
-        conn.disconnect();
     }
 
     public static void getMemberRaidInfo(Member member) throws IOException {

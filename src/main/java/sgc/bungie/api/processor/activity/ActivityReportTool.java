@@ -13,11 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.channel.Channel;
 import org.javacord.api.entity.channel.TextChannel;
@@ -52,52 +48,42 @@ public class ActivityReportTool {
     private static final String APPLICATION_NAME = "SGC Bot";
     private static final String CREDENTIALS_FILE_PATH = "/credentials.json";
     private static final List<String> SCOPES = Collections.singletonList(SheetsScopes.SPREADSHEETS);
-
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 
     private static DiscordApi API = null;
-
-    private static ExecutorService executorService = Executors.newFixedThreadPool(2);
 
     public static void setDiscordAPI(DiscordApi api) {
         API = api;
     }
 
+    /**
+     * Runs the activity sheets update process.
+     */
     public static void runActivitySheets() {
         try {
-            LOGGER.info(String.format("Starting the SGC Activity sheet update at %s",
-                    ZonedDateTime.now(BotApplication.ZID).format(BotApplication.DATE_TIME_FORMATTER)));
+            LOGGER.info("Starting the SGC Activity sheet update at " +
+                    ZonedDateTime.now(BotApplication.ZID).format(BotApplication.DATE_TIME_FORMATTER));
 
-            sendLogMessage(String.format("Starting the SGC Activity sheet update at %s",
-                    ZonedDateTime.now(BotApplication.ZID).format(BotApplication.DATE_TIME_FORMATTER)));
+            sendErrorMessage("Starting the SGC Activity sheet update at " +
+                    ZonedDateTime.now(BotApplication.ZID).format(BotApplication.DATE_TIME_FORMATTER));
 
-            HashMap<SGC_Clan, ArrayList<SGC_Member>> members = new HashMap<>();
-            for (SGC_Clan clan : SGC_Clan.values()) {
-                members.put(clan, new ArrayList<>());
-            }
-            List<Callable<Object>> tasks = new ArrayList<>();
-            tasks.add(() -> {
-                getAllClansDiscordActivity(members);
-                return null;
-            });
-            tasks.add(() -> {
-                getAllClansGameActivity(members);
-                return null;
-            });
-            executorService.invokeAll(tasks);
-            // getAllClansDiscordActivity(members);
-            // getAllClansGameActivity(members);
+            HashMap<SGC_Clan, ArrayList<SGC_Member>> members = initializeMembers();
+            getAllClansDiscordActivity(members);
+            getAllClansGameActivity(members);
             writeActivityToGoogleSheet(members);
 
-            sendLogMessage(String.format("Completed the SGC Activity sheet update at %s",
-                    ZonedDateTime.now(BotApplication.ZID).format(BotApplication.DATE_TIME_FORMATTER)));
+            sendErrorMessage("Completed the SGC Activity sheet update at " +
+                    ZonedDateTime.now(BotApplication.ZID).format(BotApplication.DATE_TIME_FORMATTER));
         } catch (Exception e) {
             LOGGER.error(e.getMessage(), e);
-            sendErrorMessage(String.format("An Error occured running the SGC Activity sheet update at %s",
-                    ZonedDateTime.now(BotApplication.ZID).format(BotApplication.DATE_TIME_FORMATTER)));
+            sendErrorMessage("An Error occurred while running the SGC Activity sheet update at " +
+                    ZonedDateTime.now(BotApplication.ZID).format(BotApplication.DATE_TIME_FORMATTER));
         }
     }
 
+    /**
+     * Initiates the authentication for Google Sheets API.
+     */
     public static void initiateGoogleSheetsAuth() {
         try {
             LOGGER.info("Initiating Google Sheet Auth");
@@ -116,96 +102,129 @@ public class ActivityReportTool {
     }
 
     /**
-     * @param members
+     * Initializes the members map with empty lists for each clan.
+     *
+     * @return Initialized members map.
      */
-    private static void getAllClansDiscordActivity(
-            HashMap<SGC_Clan, ArrayList<SGC_Member>> members) {
+    private static HashMap<SGC_Clan, ArrayList<SGC_Member>> initializeMembers() {
+        HashMap<SGC_Clan, ArrayList<SGC_Member>> members = new HashMap<>();
+        for (SGC_Clan clan : SGC_Clan.values()) {
+            members.put(clan, new ArrayList<>());
+        }
+        return members;
+    }
+
+    /**
+     * Retrieves Discord activity for all clans and updates the member information.
+     *
+     * @param members A HashMap containing clans as keys and their members as
+     *                values.
+     */
+    private static void getAllClansDiscordActivity(HashMap<SGC_Clan, ArrayList<SGC_Member>> members) {
         HashMap<User, ArrayList<SGC_Member>> allUsers = new HashMap<>();
+
         for (SGC_Clan clan : SGC_Clan.values()) {
             LOGGER.info("Processing the Discord Activity for " + clan.name());
             Optional<Role> roleById = API.getRoleById(clan.Discord_Role_ID);
-            Set<User> users = roleById.get().getUsers();
-            users.forEach(user -> {
-                SGC_Member sgc_Member = new SGC_Member(clan);
-                sgc_Member.setDiscordDisplayName(user.getDisplayName(BotApplication.SGC_SERVER));
-                sgc_Member.getDiscord_message_counts().put("TOTAL", 0);
-                sgc_Member.setDiscordUserName(user.getDiscriminatedName());
-                members.get(clan).add(sgc_Member);
-                if (allUsers.get(user) == null) {
-                    ArrayList<SGC_Member> newList = new ArrayList<>();
-                    allUsers.put(user, newList);
-                }
-                allUsers.get(user).add(sgc_Member);
-            });
+
+            if (roleById.isPresent()) {
+                Set<User> users = roleById.get().getUsers();
+
+                users.forEach(user -> {
+                    SGC_Member sgcMember = new SGC_Member(clan);
+                    sgcMember.setDiscordDisplayName(user.getDisplayName(BotApplication.SGC_SERVER));
+                    sgcMember.getDiscordMessageCounts().put("TOTAL", 0);
+                    sgcMember.setDiscordUserName(user.getDiscriminatedName());
+                    members.get(clan).add(sgcMember);
+
+                    allUsers.computeIfAbsent(user, k -> new ArrayList<>()).add(sgcMember);
+                });
+            }
         }
 
         Set<Channel> channels = API.getChannels();
-        channels.parallelStream().forEach(channel -> {
-            Optional<TextChannel> textChannel = channel.asTextChannel();
+        StringBuilder sb = new StringBuilder();
 
-            if (textChannel.isPresent() && textChannel.get().canReadMessageHistory(API.getYourself())) {
-                try {
-                    CompletableFuture<MessageSet> messagesWhile = textChannel.get().getMessagesWhile(message -> {
-                        return message.getCreationTimestamp().compareTo(Instant.now().plus(-14, ChronoUnit.DAYS)) > 0;
-                    });
-                    messagesWhile.join().forEach(message -> {
-                        Optional<User> userAuthor = message.getUserAuthor();
-                        if (userAuthor.isPresent()) {
-                            if (allUsers.containsKey(userAuthor.get())) {
+        channels.parallelStream().forEach(channel -> {
+            if (channel.canYouSee()) {
+                Optional<TextChannel> textChannel = channel.asTextChannel();
+
+                if (textChannel.isPresent() && textChannel.get().canReadMessageHistory(API.getYourself())) {
+                    try {
+                        CompletableFuture<MessageSet> messagesWhile = textChannel.get()
+                                .getMessagesWhile(message -> message.getCreationTimestamp()
+                                        .compareTo(Instant.now().plus(-14, ChronoUnit.DAYS)) > 0);
+                        messagesWhile.join().forEach(message -> {
+                            Optional<User> userAuthor = message.getUserAuthor();
+                            if (userAuthor.isPresent() && allUsers.containsKey(userAuthor.get())) {
                                 for (SGC_Member member : allUsers.get(userAuthor.get())) {
-                                    member.getDiscord_message_counts().put("TOTAL",
-                                            member.getDiscord_message_counts().get("TOTAL") + 1);
-                                    member.setDiscord_activity(true);
+                                    member.getDiscordMessageCounts().put("TOTAL",
+                                            member.getDiscordMessageCounts().get("TOTAL") + 1);
+                                    member.setDiscordActivity(true);
                                 }
                             }
-                        }
-                    });
-                } catch (Exception e) {
-                    LOGGER.error(e.getMessage(), e);
+                        });
+                    } catch (Exception e) {
+                        sb.append(channel.getIdAsString()).append("\n");
+                        LOGGER.error(e.getMessage(), e);
+                    }
                 }
             }
         });
     }
 
+    /**
+     * Retrieves game activity for all clans and updates the member information.
+     *
+     * @param members A HashMap containing clans as keys and their members as
+     *                values.
+     */
     private static void getAllClansGameActivity(HashMap<SGC_Clan, ArrayList<SGC_Member>> members) {
         HashMap<SGC_Clan, HashMap<String, Instant>> allMembersLastDatePlayed = RaidReportTool
                 .getAllMembersLastDatePlayed();
 
-        for (SGC_Clan sgc_clan : allMembersLastDatePlayed.keySet()) {
-            LOGGER.info("Processing the In-Game Activity for " + sgc_clan.name());
-            for (String bungieDisplayName : allMembersLastDatePlayed.get(sgc_clan).keySet()) {
-                boolean isActive = allMembersLastDatePlayed.get(sgc_clan).get(bungieDisplayName)
-                        .compareTo(Instant.now().plus(-10, ChronoUnit.DAYS)) > 0;
+        for (SGC_Clan clan : allMembersLastDatePlayed.keySet()) {
+            LOGGER.info("Processing the In-Game Activity for " + clan.name());
+
+            HashMap<String, Instant> clanMembersLastDatePlayed = allMembersLastDatePlayed.get(clan);
+
+            for (String bungieDisplayName : clanMembersLastDatePlayed.keySet()) {
+                boolean isActive = clanMembersLastDatePlayed.get(bungieDisplayName)
+                        .isAfter(Instant.now().minus(10, ChronoUnit.DAYS));
                 boolean found = false;
-                for (SGC_Member sgc_member : members.get(sgc_clan)) {
-                    if (sgc_member.isSameMember(bungieDisplayName)) {
+
+                for (SGC_Member member : members.get(clan)) {
+                    if (member.isSameMember(bungieDisplayName)) {
                         found = true;
-                        sgc_member.setGame_activity(isActive);
-                        sgc_member.setBungieDisplayName(bungieDisplayName);
+                        member.setGameActivity(isActive);
+                        member.setBungieDisplayName(bungieDisplayName);
+                        break;
                     }
                 }
+
                 if (!found) {
-                    SGC_Member sgc_Member = new SGC_Member(sgc_clan);
-                    sgc_Member.setBungieDisplayName(bungieDisplayName);
-                    sgc_Member.setGame_activity(isActive);
-                    members.get(sgc_clan).add(sgc_Member);
+                    SGC_Member newMember = new SGC_Member(clan);
+                    newMember.setBungieDisplayName(bungieDisplayName);
+                    newMember.setGameActivity(isActive);
+                    members.get(clan).add(newMember);
                 }
             }
         }
     }
 
     /**
-     * @param HTTP_TRANSPORT
-     * @return
-     * @throws IOException
+     * Returns the HTTP request initializer for Google Sheets API authentication.
+     *
+     * @return The HTTP request initializer.
+     * @throws IOException If there is an error reading the credentials file.
      */
-    private static HttpRequestInitializer getGoogleSheetsHttpRequestInitializer()
-            throws IOException {
+    private static HttpRequestInitializer getGoogleSheetsHttpRequestInitializer() throws IOException {
         // Load service account secrets.
         InputStream resourceAsStream = ActivityReportTool.class.getResourceAsStream(CREDENTIALS_FILE_PATH);
         if (resourceAsStream == null) {
             throw new FileNotFoundException("Resource not found: " + CREDENTIALS_FILE_PATH);
         }
+
         final ServiceAccountCredentials serviceAccountCredentials = ServiceAccountCredentials
                 .fromStream(resourceAsStream);
         GoogleCredentials credentials = serviceAccountCredentials.createScoped(SCOPES);
@@ -214,16 +233,16 @@ public class ActivityReportTool {
     }
 
     /**
-     * @param members
+     * Writes the activity data to the Google Sheets.
+     *
+     * @param members A HashMap containing clans as keys and their members as
+     *                values.
      */
     private static void writeActivityToGoogleSheet(HashMap<SGC_Clan, ArrayList<SGC_Member>> members) {
         try {
             final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
-
             final String spreadsheetId = "1R0RkQYKVWcy6DA71xNkoDU-XIc14UjXuD7M05H2VHPk";
-
-            Sheets service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY,
-                    getGoogleSheetsHttpRequestInitializer())
+            Sheets service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getGoogleSheetsHttpRequestInitializer())
                     .setApplicationName(APPLICATION_NAME)
                     .build();
 
@@ -237,24 +256,28 @@ public class ActivityReportTool {
 
                 ValueRange valueRange = new ValueRange();
                 valueRange.setRange(range);
+
                 List<List<Object>> values = new ArrayList<>();
                 for (SGC_Member member : members.get(clan)) {
                     List<Object> row = new ArrayList<>();
                     row.add(member.getDiscordDisplayName());
                     row.add(member.getBungieDisplayName());
-                    row.add(member.isDiscord_activity());
-                    row.add(member.isGame_activity());
-                    row.add(member.getDiscord_message_counts().get("TOTAL"));
+                    row.add(member.isDiscordActivity());
+                    row.add(member.isGameActivity());
+                    row.add(member.getDiscordMessageCounts().get("TOTAL"));
                     row.add(member.getDiscordUserName());
                     values.add(row);
                 }
+
                 valueRange.setValues(values);
                 Update update = service.spreadsheets().values().update(spreadsheetId, range, valueRange);
                 update.setValueInputOption("USER_ENTERED");
                 updates.add(update);
             }
+
             batchClearValuesRequest.setRanges(ranges);
             service.spreadsheets().values().batchClear(spreadsheetId, batchClearValuesRequest).execute();
+
             for (Update update : updates) {
                 update.execute();
             }
@@ -263,63 +286,53 @@ public class ActivityReportTool {
         }
     }
 
-    private static void sendLogMessage(String logMessage) {
-        try {
-            new MessageBuilder()
-                    .addEmbed(new EmbedBuilder()
-                            .setAuthor(API.getYourself())
-                            .setTitle("SGC Activity Sheets")
-                            .setDescription(logMessage)
-                            .setFooter("#AreYouShrouded")
-                            .setThumbnail(ActivityReportTool.class
-                                    .getClassLoader()
-                                    .getResourceAsStream(
-                                            "SGC.png"))
-                            .setColor(Color.BLUE))
-                    .send(API.getChannelById("629511503296593930").get().asTextChannel().get());
-        } catch (Exception e) {
-            LOGGER.error(e.getMessage(), e);
-        }
-    }
-
     private static void sendErrorMessage(String logMessage) {
         try {
-            new MessageBuilder()
+            MessageBuilder messageBuilder = new MessageBuilder()
                     .addEmbed(new EmbedBuilder()
                             .setAuthor(API.getYourself())
                             .setTitle("SGC Activity Sheets")
                             .setDescription(logMessage)
                             .setFooter("ERROR")
-                            .setThumbnail(ActivityReportTool.class
-                                    .getClassLoader()
-                                    .getResourceAsStream(
-                                            "SGC.png"))
-                            .setColor(Color.RED))
-                    .send(API.getChannelById("629511503296593930").get().asTextChannel().get());
+                            .setThumbnail(ActivityReportTool.class.getClassLoader()
+                                    .getResourceAsStream("SGC.png"))
+                            .setColor(Color.RED));
+
+            Optional<TextChannel> channel = API.getChannelById("629511503296593930").get().asTextChannel();
+            if (channel.isPresent()) {
+                messageBuilder.send(channel.get());
+            } else {
+                LOGGER.error("Channel not found with ID: 629511503296593930");
+            }
         } catch (Exception e) {
             LOGGER.error(e.getMessage(), e);
         }
     }
 
     /**
-     * @param API
-     * @param members
-     * @throws Exception
+     * Retrieves the clan's Discord activity for a specific channel within a certain
+     * number of days.
+     *
+     * @param clan      The clan for which to retrieve the Discord activity.
+     * @param channelID The ID of the Discord channel.
+     * @param days      The number of days to consider for the activity.
+     * @return A string representing the clan's Discord activity.
+     * @throws Exception If an error occurs during the process.
      */
     public static String getClanDiscordActivityForForum(SGC_Clan clan, String channelID, int days) throws Exception {
         HashMap<User, ArrayList<SGC_Member>> allUsers = new HashMap<>();
 
         LOGGER.info("Processing the Discord Activity for " + clan.name());
-        Optional<Role> roleById = API.getRoleById(clan.Discord_Role_ID);
-        Set<User> users = roleById.get().getUsers();
+        Optional<Role> role = API.getRoleById(clan.Discord_Role_ID);
+        if (role.isEmpty()) {
+            throw new Exception("Role not found with ID: " + clan.Discord_Role_ID);
+        }
+        Set<User> users = role.get().getUsers();
+
         users.forEach(user -> {
-            SGC_Member sgc_Member = new SGC_Member(clan);
-            sgc_Member.setDiscordDisplayName(user.getDisplayName(BotApplication.SGC_SERVER));
-            if (allUsers.get(user) == null) {
-                ArrayList<SGC_Member> newList = new ArrayList<>();
-                allUsers.put(user, newList);
-            }
-            allUsers.get(user).add(sgc_Member);
+            SGC_Member sgcMember = new SGC_Member(clan);
+            sgcMember.setDiscordDisplayName(user.getDisplayName(BotApplication.SGC_SERVER));
+            allUsers.computeIfAbsent(user, key -> new ArrayList<>()).add(sgcMember);
         });
 
         Optional<Channel> channel = API.getChannelById(channelID);
@@ -327,21 +340,16 @@ public class ActivityReportTool {
             API.getServerThreadChannels().forEach(thread -> {
                 if (thread.getParent().getIdAsString().equals(channelID)) {
                     try {
-                        CompletableFuture<MessageSet> messagesWhile = thread.getMessagesWhile(message -> {
-                            return message.getCreationTimestamp()
-                                    .compareTo(Instant.now().plus(days * -1, ChronoUnit.DAYS)) > 0;
-                        });
+                        CompletableFuture<MessageSet> messagesWhile = thread.getMessagesWhile(message -> message
+                                .getCreationTimestamp().compareTo(Instant.now().plus(days * -1, ChronoUnit.DAYS)) > 0);
                         messagesWhile.join().forEach(message -> {
                             Optional<User> userAuthor = message.getUserAuthor();
                             if (userAuthor.isPresent()) {
-                                if (allUsers.containsKey(userAuthor.get())) {
-                                    for (SGC_Member member : allUsers.get(userAuthor.get())) {
-                                        Integer count = member.getDiscord_message_counts().get(channelID);
-                                        if (count == null) {
-                                            member.getDiscord_message_counts().put(channelID, 1);
-                                        } else {
-                                            member.getDiscord_message_counts().put(channelID, count.intValue() + 1);
-                                        }
+                                ArrayList<SGC_Member> members = allUsers.get(userAuthor.get());
+                                if (members != null) {
+                                    for (SGC_Member member : members) {
+                                        HashMap<String, Integer> messageCounts = member.getDiscordMessageCounts();
+                                        messageCounts.put(channelID, messageCounts.getOrDefault(channelID, 0) + 1);
                                     }
                                 }
                             }
@@ -352,23 +360,20 @@ public class ActivityReportTool {
                 }
             });
 
-            final StringBuilder stringBuilder = new StringBuilder();
+            StringBuilder stringBuilder = new StringBuilder();
 
             stringBuilder.append("\"Discord Name\",");
             stringBuilder.append("\"").append(channel.get().asServerChannel().get().getName()).append("\",");
-
             stringBuilder.append("\n");
+
             allUsers.keySet().forEach(user -> {
-                stringBuilder.append("\"").append(allUsers.get(user).get(0).getDiscordDisplayName())
-                        .append("\",");
+                stringBuilder.append("\"").append(allUsers.get(user).get(0).getDiscordDisplayName()).append("\",");
                 int count = 0;
                 for (SGC_Member member : allUsers.get(user)) {
-                    if (member.getDiscord_message_counts().get(channelID) != null) {
-                        count += member.getDiscord_message_counts().get(channelID);
-                    }
+                    HashMap<String, Integer> messageCounts = member.getDiscordMessageCounts();
+                    count += messageCounts.getOrDefault(channelID, 0);
                 }
-                stringBuilder.append("\"").append(count)
-                        .append("\",");
+                stringBuilder.append("\"").append(count).append("\",");
                 stringBuilder.append("\n");
             });
 
@@ -378,15 +383,25 @@ public class ActivityReportTool {
         }
     }
 
+    /**
+     * Retrieves the name of the Discord role based on the role ID.
+     *
+     * @param discordRoleID The ID of the Discord role.
+     * @return The name of the Discord role, or null if the role is not found.
+     */
     public static String getDiscordRoleName(String discordRoleID) {
         Optional<Role> roleById = API.getRoleById(discordRoleID);
-        if (roleById.isPresent()) {
-            return roleById.get().getName();
-        } else {
-            return null;
-        }
+        return roleById.map(Role::getName).orElse(null);
     }
 
+    /**
+     * Retrieves the members of the Discord role based on the role ID.
+     *
+     * @param discordRoleID The ID of the Discord role.
+     * @return A string containing the display names of the role members, separated
+     *         by newlines,
+     *         or null if the role is not found.
+     */
     public static String getDiscordRoleMembers(String discordRoleID) {
         Optional<Role> roleById = API.getRoleById(discordRoleID);
         if (roleById.isPresent()) {
@@ -400,4 +415,5 @@ public class ActivityReportTool {
             return null;
         }
     }
+
 }
