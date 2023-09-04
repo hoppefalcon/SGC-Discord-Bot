@@ -17,8 +17,10 @@ public enum Raid {
     GARDEN_OF_SALVATION("Garden of Salvation",
             Arrays.asList("3845997235", "2659723068", "2497200493", "1042180643", "3458480158", "3823237780")),
     DEEP_STONE_CRYPT("Deep Stone Crypt", Arrays.asList("910380154", "3976949817")),
-    VAULT_OF_GLASS("Vault of Glass", Arrays.asList("3881495763", "1485585878", "1681562271", "3711931140")),
-    VOW_OF_THE_DISCIPLE("Vow of the Disciple", Arrays.asList("1441982566", "4156879541", "4217492330")),
+    VAULT_OF_GLASS("Vault of Glass",
+            Arrays.asList("3881495763", "1485585878", "1681562271", "3711931140", "3022541210")),
+    VOW_OF_THE_DISCIPLE("Vow of the Disciple",
+            Arrays.asList("1441982566", "2906950631", "3889634515", "4156879541", "4217492330")),
     KINGS_FALL("King's Fall", Arrays.asList("1374392663", "1063970578", "2897223272", "2964135793", "3257594522")),
     ROOT_OF_NIGHTMARES("Root of Nightmares", Arrays.asList("2381413764", "1191701339", "2918919505")),
     CROTAS_END("Crota's End", Arrays.asList("156253568", "4179289725"));
