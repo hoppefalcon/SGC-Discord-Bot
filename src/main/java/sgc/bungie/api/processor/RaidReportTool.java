@@ -1443,4 +1443,116 @@ public class RaidReportTool {
         conn.disconnect();
         return response;
     }
+
+    public static Clan getClanDungeonReport(Clan clan,
+            InteractionOriginalResponseUpdater interactionOriginalResponseUpdater)
+            throws Exception {
+        LOGGER.trace("Processing " + clan.getName());
+        final AtomicInteger count = new AtomicInteger(0);
+
+        List<Callable<Object>> tasks = new ArrayList<>();
+        clan.getMembers().forEach((memberId, member) -> {
+            tasks.add(() -> {
+                try {
+                    getClanMemberDungeonReport(member);
+                    if (interactionOriginalResponseUpdater != null)
+                        interactionOriginalResponseUpdater
+                                .setContent(String.format("Building a clan dungeon report for %s (%d/%d)",
+                                        clan.getName(), count.incrementAndGet(), clan.getMembers().size()))
+                                .update().join();
+                } catch (Exception ex) {
+                    LOGGER.error("Error processing Clan Dungeon Report for " + clan.getName(), ex);
+                }
+                return member;
+            });
+        });
+        executorService.invokeAll(tasks);
+        LOGGER.trace("Finished Processing " + clan.getName());
+        return clan;
+    }
+
+    public static String getClanDungeonReportAsCsv(Clan clan) throws IOException {
+        final StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("\"Gamertag\",").append("\"BungieDisplayName\",");
+        Dungeon.getDungeonsOrdered().forEach((Dungeon dungeon) -> {
+            stringBuilder.append(dungeon.name).append(",");
+        });
+
+        clan.getMembers().forEach((id, member) -> {
+            HashMap<Dungeon, Integer> dungeonClears = member.getDungeonClears();
+            stringBuilder.append("\"").append(member.getDisplayName()).append("\",")
+                    .append("\"").append(member.getCombinedBungieGlobalDisplayName()).append("\",");
+            Dungeon.getDungeonsOrdered().forEach((Dungeon raid) -> {
+                stringBuilder.append("\"").append(dungeonClears.get(raid)).append("\",");
+            });
+            stringBuilder.append("\n");
+
+        });
+        return stringBuilder.toString();
+    }
+
+    private static void getClanMemberDungeonReport(Member member) {
+        LOGGER.trace("Processing " + member.getDisplayName());
+        try {
+            getAllMembersCharacters(member);
+            getMemberDungeonInfo(member);
+            getUserWeeklyClears(member, LocalDate.now().minusDays(6), LocalDate.now());
+        } catch (Exception e) {
+            LOGGER.error("Error processing Clan Member Dungeon Report for " + member.getDisplayName(), e);
+        }
+        LOGGER.trace("Finished Processing " + member.getDisplayName());
+    }
+
+    public static void getMemberDungeonInfo(Member member) throws IOException {
+        List<String> validDungeonHashes = Dungeon.getAllValidDungeonHashes();
+        member.getCharacters().forEach((characterId, character) -> {
+            try {
+                URL url = new URI(String.format(
+                        "https://www.bungie.net/Platform/Destiny2/%s/Account/%s/Character/%s/Stats/AggregateActivityStats",
+                        member.getMemberType(), member.getUID(), character.getUID())).toURL();
+
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("GET");
+                conn.addRequestProperty("X-API-Key", apiKey);
+                conn.addRequestProperty("Accept", "Application/Json");
+                conn.connect();
+
+                // Getting the response code
+                int responsecode = conn.getResponseCode();
+
+                if (responsecode == 200) {
+                    BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                    String inputLine;
+                    StringBuffer content = new StringBuffer();
+                    while ((inputLine = in.readLine()) != null) {
+                        content.append(inputLine);
+                    }
+                    // JsonObject json =
+                    // JsonParser.parseString(content.toString()).getAsJsonObject();
+                    JsonArray results = (JsonArray) JsonParser.parseString(content.toString()).getAsJsonObject()
+                            .getAsJsonObject("Response").get("activities");
+                    List<JsonObject> dungeons = IntStream.range(0, results.size())
+                            .mapToObj(index -> (JsonObject) results.get(index)).filter((result) -> {
+                                // String asString = result.get("activityHash").getAsString();
+                                return validDungeonHashes.contains(result.get("activityHash").getAsString());
+                            }).collect(Collectors.toList());
+                    dungeons.forEach((entry) -> {
+                        Dungeon dungeon = Dungeon.getDungeon(entry.get("activityHash").getAsString());
+                        if (dungeon != null) {
+                            String clears = entry.get("values").getAsJsonObject().get("activityCompletions")
+                                    .getAsJsonObject().get("basic").getAsJsonObject().get("value").getAsString();
+                            character.getDungeonActivities().get(dungeon).addClears(Double.parseDouble(clears));
+                        }
+                    });
+
+                    in.close();
+                }
+                conn.disconnect();
+
+            } catch (Exception ex) {
+                LOGGER.error("Error processing JSON result for characterID: "
+                        + characterId, ex);
+            }
+        });
+    }
 }

@@ -18,6 +18,8 @@ public class Character {
     private final String dateLastPlayed;
     private final HashMap<Raid, RaidActivity> raidActivities = new HashMap<>();
     private final HashMap<Raid, RaidActivity> weeklyRaidActivities = new HashMap<>();
+    private final HashMap<Dungeon, DungeonActivity> dungeonActivities = new HashMap<>();
+    private final HashMap<Dungeon, DungeonActivity> weeklyDungeonActivities = new HashMap<>();
     private final HashMap<Mode, Integer> activitiesWithSGCMembersByMode = new HashMap<>();
     private int activitiesWithSGCMembersScore = 0;
 
@@ -27,6 +29,9 @@ public class Character {
         this.dateLastPlayed = dateLastPlayed;
         Raid.getRaidsOrdered().forEach((Raid raid) -> {
             raidActivities.put(raid, new RaidActivity(raid));
+        });
+        Dungeon.getDungeonsOrdered().forEach((Dungeon dungeon) -> {
+            dungeonActivities.put(dungeon, new DungeonActivity(dungeon));
         });
         Mode.validModesForCPOTW().forEach((mode) -> {
             activitiesWithSGCMembersByMode.put(mode, 0);
@@ -66,6 +71,20 @@ public class Character {
      */
     public HashMap<Raid, RaidActivity> getWeeklyRaidActivities() {
         return weeklyRaidActivities;
+    }
+
+    /**
+     * @return the activities
+     */
+    public HashMap<Dungeon, DungeonActivity> getDungeonActivities() {
+        return dungeonActivities;
+    }
+
+    /**
+     * @return the weeklyActivities
+     */
+    public HashMap<Dungeon, DungeonActivity> getWeeklyDungeonActivities() {
+        return weeklyDungeonActivities;
     }
 
     public void addClearedActivitiesWithSGCMembers(GenericActivity activity) {

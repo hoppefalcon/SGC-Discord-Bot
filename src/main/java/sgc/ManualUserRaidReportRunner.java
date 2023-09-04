@@ -12,14 +12,8 @@ public class ManualUserRaidReportRunner {
 
         public static void main(String[] args) throws Exception {
                 try {
-                        LocalDate startDate = LocalDate.parse("20221206",
-                                        DateTimeFormatter.BASIC_ISO_DATE);
-                        LocalDate endDate = LocalDate.parse("20230418",
-                                        DateTimeFormatter.BASIC_ISO_DATE);
-                        String userBungieId = "hoppefalcon#7599";
-                        String userWeeklyClears = RaidReportTool.getUserWeeklyClears(userBungieId,
-                                        startDate,
-                                        endDate);
+                        String userBungieId = "Falacy#7560";
+                        String userWeeklyClears = RaidReportTool.getUserRaidReport(userBungieId);
                         System.out.println(userWeeklyClears);
                 } catch (Exception e) {
                         LOGGER.error(e.getMessage(), e);

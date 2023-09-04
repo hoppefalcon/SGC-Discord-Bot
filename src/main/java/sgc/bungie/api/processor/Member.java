@@ -179,4 +179,36 @@ public class Member {
     public HashMap<String, Boolean> getCollectibles() {
         return collectibles;
     }
+
+     public HashMap<Dungeon, Integer> getDungeonClears() {
+        HashMap<Dungeon, Integer> dungeonClears = new HashMap<>();
+        for (Dungeon r : Dungeon.values()) {
+            dungeonClears.put(r, 0);
+        }
+        characters.values().forEach((c) -> {
+            for (Dungeon r : Dungeon.values()) {
+                DungeonActivity activity = c.getDungeonActivities().get(r);
+                if (activity != null) {
+                    int total = 0;
+                    total += dungeonClears.get(r);
+                    total += activity.getTotalClears();
+                    dungeonClears.put(r, total);
+                }
+            }
+        });
+        return dungeonClears;
+    }
+
+    public int getTotalWeeklyDungeonClears() {
+        AtomicInteger totalWeeklyDungeonClears = new AtomicInteger(0);
+        characters.values().forEach((c) -> {
+            for (Dungeon r : Dungeon.values()) {
+                DungeonActivity activity = c.getDungeonActivities().get(r);
+                if (activity != null) {
+                    totalWeeklyDungeonClears.set(totalWeeklyDungeonClears.get() + activity.getWeeklyClears());
+                }
+            }
+        });
+        return totalWeeklyDungeonClears.get();
+    }
 }
