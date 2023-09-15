@@ -219,7 +219,9 @@ public class Member {
         });
         characters.forEach((characterId, character) -> {
             character.getPotwCompletionsByMode().forEach((mode, completed) -> {
-                output.put(mode, output.get(mode) + 1);
+                if (completed) {
+                    output.put(mode, output.get(mode) + 1);
+                }
             });
         });
 
@@ -233,7 +235,9 @@ public class Member {
         });
         characters.forEach((characterId, character) -> {
             character.getPotwCompletionsByRaid().forEach((raid, completed) -> {
-                output.put(raid, output.get(raid) + 1);
+                if (completed) {
+                    output.put(raid, output.get(raid) + 1);
+                }
             });
         });
 
@@ -247,7 +251,9 @@ public class Member {
         });
         characters.forEach((characterId, character) -> {
             character.getPotwCompletionsByDungeon().forEach((dungeon, completed) -> {
-                output.put(dungeon, output.get(dungeon) + 1);
+                if (completed) {
+                    output.put(dungeon, output.get(dungeon) + 1);
+                }
             });
         });
 
