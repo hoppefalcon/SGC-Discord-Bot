@@ -178,6 +178,24 @@ public enum Mode {
         return validList;
     }
 
+    public static List<Mode> validModesForPOTW() {
+        ArrayList<Mode> validList = new ArrayList<>();
+
+        List<Mode> invalidModesForPOTW = invalidModesForCPOTW();
+
+        for (Mode mode : Mode.values()) {
+            if (!invalidModesForPOTW.contains(mode) || mode.equals(RAID) || mode.equals(DUNGEON)) {
+                validList.add(mode);
+            }
+        }
+
+        validList.sort((m1, m2) -> {
+            return Integer.compare(m1.value, m2.value);
+        });
+
+        return validList;
+    }
+
     public static List<Integer> validModeValuesForCPOTW() {
         ArrayList<Integer> validList = new ArrayList<>();
 

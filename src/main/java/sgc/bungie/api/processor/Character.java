@@ -20,7 +20,10 @@ public class Character {
     private final HashMap<Raid, RaidActivity> weeklyRaidActivities = new HashMap<>();
     private final HashMap<Dungeon, DungeonActivity> dungeonActivities = new HashMap<>();
     private final HashMap<Dungeon, DungeonActivity> weeklyDungeonActivities = new HashMap<>();
-    private final HashMap<Mode, Integer> activitiesWithSGCMembersByMode = new HashMap<>();
+    private final HashMap<Mode, Integer> cpotwActivitiesWithSGCMembersByMode = new HashMap<>();
+    private final HashMap<Mode, Boolean> potwCompletionsByMode = new HashMap<>();
+    private final HashMap<Raid, Boolean> potwCompletionsByRaid = new HashMap<>();
+    private final HashMap<Dungeon, Boolean> potwCompletionsByDungeon = new HashMap<>();
     private int activitiesWithSGCMembersScore = 0;
 
     public Character(String UID, DestinyClassType classType, String dateLastPlayed) {
@@ -34,7 +37,16 @@ public class Character {
             dungeonActivities.put(dungeon, new DungeonActivity(dungeon));
         });
         Mode.validModesForCPOTW().forEach((mode) -> {
-            activitiesWithSGCMembersByMode.put(mode, 0);
+            cpotwActivitiesWithSGCMembersByMode.put(mode, 0);
+        });
+        Mode.validModesForPOTW().forEach((mode) -> {
+            potwCompletionsByMode.put(mode, false);
+        });
+        Raid.getRaidsOrdered().forEach((raid) -> {
+            potwCompletionsByRaid.put(raid, false);
+        });
+        Dungeon.getDungeonsOrdered().forEach((dungeon) -> {
+            potwCompletionsByDungeon.put(dungeon, false);
         });
     }
 
@@ -90,8 +102,8 @@ public class Character {
     public void addClearedActivitiesWithSGCMembers(GenericActivity activity) {
         if (activity != null && activity.getEarnedPoints() > 0) {
             activitiesWithSGCMembersScore += activity.getEarnedPoints();
-            activitiesWithSGCMembersByMode.put(activity.getMODE(),
-                    activitiesWithSGCMembersByMode.get(activity.getMODE()) + 1);
+            cpotwActivitiesWithSGCMembersByMode.put(activity.getMODE(),
+                    cpotwActivitiesWithSGCMembersByMode.get(activity.getMODE()) + 1);
         }
     }
 
@@ -100,13 +112,37 @@ public class Character {
     }
 
     public int getActivitiesWithSGCMembersCount() {
-        Integer total = activitiesWithSGCMembersByMode.values().stream()
+        Integer total = cpotwActivitiesWithSGCMembersByMode.values().stream()
                 .collect(Collectors.summingInt(Integer::intValue));
         return total;
     }
 
-    public HashMap<Mode, Integer> getActivitiesWithSGCMembersByMode() {
-        return activitiesWithSGCMembersByMode;
+    public HashMap<Mode, Integer> getCpotwActivitiesWithSGCMembersByMode() {
+        return cpotwActivitiesWithSGCMembersByMode;
+    }
+
+    public void addCompletedMode(Mode mode) {
+        potwCompletionsByMode.put(mode, true);
+    }
+
+    public void addCompletedRaid(Raid raid) {
+        potwCompletionsByRaid.put(raid, true);
+    }
+
+    public void addCompletedDungeon(Dungeon dungeon) {
+        potwCompletionsByDungeon.put(dungeon, true);
+    }
+
+    public HashMap<Mode, Boolean> getPotwCompletionsByMode() {
+        return potwCompletionsByMode;
+    }
+
+    public HashMap<Raid, Boolean> getPotwCompletionsByRaid() {
+        return potwCompletionsByRaid;
+    }
+
+    public HashMap<Dungeon, Boolean> getPotwCompletionsByDungeon() {
+        return potwCompletionsByDungeon;
     }
 
 }

@@ -169,7 +169,7 @@ public class Member {
         for (Character character : characters.values()) {
             Mode.validModesForCPOTW().forEach((mode) -> {
                 totalActivitiesWithSGCMembersByMode.put(mode, totalActivitiesWithSGCMembersByMode.get(mode)
-                        + character.getActivitiesWithSGCMembersByMode().get(mode));
+                        + character.getCpotwActivitiesWithSGCMembersByMode().get(mode));
             });
 
         }
@@ -180,7 +180,7 @@ public class Member {
         return collectibles;
     }
 
-     public HashMap<Dungeon, Integer> getDungeonClears() {
+    public HashMap<Dungeon, Integer> getDungeonClears() {
         HashMap<Dungeon, Integer> dungeonClears = new HashMap<>();
         for (Dungeon r : Dungeon.values()) {
             dungeonClears.put(r, 0);
@@ -210,5 +210,47 @@ public class Member {
             }
         });
         return totalWeeklyDungeonClears.get();
+    }
+
+    public Map<Mode, Integer> getPOTWModeCompletions() {
+        HashMap<Mode, Integer> output = new HashMap<Mode, Integer>();
+        Mode.validModesForPOTW().forEach((mode) -> {
+            output.put(mode, 0);
+        });
+        characters.forEach((characterId, character) -> {
+            character.getPotwCompletionsByMode().forEach((mode, completed) -> {
+                output.put(mode, output.get(mode) + 1);
+            });
+        });
+
+        return output;
+    }
+
+    public Map<Raid, Integer> getPOTWRaidCompletions() {
+        HashMap<Raid, Integer> output = new HashMap<Raid, Integer>();
+        Raid.getRaidsOrdered().forEach((raid) -> {
+            output.put(raid, 0);
+        });
+        characters.forEach((characterId, character) -> {
+            character.getPotwCompletionsByRaid().forEach((raid, completed) -> {
+                output.put(raid, output.get(raid) + 1);
+            });
+        });
+
+        return output;
+    }
+
+    public Map<Dungeon, Integer> getPOTWDungeonCompletions() {
+        HashMap<Dungeon, Integer> output = new HashMap<Dungeon, Integer>();
+        Dungeon.getDungeonsOrdered().forEach((dungeon) -> {
+            output.put(dungeon, 0);
+        });
+        characters.forEach((characterId, character) -> {
+            character.getPotwCompletionsByDungeon().forEach((dungeon, completed) -> {
+                output.put(dungeon, output.get(dungeon) + 1);
+            });
+        });
+
+        return output;
     }
 }

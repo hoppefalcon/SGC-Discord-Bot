@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -830,7 +831,9 @@ public class RaidReportTool {
 
             try {
                 executorService.invokeAll(tasks);
-                sendClanSGCActivityMessage(startDate, endDate, clan, textChannel, discordUser);
+                if (textChannel != null && discordUser != null) {
+                    sendClanSGCActivityMessage(startDate, endDate, clan, textChannel, discordUser);
+                }
             } finally {
                 System.gc();
                 LOGGER.info("Finished processing " + clan.getCallsign());
@@ -943,7 +946,8 @@ public class RaidReportTool {
     }
 
     public static int getMembersClearedActivities(Member member, LocalDate startDate, LocalDate endDate,
-            HashMap<String, Member> sgcClanMembersMap, int mode) throws IOException, URISyntaxException {
+            HashMap<String, Member> sgcClanMembersMap, int mode)
+            throws IOException, URISyntaxException, InterruptedException {
         LOGGER.debug(String.format("Getting Cleared Activities for %s", member.getCombinedBungieGlobalDisplayName()));
         AtomicInteger PGCR_COUNT = new AtomicInteger(0);
         getMembersActiveCharacters(member);
@@ -984,6 +988,11 @@ public class RaidReportTool {
                             results.forEach((result) -> {
                                 int activityMode = result.getAsJsonObject().getAsJsonObject("activityDetails")
                                         .getAsJsonPrimitive("mode").getAsInt();
+
+                                String directorActivityHash = result.getAsJsonObject()
+                                        .getAsJsonObject("activityDetails")
+                                        .getAsJsonPrimitive("directorActivityHash").getAsString();
+
                                 if (Mode.validModeValuesForCPOTW().contains(activityMode)) {
                                     String activityDateStr = result.getAsJsonObject().getAsJsonPrimitive("period")
                                             .getAsString();
@@ -1005,18 +1014,33 @@ public class RaidReportTool {
                                                         .getAsJsonObject("team")
                                                         .getAsJsonObject("basic").getAsJsonPrimitive("value")
                                                         .getAsDouble();
-                                            } catch (NullPointerException ex) {
+                                                Mode fromValue = Mode.getFromValue(activityMode);
+                                                Platform clanPlatform = member.getClan().getClanPlatform();
+                                                GenericActivity genericActivity = new GenericActivity(instanceId,
+                                                        Mode.getFromValue(activityMode),
+                                                        member.getClan().getClanPlatform());
+                                                genericActivity.setTeam(team);
+                                                genericActivitiesToProcess.add(genericActivity);
+                                            } catch (Throwable ex) {
+                                                LOGGER.error(ex.getMessage(), ex);
                                             }
-                                            GenericActivity genericActivity = new GenericActivity(instanceId,
-                                                    Mode.getFromValue(activityMode),
-                                                    member.getClan().getClanPlatform());
-                                            genericActivity.setTeam(team);
-                                            genericActivitiesToProcess.add(genericActivity);
+
+                                            // POTW Calculations
+                                            if (Mode.getFromValue(activityMode).equals(Mode.RAID)) {
+                                                character.addCompletedRaid(
+                                                        Raid.getRaid(directorActivityHash));
+                                            } else if (Mode.getFromValue(activityMode).equals(Mode.DUNGEON)) {
+                                                character.addCompletedDungeon(
+                                                        Dungeon.getDungeon(directorActivityHash));
+                                            } else {
+                                                character.addCompletedMode(Mode.getFromValue(activityMode));
+                                            }
                                         }
                                     } else if (dateCompleted.isAfter(endDate)) {
                                         recordsAfterEndDate.incrementAndGet();
                                     }
                                 }
+
                             });
 
                             LOGGER.debug(String.format(
@@ -1054,7 +1078,8 @@ public class RaidReportTool {
                 });
 
                 LOGGER.debug(
-                        "Finished Processing Cleared Activities for " + member.getCombinedBungieGlobalDisplayName());
+                        "Finished Processing Cleared Activities for "
+                                + member.getCombinedBungieGlobalDisplayName());
 
             } catch (Exception ex) {
                 LOGGER.error(
@@ -1063,6 +1088,7 @@ public class RaidReportTool {
                         ex);
             }
         });
+
         LOGGER.info(String.format("PGCR Count for %s is %d", member.getCombinedBungieGlobalDisplayName(),
                 PGCR_COUNT.get()));
         return PGCR_COUNT.get();
@@ -1161,7 +1187,6 @@ public class RaidReportTool {
 
     private static String getClanActivityCsvPart(Clan clan) {
         final StringBuilder csvPart = new StringBuilder();
-        List<Mode> validModesForCPOTW = Mode.validModesForCPOTW();
         clan.getMembers()
                 .forEach((memberId, member) -> {
                     Character titanCharacter = member.getCharacterByDestinyClassType(DestinyClassType.TITAN);
@@ -1177,8 +1202,12 @@ public class RaidReportTool {
 
                     HashMap<Mode, Integer> totalActivitiesWithSGCMembersByMode = member
                             .getTotalActivitiesWithSGCMembersByMode();
+                    Map<Mode, Integer> potwModeCompletions = member.getPOTWModeCompletions();
+                    Map<Raid, Integer> potwRaidCompletions = member.getPOTWRaidCompletions();
+                    Map<Dungeon, Integer> potwDungeonCompletions = member.getPOTWDungeonCompletions();
 
                     if (member.hasNewBungieName()) {
+                        // Base CPOTW
                         csvPart.append("\"").append(member.getDisplayName()).append("\",")
                                 .append("\"").append(member.getCombinedBungieGlobalDisplayName()).append("\",")
                                 .append("\"").append(clan.getCallsign()).append("\",")
@@ -1186,9 +1215,23 @@ public class RaidReportTool {
                                 .append("\"").append(titanClears).append("\",")
                                 .append("\"").append(hunterClears).append("\",")
                                 .append("\"").append(warlockClears).append("\",");
-                        for (Mode mode : validModesForCPOTW) {
+                        for (Mode mode : Mode.validModesForCPOTW()) {
                             csvPart.append("\"").append(totalActivitiesWithSGCMembersByMode.get(mode)).append("\",");
                         }
+
+                        // POTW Modes
+                        for (Mode mode : Mode.validModesForPOTW()) {
+                            csvPart.append("\"").append(potwModeCompletions.get(mode)).append("\",");
+                        }
+                        // POTW Raids
+                        for (Raid raid : Raid.getRaidsOrdered()) {
+                            csvPart.append("\"").append(potwRaidCompletions.get(raid)).append("\",");
+                        }
+                        // POTW Dungeons
+                        for (Dungeon dungeon : Dungeon.getDungeonsOrdered()) {
+                            csvPart.append("\"").append(potwDungeonCompletions.get(dungeon)).append("\",");
+                        }
+                        // New Line
                         csvPart.append("\n");
                     }
                 });
@@ -1334,18 +1377,33 @@ public class RaidReportTool {
     }
 
     private static String getActivityReportCsvHeader() {
-        final StringBuilder stringBuilder = new StringBuilder();
+        final StringBuilder csvPart = new StringBuilder();
 
-        stringBuilder.append("\"Gamertag\",").append("\"BungieDisplayName\",").append("\"Clan\",")
+        // Base CPOTW
+        csvPart.append("\"Gamertag\",").append("\"BungieDisplayName\",").append("\"Clan\",")
                 .append("\"Community POTW Points\",").append("\"Titan Clears\",").append("\"Hunter Clears\",")
                 .append("\"Warlock Clears\",");
 
         List<Mode> validModesForCPOTW = Mode.validModesForCPOTW();
         for (Mode mode : validModesForCPOTW) {
-            stringBuilder.append("\"").append(mode.getName()).append("\",");
+            csvPart.append("\"").append(mode.getName()).append("\",");
         }
 
-        return stringBuilder.append("\n").toString();
+        // POTW Modes
+        for (Mode mode : Mode.validModesForPOTW()) {
+            csvPart.append("\"").append(mode.getName() + " [POTW]").append("\",");
+        }
+        // POTW Raids
+        for (Raid raid : Raid.getRaidsOrdered()) {
+            csvPart.append("\"").append(raid.getName() + " [POTW]").append("\",");
+        }
+        // POTW Dungeons
+        for (Dungeon dungeon : Dungeon.getDungeonsOrdered()) {
+            csvPart.append("\"").append(dungeon.getName() + " [POTW]").append("\",");
+        }
+
+        // New Line
+        return csvPart.append("\n").toString();
     }
 
     private static String getInternalActivityReportCsvHeader() {
