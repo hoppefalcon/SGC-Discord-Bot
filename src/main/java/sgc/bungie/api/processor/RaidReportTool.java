@@ -47,7 +47,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import sgc.Platform;
-import sgc.SGC_Clan;;
+import sgc.SGC_Clan;
 
 /**
  * @author chris hoppe
@@ -1221,7 +1221,9 @@ public class RaidReportTool {
 
                         // POTW Modes
                         for (Mode mode : Mode.validModesForPOTW()) {
-                            csvPart.append("\"").append(potwModeCompletions.get(mode)).append("\",");
+                            if (mode != Mode.RAID || mode != Mode.DUNGEON) {
+                                csvPart.append("\"").append(potwModeCompletions.get(mode)).append("\",");
+                            }
                         }
                         // POTW Raids
                         for (Raid raid : Raid.getRaidsOrdered()) {
@@ -1391,7 +1393,9 @@ public class RaidReportTool {
 
         // POTW Modes
         for (Mode mode : Mode.validModesForPOTW()) {
-            csvPart.append("\"").append(mode.getName() + " [POTW]").append("\",");
+            if (mode != Mode.RAID || mode != Mode.DUNGEON) {
+                csvPart.append("\"").append(mode.getName() + " [POTW]").append("\",");
+            }
         }
         // POTW Raids
         for (Raid raid : Raid.getRaidsOrdered()) {
