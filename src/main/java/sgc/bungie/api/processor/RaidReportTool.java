@@ -63,7 +63,7 @@ public class RaidReportTool {
     private static final HashMap<String, String> xbClanIdMap = new HashMap<>();
     private static final HashMap<String, String> psClanIdMap = new HashMap<>();
 
-    private static ExecutorService executorService = Executors.newFixedThreadPool(15);
+    private static ExecutorService executorService = Executors.newFixedThreadPool(10);
 
     /**
      * Initializes the clan ID maps.
@@ -174,6 +174,7 @@ public class RaidReportTool {
         List<Callable<Object>> tasks = new ArrayList<>();
         clan.getMembers().forEach((memberId, member) -> {
             tasks.add(() -> {
+                System.gc();
                 try {
                     getClanMemberRaidReport(member);
 
@@ -812,6 +813,7 @@ public class RaidReportTool {
             LOGGER.info("Starting to process " + clan.getCallsign());
             clan.getMembers().forEach((memberId, member) -> {
                 tasks.add(() -> {
+                    System.gc();
                     if (member.hasNewBungieName()) {
                         try {
                             LOGGER.debug("Starting to process " + member.getDisplayName());
@@ -821,7 +823,7 @@ public class RaidReportTool {
 
                             SCORED_PGCR_COUNT.addAndGet(member.getWeeklySGCActivity().get("COUNT"));
                             LOGGER.debug("Finished processing " + member.getDisplayName());
-                        } catch (IOException ex) {
+                        } catch (Throwable ex) {
                             LOGGER.error("Error processing " + member.getDisplayName(), ex);
                         }
                     }
@@ -868,6 +870,7 @@ public class RaidReportTool {
         LOGGER.info("Starting to process " + clan.getCallsign());
         clan.getMembers().forEach((memberId, member) -> {
             tasks.add(() -> {
+                System.gc();
                 if (member.hasNewBungieName()) {
                     try {
                         LOGGER.debug("Starting to process " + member.getDisplayName());
@@ -899,6 +902,7 @@ public class RaidReportTool {
 
         for (SGC_Clan sgc_clan : SGC_Clan.values()) {
             tasks.add(() -> {
+                System.gc();
                 try {
                     Clan clan = new Clan(sgc_clan.Bungie_ID, sgc_clan.Primary_Platform);
                     getClanInfo(clan);
@@ -989,10 +993,6 @@ public class RaidReportTool {
                                 int activityMode = result.getAsJsonObject().getAsJsonObject("activityDetails")
                                         .getAsJsonPrimitive("mode").getAsInt();
 
-                                String directorActivityHash = result.getAsJsonObject()
-                                        .getAsJsonObject("activityDetails")
-                                        .getAsJsonPrimitive("directorActivityHash").getAsString();
-
                                 if (Mode.validModeValuesForCPOTW().contains(activityMode)) {
                                     String activityDateStr = result.getAsJsonObject().getAsJsonPrimitive("period")
                                             .getAsString();
@@ -1014,8 +1014,6 @@ public class RaidReportTool {
                                                         .getAsJsonObject("team")
                                                         .getAsJsonObject("basic").getAsJsonPrimitive("value")
                                                         .getAsDouble();
-                                                Mode fromValue = Mode.getFromValue(activityMode);
-                                                Platform clanPlatform = member.getClan().getClanPlatform();
                                                 GenericActivity genericActivity = new GenericActivity(instanceId,
                                                         Mode.getFromValue(activityMode),
                                                         member.getClan().getClanPlatform());
@@ -1026,12 +1024,19 @@ public class RaidReportTool {
                                             }
 
                                             // POTW Calculations
+
                                             if (Mode.getFromValue(activityMode).equals(Mode.RAID)) {
                                                 character.addCompletedRaid(
-                                                        Raid.getRaid(directorActivityHash));
+                                                        Raid.getRaid(result.getAsJsonObject()
+                                                                .getAsJsonObject("activityDetails")
+                                                                .getAsJsonPrimitive("directorActivityHash")
+                                                                .getAsString()));
                                             } else if (Mode.getFromValue(activityMode).equals(Mode.DUNGEON)) {
                                                 character.addCompletedDungeon(
-                                                        Dungeon.getDungeon(directorActivityHash));
+                                                        Dungeon.getDungeon(result.getAsJsonObject()
+                                                                .getAsJsonObject("activityDetails")
+                                                                .getAsJsonPrimitive("directorActivityHash")
+                                                                .getAsString()));
                                             } else {
                                                 character.addCompletedMode(Mode.getFromValue(activityMode));
                                             }
@@ -1437,6 +1442,7 @@ public class RaidReportTool {
                 clan.getMembers().forEach((memberId, member) -> {
                     try {
                         tasks.add(() -> {
+                            System.gc();
                             LOGGER.trace("Processing " + member.getCombinedBungieGlobalDisplayName());
                             getMembersActiveCharacters(member);
                             List<Instant> lastPlayedDates = new ArrayList<>();
@@ -1515,6 +1521,7 @@ public class RaidReportTool {
         List<Callable<Object>> tasks = new ArrayList<>();
         clan.getMembers().forEach((memberId, member) -> {
             tasks.add(() -> {
+                System.gc();
                 try {
                     getClanMemberDungeonReport(member);
                     if (interactionOriginalResponseUpdater != null)
