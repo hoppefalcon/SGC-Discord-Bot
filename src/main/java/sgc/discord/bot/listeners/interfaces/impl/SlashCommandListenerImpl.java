@@ -7,6 +7,8 @@ import org.springframework.stereotype.Component;
 import sgc.discord.bot.commands.impl.ClanChatReportCommand;
 import sgc.discord.bot.commands.impl.ClanInternalActivityReportCommand;
 import sgc.discord.bot.commands.impl.ClanRaidReportCommand;
+import sgc.discord.bot.commands.impl.InfographicCommand;
+import sgc.discord.bot.commands.impl.InformationMessageCommand;
 import sgc.discord.bot.commands.impl.RaidCarnageReportCommand;
 import sgc.discord.bot.commands.impl.RoleMemberListCommand;
 import sgc.discord.bot.commands.impl.SGCActivityReportCommand;
@@ -72,6 +74,14 @@ public class SlashCommandListenerImpl implements SlashCommandListener {
 
             case "psn-clan-iar":
                 new ClanInternalActivityReportCommand().handle(slashCommandInteraction);
+                break;
+
+            case "infographic":
+                new InfographicCommand().handle(slashCommandInteraction);
+                break;
+
+            case "information":
+                new InformationMessageCommand().handle(slashCommandInteraction);
                 break;
             default:
                 break;

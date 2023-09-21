@@ -31,6 +31,9 @@ import org.springframework.stereotype.Controller;
 import sgc.bungie.api.processor.RaidReportTool;
 import sgc.bungie.api.processor.activity.ActivityReportTool;
 import sgc.discord.bot.listeners.interfaces.SlashCommandListener;
+import sgc.discord.infographics.GoogleDriveUtil;
+import sgc.discord.infographics.Infographic;
+import sgc.discord.messages.Message;
 
 @Controller
 @SpringBootApplication
@@ -67,7 +70,7 @@ public class BotApplication {
 	private static boolean firstRun = true;
 
 	public static void main(String[] args) {
-		ActivityReportTool.initiateGoogleSheetsAuth();
+		GoogleDriveUtil.initiateGoogleSheetsAuth();
 		SpringApplication.run(BotApplication.class, args);
 		ActivityReportTool.setDiscordAPI(API);
 		scheduleActivitySheetUpdate(2, 6);
@@ -224,6 +227,21 @@ public class BotApplication {
 		timeframe.addChoice("2 Weeks", "14");
 		timeframe.addChoice("1 Month", "30");
 
+		final SlashCommandOptionBuilder infographicOption = new SlashCommandOptionBuilder().setName("Infographic")
+				.setType(SlashCommandOptionType.STRING).setRequired(true)
+				.setDescription("Which Infographic are you looking for?");
+		for (Infographic infographic : Infographic.values()) {
+			infographicOption.addChoice(infographic.name(), infographic.folderID);
+		}
+
+		final SlashCommandOptionBuilder infomationMessageOption = new SlashCommandOptionBuilder()
+				.setName("InfomationMessage")
+				.setType(SlashCommandOptionType.STRING).setRequired(true)
+				.setDescription("Which Infomation Message are you looking for?");
+		for (Message message : Message.values()) {
+			infographicOption.addChoice(message.name(), message.name());
+		}
+
 		Set<SlashCommandBuilder> commandList = new HashSet<>();
 
 		commandList.add(new SlashCommandBuilder().setName("user-raid-report")
@@ -287,6 +305,14 @@ public class BotApplication {
 				.setDescription("Pulls a Playstation clan internal activity report.")
 				.addOption(psClanOption.build())
 				.addOption(timeframe.build()));
+
+		commandList.add(new SlashCommandBuilder().setName("infographic")
+				.setDescription("Pulls an SGC infographic of choice.")
+				.addOption(infographicOption.build()));
+
+		commandList.add(new SlashCommandBuilder().setName("information")
+				.setDescription("Posts a selected SGC Information Message.")
+				.addOption(infomationMessageOption.build()));
 
 		API.bulkOverwriteGlobalApplicationCommands(commandList).join();
 

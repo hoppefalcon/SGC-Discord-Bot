@@ -27,7 +27,7 @@ public enum Mode {
     CRIMSON_DOUBLES("CrimsonDoubles", 15, 1.0),
     NIGHTFALL("Nightfall", 16, 1.0),
     HEROIC_NIGHTFALL("HeroicNightfall", 17, 1.0),
-    ALLS_TRIKES("AllStrikes", 18, 1.0),
+    ALL_STRIKES("AllStrikes", 18, 1.0),
     IRON_BANNER("IronBanner", 19, 1.0),
     RESERVED_20("Reserved20", 20, 1.0),
     RESERVED_21("Reserved21", 21, 1.0),

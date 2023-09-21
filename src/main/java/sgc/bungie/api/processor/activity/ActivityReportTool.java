@@ -1,19 +1,15 @@
 package sgc.bungie.api.processor.activity;
 
 import java.awt.Color;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
 import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+
 import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.channel.Channel;
 import org.javacord.api.entity.channel.TextChannel;
@@ -24,31 +20,14 @@ import org.javacord.api.entity.permission.Role;
 import org.javacord.api.entity.user.User;
 import org.slf4j.Logger;
 
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
-import com.google.api.client.http.HttpRequestInitializer;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.gson.GsonFactory;
-import com.google.api.services.sheets.v4.Sheets;
-import com.google.api.services.sheets.v4.Sheets.Spreadsheets.Values.Update;
-import com.google.api.services.sheets.v4.SheetsScopes;
-import com.google.api.services.sheets.v4.model.BatchClearValuesRequest;
-import com.google.api.services.sheets.v4.model.ValueRange;
-import com.google.auth.http.HttpCredentialsAdapter;
-import com.google.auth.oauth2.GoogleCredentials;
-import com.google.auth.oauth2.ServiceAccountCredentials;
-
 import sgc.SGC_Clan;
 import sgc.bungie.api.processor.RaidReportTool;
 import sgc.discord.bot.BotApplication;
+import sgc.discord.infographics.GoogleDriveUtil;
 
 public class ActivityReportTool {
 
     private static final Logger LOGGER = BotApplication.getLogger();
-    private static final String APPLICATION_NAME = "SGC Bot";
-    private static final String CREDENTIALS_FILE_PATH = "/credentials.json";
-    private static final List<String> SCOPES = Collections.singletonList(SheetsScopes.SPREADSHEETS);
-    private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 
     private static DiscordApi API = null;
 
@@ -70,7 +49,7 @@ public class ActivityReportTool {
             HashMap<SGC_Clan, ArrayList<SGC_Member>> members = initializeMembers();
             getAllClansDiscordActivity(members);
             getAllClansGameActivity(members);
-            writeActivityToGoogleSheet(members);
+            GoogleDriveUtil.writeActivityToGoogleSheet(members);
 
             sendLogMessage("Completed the SGC Activity sheet update at " +
                     ZonedDateTime.now(BotApplication.ZID).format(BotApplication.DATE_TIME_FORMATTER));
@@ -78,26 +57,6 @@ public class ActivityReportTool {
             LOGGER.error(e.getMessage(), e);
             sendErrorMessage("An Error occurred while running the SGC Activity sheet update at " +
                     ZonedDateTime.now(BotApplication.ZID).format(BotApplication.DATE_TIME_FORMATTER));
-        }
-    }
-
-    /**
-     * Initiates the authentication for Google Sheets API.
-     */
-    public static void initiateGoogleSheetsAuth() {
-        try {
-            LOGGER.info("Initiating Google Sheet Auth");
-            final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
-
-            Sheets service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY,
-                    getGoogleSheetsHttpRequestInitializer())
-                    .setApplicationName(APPLICATION_NAME)
-                    .build();
-
-            final String spreadsheetId = "1R0RkQYKVWcy6DA71xNkoDU-XIc14UjXuD7M05H2VHPk";
-            service.spreadsheets().values().get(spreadsheetId, "SOL!A2:F").execute();
-        } catch (Exception e) {
-            LOGGER.error(e.getMessage(), e);
         }
     }
 
@@ -209,80 +168,6 @@ public class ActivityReportTool {
                     members.get(clan).add(newMember);
                 }
             }
-        }
-    }
-
-    /**
-     * Returns the HTTP request initializer for Google Sheets API authentication.
-     *
-     * @return The HTTP request initializer.
-     * @throws IOException If there is an error reading the credentials file.
-     */
-    private static HttpRequestInitializer getGoogleSheetsHttpRequestInitializer() throws IOException {
-        // Load service account secrets.
-        InputStream resourceAsStream = ActivityReportTool.class.getResourceAsStream(CREDENTIALS_FILE_PATH);
-        if (resourceAsStream == null) {
-            throw new FileNotFoundException("Resource not found: " + CREDENTIALS_FILE_PATH);
-        }
-
-        final ServiceAccountCredentials serviceAccountCredentials = ServiceAccountCredentials
-                .fromStream(resourceAsStream);
-        GoogleCredentials credentials = serviceAccountCredentials.createScoped(SCOPES);
-
-        return new HttpCredentialsAdapter(credentials);
-    }
-
-    /**
-     * Writes the activity data to the Google Sheets.
-     *
-     * @param members A HashMap containing clans as keys and their members as
-     *                values.
-     */
-    private static void writeActivityToGoogleSheet(HashMap<SGC_Clan, ArrayList<SGC_Member>> members) {
-        try {
-            final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
-            final String spreadsheetId = "1R0RkQYKVWcy6DA71xNkoDU-XIc14UjXuD7M05H2VHPk";
-            Sheets service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getGoogleSheetsHttpRequestInitializer())
-                    .setApplicationName(APPLICATION_NAME)
-                    .build();
-
-            BatchClearValuesRequest batchClearValuesRequest = new BatchClearValuesRequest();
-            List<String> ranges = new ArrayList<>();
-            List<Update> updates = new ArrayList<>();
-
-            for (SGC_Clan clan : members.keySet()) {
-                final String range = String.format("%s!A2:F", clan);
-                ranges.add(range);
-
-                ValueRange valueRange = new ValueRange();
-                valueRange.setRange(range);
-
-                List<List<Object>> values = new ArrayList<>();
-                for (SGC_Member member : members.get(clan)) {
-                    List<Object> row = new ArrayList<>();
-                    row.add(member.getDiscordDisplayName());
-                    row.add(member.getBungieDisplayName());
-                    row.add(member.isDiscordActivity());
-                    row.add(member.isGameActivity());
-                    row.add(member.getDiscordMessageCounts().get("TOTAL"));
-                    row.add(member.getDiscordUserName());
-                    values.add(row);
-                }
-
-                valueRange.setValues(values);
-                Update update = service.spreadsheets().values().update(spreadsheetId, range, valueRange);
-                update.setValueInputOption("USER_ENTERED");
-                updates.add(update);
-            }
-
-            batchClearValuesRequest.setRanges(ranges);
-            service.spreadsheets().values().batchClear(spreadsheetId, batchClearValuesRequest).execute();
-
-            for (Update update : updates) {
-                update.execute();
-            }
-        } catch (Exception e) {
-            LOGGER.error(e.getMessage(), e);
         }
     }
 
