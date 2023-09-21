@@ -29,15 +29,15 @@ public class InformationMessageCommand implements Command {
                         try {
                                 byte[] sgcLogo = GoogleDriveUtil.getSGCLogo();
 
-                                new MessageBuilder().setContent("")
+                                interactionOriginalResponseUpdater.setContent("")
                                                 .addEmbed(new EmbedBuilder()
                                                                 .setTitle(message.title)
                                                                 .setDescription(message.body)
                                                                 .setFooter("Shrouded Gaming | Twitch.tv/ShroudedGaming | #AreYouShrouded")
-                                                                .setImage(sgcLogo)
+                                                                .setThumbnail(sgcLogo)
                                                                 .setColor(Color.CYAN)
                                                                 .setUrl(message.url))
-                                                .send(slashCommandInteraction.getChannel().get());
+                                                .update();
 
                         } catch (Exception e) {
                                 LOGGER.error(e.getMessage(), e);

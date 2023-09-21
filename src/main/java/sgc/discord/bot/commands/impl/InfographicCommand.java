@@ -25,20 +25,15 @@ public class InfographicCommand implements Command {
 
                 slashCommandInteraction.respondLater().thenAccept(interactionOriginalResponseUpdater -> {
 
-                        interactionOriginalResponseUpdater
-                                        .setContent("Running InfographicCommand with option "
-                                                        + infoName)
-                                        .update();
-
                         try {
                                 byte[] infographicFile = GoogleDriveUtil.getInfographic(infographic);
 
-                                new MessageBuilder().setContent("")
+                                interactionOriginalResponseUpdater.setContent("")
                                                 .addEmbed(new EmbedBuilder()
                                                                 .setFooter("Shrouded Gaming | Twitch.tv/ShroudedGaming | #AreYouShrouded")
                                                                 .setImage(infographicFile)
                                                                 .setColor(Color.ORANGE))
-                                                .send(slashCommandInteraction.getChannel().get());
+                                                .update();
 
                         } catch (Exception e) {
                                 LOGGER.error(e.getMessage(), e);
