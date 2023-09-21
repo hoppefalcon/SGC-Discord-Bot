@@ -33,13 +33,10 @@ public class InfographicCommand implements Command {
                         try {
                                 byte[] infographicFile = GoogleDriveUtil.getInfographic(infographic);
 
-                                byte[] sgcLogo = GoogleDriveUtil.getSGCLogo();
                                 new MessageBuilder().setContent("")
                                                 .addEmbed(new EmbedBuilder()
-                                                                .setTitle(infoName + " Infographic")
                                                                 .setFooter("Shrouded Gaming | Twitch.tv/ShroudedGaming | #AreYouShrouded")
                                                                 .setImage(infographicFile)
-                                                                .setThumbnail(sgcLogo)
                                                                 .setColor(Color.ORANGE))
                                                 .send(slashCommandInteraction.getChannel().get());
 

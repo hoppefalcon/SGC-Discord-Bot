@@ -26,11 +26,6 @@ public class InformationMessageCommand implements Command {
 
                 slashCommandInteraction.respondLater().thenAccept(interactionOriginalResponseUpdater -> {
 
-                        interactionOriginalResponseUpdater
-                                        .setContent("Running InfographicCommand with option "
-                                                        + value)
-                                        .update();
-
                         try {
                                 byte[] sgcLogo = GoogleDriveUtil.getSGCLogo();
 
@@ -40,7 +35,6 @@ public class InformationMessageCommand implements Command {
                                                                 .setDescription(message.body)
                                                                 .setFooter("Shrouded Gaming | Twitch.tv/ShroudedGaming | #AreYouShrouded")
                                                                 .setImage(sgcLogo)
-                                                                .setThumbnail(sgcLogo)
                                                                 .setColor(Color.CYAN))
                                                 .send(slashCommandInteraction.getChannel().get());
 

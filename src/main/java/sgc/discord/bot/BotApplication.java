@@ -239,7 +239,7 @@ public class BotApplication {
 				.setType(SlashCommandOptionType.STRING).setRequired(true)
 				.setDescription("Which Infomation Message are you looking for?");
 		for (Message message : Message.values()) {
-			infographicOption.addChoice(message.name(), message.name());
+			infomationMessageOption.addChoice(message.name(), message.name());
 		}
 
 		Set<SlashCommandBuilder> commandList = new HashSet<>();
