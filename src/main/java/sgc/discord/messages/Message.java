@@ -22,7 +22,8 @@ public enum Message {
                     + //
                     "\r\n" + //
                     "**WOULD YOU LIKE TO KNOW MORE?**\r\n" + //
-                    "https://www.shroudedgaming.com/sherpa-application"),
+                    "https://www.shroudedgaming.com/sherpa-application",
+            "https://www.shroudedgaming.com/sherpa-application"),
     ADMIN("Become an SGC Clan Admin Toady!!!",
             "Being a Clan Admin in the SGC means you have actively dedicated your time to growing, maintaining, and ensuring the happiness of one of our many SGC clans that we have to offer.\r\n"
                     + //
@@ -36,7 +37,8 @@ public enum Message {
                     + //
                     "\r\n" + //
                     "**WOULD YOU LIKE TO KNOW MORE?**\r\n" + //
-                    "https://www.shroudedgaming.com/admin-application"),
+                    "https://www.shroudedgaming.com/admin-application",
+            "https://www.shroudedgaming.com/admin-application"),
     OFFICER("Become an SGC Clan Officer Toady!!!",
             "SGC Officers are our social butterflies. Always active in the clan chat to help engage and interact with the members within. They provide announcements both for Destiny and the SGC, making sure that all members are up to date on any and all information relating to Destiny and the SGC.\r\n"
                     + //
@@ -50,14 +52,17 @@ public enum Message {
                     + //
                     "\r\n" + //
                     "**WOULD YOU LIKE TO KNOW MORE?**\r\n" + //
-                    "https://www.shroudedgaming.com/officer-application-form");
+                    "https://www.shroudedgaming.com/officer-application-form",
+            "https://www.shroudedgaming.com/officer-application-form");
 
     public final String title;
     public final String body;
+    public final String url;
 
-    private Message(String title, String body) {
+    private Message(String title, String body, String url) {
         this.title = title;
         this.body = body;
+        this.url = url;
     }
 
     public static Message getFromName(String Name) {

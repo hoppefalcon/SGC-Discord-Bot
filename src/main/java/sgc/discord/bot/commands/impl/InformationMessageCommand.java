@@ -35,7 +35,8 @@ public class InformationMessageCommand implements Command {
                                                                 .setDescription(message.body)
                                                                 .setFooter("Shrouded Gaming | Twitch.tv/ShroudedGaming | #AreYouShrouded")
                                                                 .setImage(sgcLogo)
-                                                                .setColor(Color.CYAN))
+                                                                .setColor(Color.CYAN)
+                                                                .setUrl(message.url))
                                                 .send(slashCommandInteraction.getChannel().get());
 
                         } catch (Exception e) {
