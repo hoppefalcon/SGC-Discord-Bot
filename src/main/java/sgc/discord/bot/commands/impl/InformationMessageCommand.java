@@ -18,7 +18,7 @@ public class InformationMessageCommand implements Command {
 
         @Override
         public void handle(SlashCommandInteraction slashCommandInteraction) {
-                String value = slashCommandInteraction.getOptionByName("Infographic").get().getStringValue()
+                String value = slashCommandInteraction.getOptionByName("InfomationMessage").get().getStringValue()
                                 .get();
                 Message message = Message.getFromName(value);
                 LOGGER.info("Running InfographicCommand with option "
