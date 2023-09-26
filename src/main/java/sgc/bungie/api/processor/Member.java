@@ -236,7 +236,12 @@ public class Member {
         characters.forEach((characterId, character) -> {
             character.getPotwCompletionsByRaid().forEach((raid, completed) -> {
                 if (completed) {
-                    output.put(raid, output.get(raid) + 1);
+                    if (output.get(raid) != null) {
+                        output.put(raid, output.get(raid) + 1);
+                    } else {
+                        output.put(raid, 1);
+                    }
+
                 }
             });
         });
