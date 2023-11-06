@@ -2,7 +2,6 @@ package sgc.discord.bot.commands.impl;
 
 import java.awt.Color;
 
-import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.interaction.SlashCommandInteraction;
 import org.slf4j.Logger;

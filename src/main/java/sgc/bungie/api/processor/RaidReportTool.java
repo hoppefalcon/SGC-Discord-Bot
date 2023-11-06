@@ -1624,4 +1624,156 @@ public class RaidReportTool {
             }
         });
     }
+
+    public static HashMap<String, HashMap<Mode, Boolean>> getActivitytoCodeWalk(String bungieId, LocalDate startDate,
+            LocalDate endDate) throws Exception {
+        HashMap<String, String> hashToNameMap = new HashMap<>();
+        Member member = getMemberInformationWithCharacters(bungieId, true);
+        HashMap<String, HashMap<Mode, Boolean>> output = new HashMap<>();
+        member.getCharacters().forEach((characteruid, character) -> {
+            try {
+                boolean next = false;
+                for (int page = 0; !next; page++) {
+                    URL url = new URI(String.format(
+                            "https://www.bungie.net/Platform/Destiny2/%s/Account/%s/Character/%s/Stats/Activities/?page=%d&mode=%d&count=250",
+                            member.getMemberType(), member.getUID(), character.getUID(), page, 0))
+                            .toURL();
+
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.setRequestMethod("GET");
+                    conn.addRequestProperty("X-API-Key", apiKey);
+                    conn.addRequestProperty("Accept", "Application/Json");
+
+                    LOGGER.info(String.format("Makking HTTP call #%d for %s:%s", page + 1,
+                            member.getCombinedBungieGlobalDisplayName(), character.getUID()));
+                    conn.connect();
+
+                    // Getting the response code
+                    int responsecode = conn.getResponseCode();
+
+                    if (responsecode == 200) {
+                        BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                        String inputLine;
+                        StringBuffer content = new StringBuffer();
+                        while ((inputLine = in.readLine()) != null) {
+                            content.append(inputLine);
+                        }
+                        JsonArray results = (JsonArray) JsonParser.parseString(content.toString()).getAsJsonObject()
+                                .getAsJsonObject("Response").get("activities");
+                        if (results != null) {
+                            AtomicInteger recordsAfterEndDate = new AtomicInteger(0);
+
+                            List<Callable<Object>> tasks = new ArrayList<>();
+                            results.forEach((result) -> {
+                                tasks.add(() -> {
+                                    int activityMode = result.getAsJsonObject().getAsJsonObject("activityDetails")
+                                            .getAsJsonPrimitive("mode").getAsInt();
+
+                                    if (Mode.validModeValuesForCPOTW().contains(activityMode)) {
+                                        String activityDateStr = result.getAsJsonObject().getAsJsonPrimitive("period")
+                                                .getAsString();
+                                        LocalDate dateCompleted = ZonedDateTime.parse(activityDateStr)
+                                                .withZoneSameInstant(ZoneId.of("US/Eastern")).toLocalDate();
+                                        if ((dateCompleted.isAfter(startDate) && dateCompleted.isBefore(endDate))
+                                                || dateCompleted.isEqual(startDate) || dateCompleted.isEqual(endDate)) {
+                                            boolean completed = result.getAsJsonObject().getAsJsonObject("values")
+                                                    .getAsJsonObject("completed")
+                                                    .getAsJsonObject("basic").getAsJsonPrimitive("value")
+                                                    .getAsDouble() == 1.0;
+                                            if (completed) {
+                                                try {
+                                                    String directorActivityHash = result.getAsJsonObject()
+                                                            .getAsJsonObject("activityDetails")
+                                                            .getAsJsonPrimitive("directorActivityHash")
+                                                            .getAsString();
+                                                    if (!hashToNameMap.containsKey(directorActivityHash)) {
+                                                        hashToNameMap.put(directorActivityHash,
+                                                                getActivityName(directorActivityHash));
+                                                    }
+                                                    output.putIfAbsent(hashToNameMap.get(directorActivityHash),
+                                                            createEmptyCodeMap());
+                                                    output.get(hashToNameMap.get(directorActivityHash))
+                                                            .put(Mode.getFromValue(activityMode), true);
+                                                } catch (Throwable ex) {
+                                                    LOGGER.error(ex.getMessage(), ex);
+                                                }
+                                            }
+                                        } else if (dateCompleted.isAfter(endDate)) {
+                                            recordsAfterEndDate.incrementAndGet();
+                                        }
+                                    }
+                                    return null;
+                                });
+                            });
+
+                            executorService.invokeAll(tasks);
+                            LOGGER.info(String.format(
+                                    "Finished processing HTTP call #%d for %s:%s", page + 1,
+                                    member.getCombinedBungieGlobalDisplayName(), character.getUID()));
+
+                            next = (results.size() < 250) || (recordsAfterEndDate.get() == results.size());
+                        } else {
+                            next = true;
+                        }
+                        in.close();
+                    } else {
+                        next = true;
+                    }
+                    conn.disconnect();
+                }
+
+            } catch (Exception ex) {
+                LOGGER.error(
+                        "Error Processing Cleared Activities for "
+                                + member.getCombinedBungieGlobalDisplayName(),
+                        ex);
+            }
+        });
+        return output;
+    }
+
+    private static HashMap<Mode, Boolean> createEmptyCodeMap() {
+        HashMap<Mode, Boolean> map = new HashMap<>();
+        Mode.validModesForPOTW().forEach(mode -> map.put(mode, false));
+        return map;
+    }
+
+    private static String getActivityName(String directorActivityHash) {
+        try {
+            URL url = new URI(
+                    String.format("https://www.bungie.net/Platform/Destiny2/Manifest/DestinyActivityDefinition/%s/",
+                            directorActivityHash))
+                    .toURL();
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.addRequestProperty("X-API-Key", apiKey);
+            conn.addRequestProperty("Accept", "Application/Json");
+            conn.connect();
+            // Getting the response code
+            int responsecode = conn.getResponseCode();
+
+            if (responsecode == 200) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                String inputLine;
+                StringBuffer content = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    content.append(inputLine);
+                }
+                conn.disconnect();
+                String activityName = JsonParser.parseString(content.toString()).getAsJsonObject()
+                        .getAsJsonObject("Response").getAsJsonObject("originalDisplayProperties")
+                        .getAsJsonPrimitive("name").getAsString();
+                if (activityName != null) {
+                    return activityName;
+                }
+            }
+        } catch (Exception ex) {
+            LOGGER.error(
+                    "Error Processing Activity Name for for directorActivityHash: "
+                            + directorActivityHash,
+                    ex);
+        }
+        return null;
+    }
+
 }
