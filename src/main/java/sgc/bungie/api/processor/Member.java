@@ -22,6 +22,7 @@ public class Member {
     private final Clan clan;
     private final HashMap<String, Character> characters = new HashMap<>();
     private final HashMap<String, Boolean> collectibles = new HashMap<>();
+    private final HashMap<String, Integer> metrics = new HashMap<>();
 
     public Member(String UID, String DisplayName, String MemberType, String bungieGlobalDisplayName,
             String bungieGlobalDisplayNameCode, Clan clan) {
@@ -178,6 +179,10 @@ public class Member {
 
     public HashMap<String, Boolean> getCollectibles() {
         return collectibles;
+    }
+
+    public HashMap<String, Integer> getMetrics() {
+        return metrics;
     }
 
     public HashMap<Dungeon, Integer> getDungeonClears() {

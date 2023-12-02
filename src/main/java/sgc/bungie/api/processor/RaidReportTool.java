@@ -1512,6 +1512,89 @@ public class RaidReportTool {
         return response;
     }
 
+    public static HashMap<String, Boolean> getMembersTriumphs(Member member, List<String> triumphHashIntegers)
+            throws IOException, URISyntaxException {
+        URL url = new URI(String.format("https://www.bungie.net/Platform/Destiny2/%s/Profile/%s/?components=900",
+                member.getMemberType(), member.getUID())).toURL();
+
+        HashMap<String, Boolean> response = new HashMap<>();
+
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.addRequestProperty("X-API-Key", apiKey);
+        conn.addRequestProperty("Accept", "Application/Json");
+        conn.connect();
+
+        // Getting the response code
+        int responsecode = conn.getResponseCode();
+        if (responsecode == 200) {
+            BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            String inputLine;
+            StringBuffer content = new StringBuffer();
+            while ((inputLine = in.readLine()) != null) {
+                content.append(inputLine);
+            }
+            JsonObject results = JsonParser.parseString(content.toString()).getAsJsonObject()
+                    .getAsJsonObject("Response").getAsJsonObject("profileRecords").getAsJsonObject("data")
+                    .getAsJsonObject("records");
+            triumphHashIntegers.forEach((hash) -> {
+                try {
+                    JsonObject triumph = results.getAsJsonObject(hash).get("objectives").getAsJsonArray().get(0)
+                            .getAsJsonObject();
+                    response.put(hash, triumph.get("complete").getAsBoolean());
+                } catch (Exception ex) {
+                    LOGGER.error("Error processing JSON result from "
+                            + url.toExternalForm(), ex);
+                    response.put(hash, null);
+                }
+            });
+            in.close();
+        }
+        conn.disconnect();
+        return response;
+    }
+
+    public static HashMap<String, Integer> getMembersMetrics(Member member, List<String> metricsHashIntegers)
+            throws IOException, URISyntaxException {
+        URL url = new URI(String.format("https://www.bungie.net/Platform/Destiny2/%s/Profile/%s/?components=1100",
+                member.getMemberType(), member.getUID())).toURL();
+        // 1765255052
+        HashMap<String, Integer> response = new HashMap<>();
+
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.addRequestProperty("X-API-Key", apiKey);
+        conn.addRequestProperty("Accept", "Application/Json");
+        conn.connect();
+
+        // Getting the response code
+        int responsecode = conn.getResponseCode();
+        if (responsecode == 200) {
+            BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            String inputLine;
+            StringBuffer content = new StringBuffer();
+            while ((inputLine = in.readLine()) != null) {
+                content.append(inputLine);
+            }
+            JsonObject results = JsonParser.parseString(content.toString()).getAsJsonObject()
+                    .getAsJsonObject("Response").getAsJsonObject("metrics").getAsJsonObject("data")
+                    .getAsJsonObject("metrics");
+            metricsHashIntegers.forEach((hash) -> {
+                try {
+                    JsonObject metric = results.getAsJsonObject(hash).getAsJsonObject("objectiveProgress");
+                    response.put(hash, metric.get("progress").getAsInt());
+                } catch (Exception ex) {
+                    LOGGER.error("Error processing JSON result from "
+                            + url.toExternalForm(), ex);
+                    response.put(hash, null);
+                }
+            });
+            in.close();
+        }
+        conn.disconnect();
+        return response;
+    }
+
     public static Clan getClanDungeonReport(Clan clan,
             InteractionOriginalResponseUpdater interactionOriginalResponseUpdater)
             throws Exception {
