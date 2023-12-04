@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +38,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 
 import sgc.SGC_Clan;
+import sgc.bungie.api.processor.Mode;
 import sgc.bungie.api.processor.activity.ActivityReportTool;
 import sgc.bungie.api.processor.activity.SGC_Member;
 
@@ -181,6 +184,29 @@ public class GoogleDriveUtil {
         }
     }
 
+    public static Map<String, Integer> getPOTWWeights() {
+        HashMap<String, Integer> weights = new HashMap<>();
+        try {
+            final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
+            final String spreadsheetId = "1EeIFBxfwDHjTrsZUFHKtNUglH7whdiLBTfupcOsqEF8";
+            final String range = "Weighting Scale!A2:B";
+            Sheets service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getGoogleSheetsHttpRequestInitializer())
+                    .setApplicationName(APPLICATION_NAME)
+                    .build();
+            ValueRange response = service.spreadsheets().values()
+                    .get(spreadsheetId, range)
+                    .execute();
+            List<List<Object>> values = response.getValues();
+            for (List<Object> row : values) {
+                weights.put(((String) row.get(0)).replace(" [POTW]", ""),
+                        Integer.parseInt((String) row.get(1)));
+            }
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+        return weights;
+    }
+
     public static byte[] getInfographic(String folderID) throws GeneralSecurityException, IOException {
         // Build a new authorized API client service.
         final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
@@ -224,9 +250,7 @@ public class GoogleDriveUtil {
     }
 
     public static void main(String[] args) throws IOException, GeneralSecurityException {
-        Path outputPath = Paths.get("target", "test.png");
-        Files.write(outputPath,
-                getInfographic("1I1tX2JMMNzGMFormF7aQCogXaqVducL7"));
+        getPOTWWeights();
     }
 
 }

@@ -116,6 +116,15 @@ public enum Mode {
         return null;
     }
 
+    public static Mode getFromName(String name) {
+        for (Mode mode : Mode.values()) {
+            if (mode.getName().equals(name)) {
+                return mode;
+            }
+        }
+        return null;
+    }
+
     public String getName() {
         return name;
     }

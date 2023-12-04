@@ -48,6 +48,7 @@ import com.google.gson.JsonParser;
 
 import sgc.Platform;
 import sgc.SGC_Clan;
+import sgc.discord.infographics.GoogleDriveUtil;
 
 /**
  * @author chris hoppe
@@ -819,7 +820,7 @@ public class RaidReportTool {
                             LOGGER.debug("Starting to process " + member.getDisplayName());
                             TOTAL_PGCR_COUNT.addAndGet(
                                     getMembersClearedActivities(member, startDate, endDate,
-                                            sgcClanMembersMap, 0));
+                                            sgcClanMembersMap, 0, false));
 
                             SCORED_PGCR_COUNT.addAndGet(member.getWeeklySGCActivity().get("COUNT"));
                             LOGGER.debug("Finished processing " + member.getDisplayName());
@@ -875,7 +876,7 @@ public class RaidReportTool {
                     try {
                         LOGGER.debug("Starting to process " + member.getDisplayName());
                         getMembersClearedActivities(member, startDate, endDate,
-                                sgcClanMembersMap, 0);
+                                sgcClanMembersMap, 0, false);
                         LOGGER.debug("Finished processing " + member.getDisplayName());
                     } catch (IOException ex) {
                         LOGGER.error("Error processing " + member.getDisplayName(), ex);
@@ -950,7 +951,7 @@ public class RaidReportTool {
     }
 
     public static int getMembersClearedActivities(Member member, LocalDate startDate, LocalDate endDate,
-            HashMap<String, Member> sgcClanMembersMap, int mode)
+            HashMap<String, Member> sgcClanMembersMap, int mode, boolean potwOnly)
             throws IOException, URISyntaxException, InterruptedException {
         LOGGER.debug(String.format("Getting Cleared Activities for %s", member.getCombinedBungieGlobalDisplayName()));
         AtomicInteger PGCR_COUNT = new AtomicInteger(0);
@@ -1005,22 +1006,24 @@ public class RaidReportTool {
                                                 .getAsJsonObject("basic").getAsJsonPrimitive("value")
                                                 .getAsDouble() == 1.0;
                                         if (completed) {
-                                            String instanceId = result.getAsJsonObject()
-                                                    .getAsJsonObject("activityDetails")
-                                                    .getAsJsonPrimitive("instanceId").toString().replace("\"", "");
-                                            double team = 0.0;
-                                            try {
-                                                team = result.getAsJsonObject().getAsJsonObject("values")
-                                                        .getAsJsonObject("team")
-                                                        .getAsJsonObject("basic").getAsJsonPrimitive("value")
-                                                        .getAsDouble();
-                                                GenericActivity genericActivity = new GenericActivity(instanceId,
-                                                        Mode.getFromValue(activityMode),
-                                                        member.getClan().getClanPlatform());
-                                                genericActivity.setTeam(team);
-                                                genericActivitiesToProcess.add(genericActivity);
-                                            } catch (Throwable ex) {
-                                                LOGGER.error(ex.getMessage(), ex);
+                                            if (!potwOnly) {
+                                                String instanceId = result.getAsJsonObject()
+                                                        .getAsJsonObject("activityDetails")
+                                                        .getAsJsonPrimitive("instanceId").toString().replace("\"", "");
+                                                double team = 0.0;
+                                                try {
+                                                    team = result.getAsJsonObject().getAsJsonObject("values")
+                                                            .getAsJsonObject("team")
+                                                            .getAsJsonObject("basic").getAsJsonPrimitive("value")
+                                                            .getAsDouble();
+                                                    GenericActivity genericActivity = new GenericActivity(instanceId,
+                                                            Mode.getFromValue(activityMode),
+                                                            member.getClan().getClanPlatform());
+                                                    genericActivity.setTeam(team);
+                                                    genericActivitiesToProcess.add(genericActivity);
+                                                } catch (Throwable ex) {
+                                                    LOGGER.error(ex.getMessage(), ex);
+                                                }
                                             }
 
                                             // POTW Calculations
@@ -1064,23 +1067,25 @@ public class RaidReportTool {
                 }
 
                 PGCR_COUNT.addAndGet(genericActivitiesToProcess.size());
-                genericActivitiesToProcess.forEach((activityWithSGCMembers) -> {
-                    try {
-                        LOGGER.debug(String.format(
-                                "Processing Activity %s for %s (%s)",
-                                activityWithSGCMembers.getUID(), member.getCombinedBungieGlobalDisplayName(),
-                                character.getUID()));
-                        getSGCMemberCarnageReport(member, activityWithSGCMembers, sgcClanMembersMap);
-                        if (activityWithSGCMembers.earnsPoints()) {
-                            character.addClearedActivitiesWithSGCMembers(activityWithSGCMembers);
+                if (!potwOnly) {
+                    genericActivitiesToProcess.forEach((activityWithSGCMembers) -> {
+                        try {
+                            LOGGER.debug(String.format(
+                                    "Processing Activity %s for %s (%s)",
+                                    activityWithSGCMembers.getUID(), member.getCombinedBungieGlobalDisplayName(),
+                                    character.getUID()));
+                            getSGCMemberCarnageReport(member, activityWithSGCMembers, sgcClanMembersMap);
+                            if (activityWithSGCMembers.earnsPoints()) {
+                                character.addClearedActivitiesWithSGCMembers(activityWithSGCMembers);
+                            }
+                        } catch (Exception ex) {
+                            LOGGER.error(String.format(
+                                    "Error Processing Activity %s for %s (%s)",
+                                    activityWithSGCMembers.getUID(), member.getCombinedBungieGlobalDisplayName(),
+                                    character.getUID()), ex);
                         }
-                    } catch (Exception ex) {
-                        LOGGER.error(String.format(
-                                "Error Processing Activity %s for %s (%s)",
-                                activityWithSGCMembers.getUID(), member.getCombinedBungieGlobalDisplayName(),
-                                character.getUID()), ex);
-                    }
-                });
+                    });
+                }
 
                 LOGGER.debug(
                         "Finished Processing Cleared Activities for "
@@ -1352,7 +1357,7 @@ public class RaidReportTool {
             try {
                 LOGGER.debug("Starting to process " + member.getDisplayName());
                 getMembersClearedActivities(member, startDate, endDate,
-                        sgcClanMembersMap, 0);
+                        sgcClanMembersMap, 0, false);
                 LOGGER.debug("Finished processing " + member.getDisplayName());
             } catch (IOException ex) {
                 LOGGER.error("Error processing " + member.getDisplayName(), ex);
@@ -1360,6 +1365,56 @@ public class RaidReportTool {
         }
 
         return member;
+    }
+
+    private static Member getUserPOTWActivityReport(String userBungieId, LocalDate startDate,
+            LocalDate endDate)
+            throws IOException, InterruptedException, URISyntaxException {
+        LOGGER.info("Starting User SGC Activity Report");
+
+        List<Clan> clanList = initializeClanList();
+        HashMap<String, Member> sgcClanMembersMap = initializeClanMembersMap(clanList);
+
+        Member member = getMemberFromMap(userBungieId, sgcClanMembersMap);
+
+        if (member != null) {
+            try {
+                LOGGER.debug("Starting to process " + member.getDisplayName());
+                getMembersClearedActivities(member, startDate, endDate,
+                        sgcClanMembersMap, 0, true);
+                LOGGER.debug("Finished processing " + member.getDisplayName());
+            } catch (IOException ex) {
+                LOGGER.error("Error processing " + member.getDisplayName(), ex);
+            }
+        }
+
+        return member;
+    }
+
+    public static int getUserPOTWScore(String userBungieId, LocalDate startDate,
+            LocalDate endDate) throws IOException, InterruptedException, URISyntaxException {
+        Member member = getUserPOTWActivityReport(userBungieId, startDate,
+                endDate);
+        if (member == null) {
+            return -1;
+        }
+        Map<String, Integer> potwWeights = GoogleDriveUtil.getPOTWWeights();
+
+        Map<Mode, Integer> potwModeCompletions = member.getPOTWModeCompletions();
+        Map<Raid, Integer> potwRaidCompletions = member.getPOTWRaidCompletions();
+        Map<Dungeon, Integer> potwDungeonCompletions = member.getPOTWDungeonCompletions();
+
+        int total = 0;
+        for (Mode mode : potwModeCompletions.keySet()) {
+            total += potwWeights.get(mode.name) * potwModeCompletions.get(mode);
+        }
+        for (Raid raid : potwRaidCompletions.keySet()) {
+            total += potwWeights.get(raid.name) * potwRaidCompletions.get(raid);
+        }
+        for (Dungeon dungeon : potwDungeonCompletions.keySet()) {
+            total += potwWeights.get(dungeon.name) * potwDungeonCompletions.get(dungeon);
+        }
+        return total;
     }
 
     private static Member getMemberFromMap(String userBungieId, HashMap<String, Member> sgcClanMembersMap) {

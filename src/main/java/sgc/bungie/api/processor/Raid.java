@@ -23,7 +23,7 @@ public enum Raid {
             Arrays.asList("1441982566", "2906950631", "3889634515", "4156879541", "4217492330")),
     KINGS_FALL("King's Fall", Arrays.asList("1374392663", "1063970578", "2897223272", "2964135793", "3257594522")),
     ROOT_OF_NIGHTMARES("Root of Nightmares", Arrays.asList("2381413764", "1191701339", "2918919505")),
-    CROTAS_END("Crota's End", Arrays.asList("156253568", "4179289725"));
+    CROTAS_END("Crota's End", Arrays.asList("156253568", "4179289725", "1507509200"));
 
     public final String name;
     private final List<String> validHashes;

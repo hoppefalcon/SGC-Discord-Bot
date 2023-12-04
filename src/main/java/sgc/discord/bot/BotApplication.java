@@ -271,7 +271,13 @@ public class BotApplication {
 				.addOption(userWeeklyClearStartOption.build())
 				.addOption(userWeeklyClearEndOption.build()));
 
-		commandList.add(new SlashCommandBuilder().setName("user-activity-report").setDescription(
+		commandList.add(new SlashCommandBuilder().setName("user-cpotw-report").setDescription(
+				"Pulls the a Community Activity Report for the User. (Requires Start Date, and End Date)")
+				.addOption(bungieIdOption.build())
+				.addOption(userWeeklyClearStartOption.build())
+				.addOption(userWeeklyClearEndOption.build()));
+
+		commandList.add(new SlashCommandBuilder().setName("user-potw-report").setDescription(
 				"Pulls the a Community Activity Report for the User. (Requires Start Date, and End Date)")
 				.addOption(bungieIdOption.build())
 				.addOption(userWeeklyClearStartOption.build())

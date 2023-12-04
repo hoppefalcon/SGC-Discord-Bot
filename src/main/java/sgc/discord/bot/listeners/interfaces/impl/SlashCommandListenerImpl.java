@@ -13,6 +13,7 @@ import sgc.discord.bot.commands.impl.RaidCarnageReportCommand;
 import sgc.discord.bot.commands.impl.RoleMemberListCommand;
 import sgc.discord.bot.commands.impl.SGCActivityReportCommand;
 import sgc.discord.bot.commands.impl.UserCommunityActivityReportCommand;
+import sgc.discord.bot.commands.impl.UserPOTWActivityReportCommand;
 import sgc.discord.bot.commands.impl.UserRaidReportCommand;
 import sgc.discord.bot.commands.impl.UserWeeklyRaidReportCommand;
 import sgc.discord.bot.listeners.interfaces.SlashCommandListener;
@@ -52,8 +53,12 @@ public class SlashCommandListenerImpl implements SlashCommandListener {
                 new SGCActivityReportCommand().handle(slashCommandInteraction);
                 break;
 
-            case "user-activity-report":
+            case "user-cpotw-report":
                 new UserCommunityActivityReportCommand().handle(slashCommandInteraction);
+                break;
+
+            case "user-potw-report":
+                new UserPOTWActivityReportCommand().handle(slashCommandInteraction);
                 break;
 
             case "discord-role-member-list":
