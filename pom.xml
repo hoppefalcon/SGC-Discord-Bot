@@ -14,12 +14,12 @@
 
 	<groupId>sgc.discord.bot</groupId>
 	<artifactId>sgc-discord-bot</artifactId>
-	<version>5.0.0</version>
+	<version>5.0.1</version>
 	<name>sgc-discord-bot</name>
 	<description>Discord Bot for Shrouded Gaming Community</description>
 
 	<properties>
-		<java.version>20</java.version>
+		<java.version>18</java.version>
 	</properties>
 
 	<dependencies>
