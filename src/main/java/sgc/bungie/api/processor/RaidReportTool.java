@@ -280,36 +280,30 @@ public class RaidReportTool {
 
                 JsonObject json = JsonParser.parseString(content.toString()).getAsJsonObject();
                 JsonArray results = json.getAsJsonObject("Response").getAsJsonArray("results");
-                List<Callable<Object>> tasks = new ArrayList<>();
                 results.forEach((entry) -> {
-                    tasks.add(() -> {
-                        System.gc();
+                    System.gc();
+                    try {
+                        JsonObject userInfo = entry.getAsJsonObject().getAsJsonObject("destinyUserInfo");
+                        String membershipType = userInfo.get("membershipType").getAsString();
+                        String membershipId = userInfo.get("membershipId").getAsString();
+                        String displayName = userInfo.get("displayName").getAsString();
+
                         try {
-                            JsonObject userInfo = entry.getAsJsonObject().getAsJsonObject("destinyUserInfo");
-                            String membershipType = userInfo.get("membershipType").getAsString();
-                            String membershipId = userInfo.get("membershipId").getAsString();
-                            String displayName = userInfo.get("displayName").getAsString();
+                            String bungieGlobalDisplayName = userInfo.get("bungieGlobalDisplayName").getAsString();
+                            String bungieGlobalDisplayNameCode = userInfo.get("bungieGlobalDisplayNameCode")
+                                    .getAsString();
 
-                            try {
-                                String bungieGlobalDisplayName = userInfo.get("bungieGlobalDisplayName").getAsString();
-                                String bungieGlobalDisplayNameCode = userInfo.get("bungieGlobalDisplayNameCode")
-                                        .getAsString();
-
-                                clan.getMembers().put(membershipId,
-                                        new Member(membershipId, displayName, membershipType,
-                                                bungieGlobalDisplayName, bungieGlobalDisplayNameCode, clan));
-                            } catch (NullPointerException ex) {
-                                LOGGER.info(displayName + " has yet to register for a bungieGlobalDisplayName");
-                            }
-                        } catch (Exception ex) {
-                            LOGGER.error("Error processing JSON result from " + url.toExternalForm(), ex);
+                            clan.getMembers().put(membershipId,
+                                    new Member(membershipId, displayName, membershipType,
+                                            bungieGlobalDisplayName, bungieGlobalDisplayNameCode, clan));
+                        } catch (NullPointerException ex) {
+                            LOGGER.info(displayName + " has yet to register for a bungieGlobalDisplayName");
                         }
-                        return null;
-                    });
+                    } catch (Exception ex) {
+                        LOGGER.error("Error processing JSON result from " + url.toExternalForm(), ex);
+                    }
 
                 });
-
-                executorService.invokeAll(tasks);
             }
         }
         conn.disconnect();
@@ -1039,20 +1033,34 @@ public class RaidReportTool {
 
     public static List<Clan> initializeClanList() throws InterruptedException {
         LOGGER.debug("Initializing Clan List for SGC Activity Report");
+        List<Callable<Object>> tasks = new ArrayList<>();
         ArrayList<Clan> clanList = new ArrayList<>();
+        ReentrantLock clanListLock = new ReentrantLock();
 
         for (SGC_Clan sgc_clan : SGC_Clan.values()) {
-            System.gc();
-            try {
-                Clan clan = new Clan(sgc_clan.Bungie_ID, sgc_clan.Primary_Platform);
-                getClanInfo(clan);
-                getClanMembers(clan);
-                clanList.add(clan);
-            } catch (Exception e) {
-                LOGGER.error("Error Processing Clan " + sgc_clan.Bungie_ID, e);
-            } finally {
-                LOGGER.debug("Full Clan List Initialized");
-            }
+            tasks.add(() -> {
+                System.gc();
+                try {
+                    Clan clan = new Clan(sgc_clan.Bungie_ID, sgc_clan.Primary_Platform);
+                    getClanInfo(clan);
+                    getClanMembers(clan);
+                    clanListLock.lock();
+                    clanList.add(clan);
+                } catch (IOException e) {
+                    LOGGER.error("Error Processing Clan " + sgc_clan.Bungie_ID, e);
+                } finally {
+                    clanListLock.unlock();
+                }
+                return null;
+            });
+        }
+
+        try {
+            executorService.invokeAll(tasks);
+        } catch (InterruptedException ex) {
+            LOGGER.error(ex.getMessage(), ex);
+        } finally {
+            LOGGER.debug("Full Clan List Initialized");
         }
 
         return clanList;
