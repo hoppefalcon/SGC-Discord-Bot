@@ -20,6 +20,7 @@ public class ClanChatReportCommand implements Command {
 
         @Override
         public void handle(SlashCommandInteraction slashCommandInteraction) {
+                System.gc();
                 String discordRoleID = slashCommandInteraction.getOptionByName("DiscordRoleID").get()
                                 .getStringValue().get();
                 String discordChannelID = slashCommandInteraction.getOptionByName("DiscordChannelID").get()

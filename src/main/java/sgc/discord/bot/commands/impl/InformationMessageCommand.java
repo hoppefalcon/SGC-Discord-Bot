@@ -17,6 +17,7 @@ public class InformationMessageCommand implements Command {
 
         @Override
         public void handle(SlashCommandInteraction slashCommandInteraction) {
+                System.gc();
                 String value = slashCommandInteraction.getOptionByName("InfomationMessage").get().getStringValue()
                                 .get();
                 Message message = Message.getFromName(value);

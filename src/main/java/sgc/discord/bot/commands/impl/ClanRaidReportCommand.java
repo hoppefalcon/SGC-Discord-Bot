@@ -19,6 +19,7 @@ public class ClanRaidReportCommand implements Command {
 
         @Override
         public void handle(SlashCommandInteraction slashCommandInteraction) {
+                System.gc();
                 String bungieClanID = slashCommandInteraction.getOptionByName("Clan").get().getStringValue().get();
                 LOGGER.info("Running ClanRaidReportCommand with option " + bungieClanID);
 

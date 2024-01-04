@@ -90,6 +90,7 @@ public class BotApplication {
 	 * @param increment  The increment value to determine the next target hour.
 	 */
 	private static void scheduleActivitySheetUpdate(int targetHour, int increment) {
+		System.gc();
 		long delay;
 		Runnable taskWrapper;
 

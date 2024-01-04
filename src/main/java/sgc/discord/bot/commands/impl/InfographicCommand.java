@@ -16,6 +16,7 @@ public class InfographicCommand implements Command {
 
         @Override
         public void handle(SlashCommandInteraction slashCommandInteraction) {
+                System.gc();
                 String infographic = slashCommandInteraction.getOptionByName("Infographic").get().getStringValue()
                                 .get();
                 String infoName = slashCommandInteraction.getOptionByName("Infographic").get().getName();

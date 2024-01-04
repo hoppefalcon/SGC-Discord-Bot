@@ -16,6 +16,7 @@ public class UserRaidReportCommand implements Command {
 
     @Override
     public void handle(SlashCommandInteraction slashCommandInteraction) {
+        System.gc();
         String bungieID = slashCommandInteraction.getOptionByName("BungieID").get().getStringValue().get();
         LOGGER.info("Running UserRaidReportCommand with BungieID " + bungieID);
 

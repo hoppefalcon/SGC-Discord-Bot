@@ -19,6 +19,7 @@ public class RoleMemberListCommand implements Command {
 
         @Override
         public void handle(SlashCommandInteraction slashCommandInteraction) {
+                System.gc();
                 String discordRoleID = slashCommandInteraction.getOptionByName("DiscordRoleID").get().getStringValue()
                                 .get();
                 LOGGER.info("Running RoleMemberListCommand with option " + discordRoleID);

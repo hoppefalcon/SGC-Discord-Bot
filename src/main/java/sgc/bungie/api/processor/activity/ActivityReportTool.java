@@ -39,6 +39,7 @@ public class ActivityReportTool {
      * Runs the activity sheets update process.
      */
     public static void runActivitySheets() {
+        System.gc();
         try {
             LOGGER.info("Starting the SGC Activity sheet update at " +
                     ZonedDateTime.now(BotApplication.ZID).format(BotApplication.DATE_TIME_FORMATTER));
@@ -48,15 +49,20 @@ public class ActivityReportTool {
 
             HashMap<SGC_Clan, ArrayList<SGC_Member>> members = initializeMembers();
             getAllClansDiscordActivity(members);
+            System.gc();
             getAllClansGameActivity(members);
             GoogleDriveUtil.writeActivityToGoogleSheet(members);
 
             sendLogMessage("Completed the SGC Activity sheet update at " +
                     ZonedDateTime.now(BotApplication.ZID).format(BotApplication.DATE_TIME_FORMATTER));
+
+            System.gc();
         } catch (Exception e) {
             LOGGER.error(e.getMessage(), e);
             sendErrorMessage("An Error occurred while running the SGC Activity sheet update at " +
                     ZonedDateTime.now(BotApplication.ZID).format(BotApplication.DATE_TIME_FORMATTER));
+
+            System.gc();
         }
     }
 

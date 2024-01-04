@@ -20,6 +20,7 @@ public class UserPOTWActivityReportCommand implements Command {
 
         @Override
         public void handle(SlashCommandInteraction slashCommandInteraction) {
+                System.gc();
                 String userBungieId = slashCommandInteraction.getOptionByName("BungieID").get().getStringValue().get();
                 String startDateStr = slashCommandInteraction.getOptionByName("StartDate").get().getStringValue().get();
                 String endDateStr = slashCommandInteraction.getOptionByName("EndDate").get().getStringValue().get();

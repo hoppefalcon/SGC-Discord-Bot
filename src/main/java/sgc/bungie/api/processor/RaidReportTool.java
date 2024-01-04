@@ -243,6 +243,7 @@ public class RaidReportTool {
 
                 clan.setName(detail.get("name").getAsString());
                 clan.setCallsign(detail.getAsJsonObject("clanInfo").get("clanCallsign").getAsString());
+                in.close();
             }
         }
         conn.disconnect();
@@ -373,6 +374,7 @@ public class RaidReportTool {
                         LOGGER.error("Error processing JSON result from " + url.toExternalForm(), ex);
                     }
                 });
+                in.close();
             }
         }
         conn.disconnect();
@@ -894,6 +896,7 @@ public class RaidReportTool {
 
             clan.getMembers().forEach((memberId, member) -> {
                 tasks.add(() -> {
+                    System.gc();
                     if (member.hasNewBungieName()) {
                         for (int k = 0; k < weeksList.size(); k++) {
                             System.gc();
@@ -1036,34 +1039,20 @@ public class RaidReportTool {
 
     public static List<Clan> initializeClanList() throws InterruptedException {
         LOGGER.debug("Initializing Clan List for SGC Activity Report");
-        List<Callable<Object>> tasks = new ArrayList<>();
         ArrayList<Clan> clanList = new ArrayList<>();
-        ReentrantLock clanListLock = new ReentrantLock();
 
         for (SGC_Clan sgc_clan : SGC_Clan.values()) {
-            tasks.add(() -> {
-                System.gc();
-                try {
-                    Clan clan = new Clan(sgc_clan.Bungie_ID, sgc_clan.Primary_Platform);
-                    getClanInfo(clan);
-                    getClanMembers(clan);
-                    clanListLock.lock();
-                    clanList.add(clan);
-                } catch (IOException e) {
-                    LOGGER.error("Error Processing Clan " + sgc_clan.Bungie_ID, e);
-                } finally {
-                    clanListLock.unlock();
-                }
-                return null;
-            });
-        }
-
-        try {
-            executorService.invokeAll(tasks);
-        } catch (InterruptedException ex) {
-            LOGGER.error(ex.getMessage(), ex);
-        } finally {
-            LOGGER.debug("Full Clan List Initialized");
+            System.gc();
+            try {
+                Clan clan = new Clan(sgc_clan.Bungie_ID, sgc_clan.Primary_Platform);
+                getClanInfo(clan);
+                getClanMembers(clan);
+                clanList.add(clan);
+            } catch (Exception e) {
+                LOGGER.error("Error Processing Clan " + sgc_clan.Bungie_ID, e);
+            } finally {
+                LOGGER.debug("Full Clan List Initialized");
+            }
         }
 
         return clanList;
@@ -2007,6 +1996,7 @@ public class RaidReportTool {
                             List<Callable<Object>> tasks = new ArrayList<>();
                             results.forEach((result) -> {
                                 tasks.add(() -> {
+                                    System.gc();
                                     int activityMode = result.getAsJsonObject().getAsJsonObject("activityDetails")
                                             .getAsJsonPrimitive("mode").getAsInt();
 
@@ -2100,14 +2090,15 @@ public class RaidReportTool {
                 while ((inputLine = in.readLine()) != null) {
                     content.append(inputLine);
                 }
-                conn.disconnect();
                 String activityName = JsonParser.parseString(content.toString()).getAsJsonObject()
                         .getAsJsonObject("Response").getAsJsonObject("originalDisplayProperties")
                         .getAsJsonPrimitive("name").getAsString();
                 if (activityName != null) {
                     return activityName;
                 }
+                in.close();
             }
+            conn.disconnect();
         } catch (Exception ex) {
             LOGGER.error(
                     "Error Processing Activity Name for for directorActivityHash: "

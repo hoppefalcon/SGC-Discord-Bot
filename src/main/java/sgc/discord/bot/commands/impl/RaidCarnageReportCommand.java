@@ -17,6 +17,7 @@ public class RaidCarnageReportCommand implements Command {
 
         @Override
         public void handle(SlashCommandInteraction slashCommandInteraction) {
+                System.gc();
                 String carnageReportID = slashCommandInteraction.getOptionByName("ID").get().getStringValue().get();
                 LOGGER.info("Running RaidCarnageReportCommand with option " + carnageReportID);
 
