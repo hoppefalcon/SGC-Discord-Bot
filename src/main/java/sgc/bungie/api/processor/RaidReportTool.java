@@ -252,10 +252,11 @@ public class RaidReportTool {
      * Retrieves the members of the clan.
      *
      * @param clan the clan for which to retrieve the members
-     * @throws IOException        if an I/O error occurs while making the request
-     * @throws URISyntaxException if the URI syntax is invalid
+     * @throws IOException          if an I/O error occurs while making the request
+     * @throws URISyntaxException   if the URI syntax is invalid
+     * @throws InterruptedException
      */
-    public static void getClanMembers(Clan clan) throws IOException, URISyntaxException {
+    public static void getClanMembers(Clan clan) throws IOException, URISyntaxException, InterruptedException {
         URL url = new URI(String.format("https://www.bungie.net/Platform/GroupV2/%s/Members/", clan.getClanId()))
                 .toURL();
 
@@ -278,27 +279,36 @@ public class RaidReportTool {
 
                 JsonObject json = JsonParser.parseString(content.toString()).getAsJsonObject();
                 JsonArray results = json.getAsJsonObject("Response").getAsJsonArray("results");
+                List<Callable<Object>> tasks = new ArrayList<>();
                 results.forEach((entry) -> {
-                    try {
-                        JsonObject userInfo = entry.getAsJsonObject().getAsJsonObject("destinyUserInfo");
-                        String membershipType = userInfo.get("membershipType").getAsString();
-                        String membershipId = userInfo.get("membershipId").getAsString();
-                        String displayName = userInfo.get("displayName").getAsString();
-
+                    tasks.add(() -> {
+                        System.gc();
                         try {
-                            String bungieGlobalDisplayName = userInfo.get("bungieGlobalDisplayName").getAsString();
-                            String bungieGlobalDisplayNameCode = userInfo.get("bungieGlobalDisplayNameCode")
-                                    .getAsString();
+                            JsonObject userInfo = entry.getAsJsonObject().getAsJsonObject("destinyUserInfo");
+                            String membershipType = userInfo.get("membershipType").getAsString();
+                            String membershipId = userInfo.get("membershipId").getAsString();
+                            String displayName = userInfo.get("displayName").getAsString();
 
-                            clan.getMembers().put(membershipId, new Member(membershipId, displayName, membershipType,
-                                    bungieGlobalDisplayName, bungieGlobalDisplayNameCode, clan));
-                        } catch (NullPointerException ex) {
-                            LOGGER.info(displayName + " has yet to register for a bungieGlobalDisplayName");
+                            try {
+                                String bungieGlobalDisplayName = userInfo.get("bungieGlobalDisplayName").getAsString();
+                                String bungieGlobalDisplayNameCode = userInfo.get("bungieGlobalDisplayNameCode")
+                                        .getAsString();
+
+                                clan.getMembers().put(membershipId,
+                                        new Member(membershipId, displayName, membershipType,
+                                                bungieGlobalDisplayName, bungieGlobalDisplayNameCode, clan));
+                            } catch (NullPointerException ex) {
+                                LOGGER.info(displayName + " has yet to register for a bungieGlobalDisplayName");
+                            }
+                        } catch (Exception ex) {
+                            LOGGER.error("Error processing JSON result from " + url.toExternalForm(), ex);
                         }
-                    } catch (Exception ex) {
-                        LOGGER.error("Error processing JSON result from " + url.toExternalForm(), ex);
-                    }
+                        return null;
+                    });
+
                 });
+
+                executorService.invokeAll(tasks);
             }
         }
         conn.disconnect();
@@ -1059,7 +1069,7 @@ public class RaidReportTool {
         return clanList;
     }
 
-    public static Clan initializeClan(SGC_Clan sgc_clan) throws IOException, URISyntaxException {
+    public static Clan initializeClan(SGC_Clan sgc_clan) throws IOException, URISyntaxException, InterruptedException {
         Clan clan = new Clan(sgc_clan.Bungie_ID, sgc_clan.Primary_Platform);
         getClanInfo(clan);
         getClanMembers(clan);
