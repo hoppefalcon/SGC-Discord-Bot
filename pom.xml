@@ -19,7 +19,7 @@
 	<description>Discord Bot for Shrouded Gaming Community</description>
 
 	<properties>
-		<java.version>18</java.version>
+		<java.version>21</java.version>
 	</properties>
 
 	<dependencies>
