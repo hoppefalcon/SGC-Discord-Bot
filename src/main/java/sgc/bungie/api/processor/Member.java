@@ -269,4 +269,10 @@ public class Member {
 
         return output;
     }
+
+    public void zeroOut() {
+        characters.forEach((characterId, character) -> {
+            character.zeroOut();
+        });
+    }
 }

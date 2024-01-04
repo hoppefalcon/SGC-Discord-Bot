@@ -851,6 +851,135 @@ public class RaidReportTool {
         return potwActivityReportAsCsv;
     }
 
+    public static HashMap<Platform, String> getSGCAnnualActivityReport(LocalDate startDate, LocalDate endDate,
+            InteractionOriginalResponseUpdater interactionOriginalResponseUpdater, TextChannel textChannel,
+            User discordUser)
+            throws IOException, InterruptedException {
+        LOGGER.info("Starting SGC Annual Activity Report");
+
+        AtomicLong TOTAL_PGCR_COUNT = new AtomicLong(0);
+        AtomicLong SCORED_PGCR_COUNT = new AtomicLong(0);
+        if (interactionOriginalResponseUpdater != null) {
+            interactionOriginalResponseUpdater.setContent(String
+                    .format("Building a SGC activity report from %s to %s\nThis will take a while.",
+                            startDate,
+                            endDate))
+                    .update().join();
+        }
+        List<Clan> clanList = initializeClanList();
+        HashMap<String, Member> sgcClanMembersMap = initializeClanMembersMap(clanList);
+        HashMap<Member, HashMap<String, Integer>> annualValues = new HashMap<>();
+        List<LocalDate> weeksList = new ArrayList<>();
+        LocalDate currentStartDate = startDate;
+        while (currentStartDate.isBefore(endDate)) {
+            weeksList.add(currentStartDate);
+            currentStartDate = currentStartDate.plusDays(7);
+        }
+
+        List<Callable<Object>> tasks = new ArrayList<>();
+        AtomicInteger completed = new AtomicInteger(0);
+        final int totalMembers = sgcClanMembersMap.size();
+        for (int i = 0; i < clanList.size(); i++) {
+            Clan clan = clanList.get(i);
+
+            clan.getMembers().forEach((memberId, member) -> {
+                tasks.add(() -> {
+                    if (member.hasNewBungieName()) {
+                        for (int k = 0; k < weeksList.size(); k++) {
+                            System.gc();
+                            try {
+                                LOGGER.debug("Starting to process " + member.getDisplayName());
+                                TOTAL_PGCR_COUNT.addAndGet(
+                                        getMembersClearedActivities(member, weeksList.get(k),
+                                                weeksList.get(k).plusDays(6),
+                                                sgcClanMembersMap, 0, false));
+
+                                SCORED_PGCR_COUNT.addAndGet(member.getWeeklySGCActivity().get("COUNT"));
+                                LOGGER.debug("Finished processing " + member.getDisplayName());
+                            } catch (Throwable ex) {
+                                LOGGER.error("Error processing " + member.getDisplayName(), ex);
+                            }
+                        }
+
+                        appendWeeklyResultsToAnnual(member, annualValues);
+                        member.zeroOut();
+                    }
+                    LOGGER.info(String.format("Finished processing %d/%d", completed.incrementAndGet(), totalMembers));
+                    return null;
+                });
+            });
+        }
+        try {
+            executorService.invokeAll(tasks);
+        } finally {
+            System.gc();
+        }
+
+        LOGGER.info("Finished processing All Clans for SGC Activity Report");
+
+        HashMap<Platform, String> potwAnnualActivityReportAsCsv = getPlatformAnnualActivityReportsAsCsv(clanList,
+                annualValues);
+        LOGGER.info("SGC Annual Activity Report Complete");
+        return potwAnnualActivityReportAsCsv;
+    }
+
+    private static void appendWeeklyResultsToAnnual(Member member,
+            HashMap<Member, HashMap<String, Integer>> annualValues) {
+        HashMap<Mode, Integer> totalActivitiesWithSGCMembersByMode = member
+                .getTotalActivitiesWithSGCMembersByMode();
+        Map<Mode, Integer> potwModeCompletions = member.getPOTWModeCompletions();
+        Map<Raid, Integer> potwRaidCompletions = member.getPOTWRaidCompletions();
+        Map<Dungeon, Integer> potwDungeonCompletions = member.getPOTWDungeonCompletions();
+        Character titanCharacter = member.getCharacterByDestinyClassType(DestinyClassType.TITAN);
+        Character hunterCharacter = member.getCharacterByDestinyClassType(DestinyClassType.HUNTER);
+        Character warlockCharacter = member.getCharacterByDestinyClassType(DestinyClassType.WARLOCK);
+        int titanClears = titanCharacter != null ? titanCharacter.getActivitiesWithSGCMembersCount() : 0;
+
+        int hunterClears = hunterCharacter != null ? hunterCharacter.getActivitiesWithSGCMembersCount() : 0;
+
+        int warlockClears = warlockCharacter != null ? warlockCharacter.getActivitiesWithSGCMembersCount()
+                : 0;
+        HashMap<String, Integer> values = annualValues.get(member);
+        if (values == null) {
+            values = new HashMap<>();
+        }
+        if (member.hasNewBungieName()) {
+            // Base CPOTW
+            setAnnualValue(values, "Community POTW Points", member.getWeeklySGCActivity().get("SCORE"));
+
+            setAnnualValue(values, "Titan Clears", titanClears);
+            setAnnualValue(values, "Hunter Clears", hunterClears);
+            setAnnualValue(values, "Warlock Clears", warlockClears);
+            for (Mode mode : Mode.validModesForCPOTW()) {
+                setAnnualValue(values, mode.getName(), totalActivitiesWithSGCMembersByMode.get(mode));
+            }
+
+            // POTW Modes
+            for (Mode mode : Mode.validModesForPOTW()) {
+                setAnnualValue(values, mode.getName() + " [POTW]", potwModeCompletions.get(mode));
+            }
+            // POTW Raids
+            for (Raid raid : Raid.getRaidsOrdered()) {
+                setAnnualValue(values, raid.getName() + " [POTW]", potwRaidCompletions.get(raid));
+            }
+            // POTW Dungeons
+            for (Dungeon dungeon : Dungeon.getDungeonsOrdered()) {
+                setAnnualValue(values, dungeon.getName() + " [POTW]", potwDungeonCompletions.get(dungeon));
+            }
+        }
+        annualValues.put(member, values);
+    }
+
+    private static void setAnnualValue(HashMap<String, Integer> values, String key, Integer value) {
+        Integer currentValue = values.get(key);
+        if (currentValue == null) {
+            currentValue = value;
+        } else {
+            currentValue += value;
+        }
+        values.put(key, currentValue);
+    }
+
     public static String getClanInternalActivityReport(SGC_Clan sgc_clan, LocalDate startDate, LocalDate endDate,
             InteractionOriginalResponseUpdater interactionOriginalResponseUpdater)
             throws IOException, InterruptedException, URISyntaxException {
@@ -1099,7 +1228,7 @@ public class RaidReportTool {
             }
         });
 
-        LOGGER.info(String.format("PGCR Count for %s is %d", member.getCombinedBungieGlobalDisplayName(),
+        LOGGER.debug(String.format("PGCR Count for %s is %d", member.getCombinedBungieGlobalDisplayName(),
                 PGCR_COUNT.get()));
         return PGCR_COUNT.get();
     }
@@ -1303,6 +1432,70 @@ public class RaidReportTool {
             output.put(platform, reportBuilder.toString());
         });
         return output;
+    }
+
+    private static HashMap<Platform, String> getPlatformAnnualActivityReportsAsCsv(List<Clan> clanList,
+            HashMap<Member, HashMap<String, Integer>> annualValues) {
+        HashMap<Platform, StringBuilder> platformToReportBuilderMap = new HashMap<>();
+        platformToReportBuilderMap.put(Platform.PC, new StringBuilder());
+        platformToReportBuilderMap.put(Platform.XBOX, new StringBuilder());
+        platformToReportBuilderMap.put(Platform.PSN, new StringBuilder());
+
+        platformToReportBuilderMap.values().forEach((strBuilder) -> {
+            strBuilder.append(getActivityReportCsvHeader());
+        });
+
+        clanList.forEach((clan) -> {
+            platformToReportBuilderMap.get(clan.getClanPlatform())
+                    .append(getClanAnnualActivityCsvPart(clan, annualValues));
+        });
+        HashMap<Platform, String> output = new HashMap<>();
+        platformToReportBuilderMap.forEach((platform, reportBuilder) -> {
+            output.put(platform, reportBuilder.toString());
+        });
+        return output;
+    }
+
+    private static Object getClanAnnualActivityCsvPart(Clan clan,
+            HashMap<Member, HashMap<String, Integer>> annualValues) {
+        final StringBuilder csvPart = new StringBuilder();
+        clan.getMembers()
+                .forEach((memberId, member) -> {
+                    HashMap<String, Integer> values = annualValues.get(member);
+
+                    if (member.hasNewBungieName()) {
+                        // Base CPOTW
+                        csvPart.append("\"").append(member.getDisplayName()).append("\",")
+                                .append("\"").append(member.getCombinedBungieGlobalDisplayName()).append("\",")
+                                .append("\"").append(clan.getCallsign()).append("\",")
+                                .append("\"").append(member.getWeeklySGCActivity().get("SCORE")).append("\",")
+                                .append("\"").append(values.get("Titan Clears")).append("\",")
+                                .append("\"").append(values.get("Hunter Clears")).append("\",")
+                                .append("\"").append(values.get("Warlock Clears")).append("\",");
+                        for (Mode mode : Mode.validModesForCPOTW()) {
+                            csvPart.append("\"").append(values.get(mode.getName())).append("\",");
+                        }
+
+                        // POTW Modes
+                        for (Mode mode : Mode.validModesForPOTW()) {
+                            if (mode != Mode.RAID || mode != Mode.DUNGEON) {
+                                csvPart.append("\"").append(values.get(mode.getName() + " [POTW]")).append("\",");
+                            }
+                        }
+                        // POTW Raids
+                        for (Raid raid : Raid.getRaidsOrdered()) {
+                            csvPart.append("\"").append(values.get(raid.getName() + " [POTW]")).append("\",");
+                        }
+                        // POTW Dungeons
+                        for (Dungeon dungeon : Dungeon.getDungeonsOrdered()) {
+                            csvPart.append("\"").append(values.get(dungeon.getName() + " [POTW]")).append("\",");
+                        }
+                        // New Line
+                        csvPart.append("\n");
+                    }
+                });
+
+        return csvPart.toString();
     }
 
     private static ReentrantLock sendClanSGCActivityMessageLock = new ReentrantLock();

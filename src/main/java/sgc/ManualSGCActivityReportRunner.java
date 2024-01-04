@@ -22,13 +22,13 @@ public class ManualSGCActivityReportRunner {
                 int year = 2023;
                 // LocalDate startDate = YearMonth.of(year, 1).atDay(1);
                 // LocalDate endDate = YearMonth.of(year, 12).atEndOfMonth();
-                LocalDate startDate = YearMonth.of(year, 9).atDay(12);
-                LocalDate endDate = YearMonth.of(year, 9).atDay(18);
+                LocalDate startDate = YearMonth.of(year, 1).atDay(1);
+                LocalDate endDate = YearMonth.of(year, 12).atDay(10);
                 LOGGER.info(String.format("Starting %s to %s SGC Activity Report", startDate.toString(),
                                 endDate.toString()));
 
                 HashMap<Platform, String> potwActivityReportAsCsv = RaidReportTool
-                                .getSGCWeeklyActivityReport(startDate,
+                                .getSGCAnnualActivityReport(startDate,
                                                 endDate,
                                                 null,
                                                 null,
@@ -38,15 +38,15 @@ public class ManualSGCActivityReportRunner {
                                 endDate.toString()));
 
                 Path xboxPath = Paths.get("target", Platform.XBOX.getName() +
-                                "_CPOTW.csv");
+                                "_Annual_CPOTW.csv");
                 Files.write(xboxPath,
                                 potwActivityReportAsCsv.get(Platform.XBOX).getBytes(StandardCharsets.UTF_8));
                 Path pcPath = Paths.get("target", Platform.PC.getName() +
-                                "_CPOTW.csv");
+                                "_Annual_CPOTW.csv");
                 Files.write(pcPath,
                                 potwActivityReportAsCsv.get(Platform.PC).getBytes(StandardCharsets.UTF_8));
                 Path psnPath = Paths.get("target", Platform.PSN.getName() +
-                                "_CPOTW.csv");
+                                "_Annual_CPOTW.csv");
                 Files.write(psnPath,
                                 potwActivityReportAsCsv.get(Platform.PSN).getBytes(StandardCharsets.UTF_8));
 

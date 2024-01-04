@@ -5,9 +5,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,7 +35,6 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 
 import sgc.SGC_Clan;
-import sgc.bungie.api.processor.Mode;
 import sgc.bungie.api.processor.activity.ActivityReportTool;
 import sgc.bungie.api.processor.activity.SGC_Member;
 

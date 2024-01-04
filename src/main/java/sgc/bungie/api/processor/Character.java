@@ -145,4 +145,25 @@ public class Character {
         return potwCompletionsByDungeon;
     }
 
+    public void zeroOut() {
+        Raid.getRaidsOrdered().forEach((Raid raid) -> {
+            raidActivities.put(raid, new RaidActivity(raid));
+        });
+        Dungeon.getDungeonsOrdered().forEach((Dungeon dungeon) -> {
+            dungeonActivities.put(dungeon, new DungeonActivity(dungeon));
+        });
+        Mode.validModesForCPOTW().forEach((mode) -> {
+            cpotwActivitiesWithSGCMembersByMode.put(mode, 0);
+        });
+        Mode.validModesForPOTW().forEach((mode) -> {
+            potwCompletionsByMode.put(mode, false);
+        });
+        Raid.getRaidsOrdered().forEach((raid) -> {
+            potwCompletionsByRaid.put(raid, false);
+        });
+        Dungeon.getDungeonsOrdered().forEach((dungeon) -> {
+            potwCompletionsByDungeon.put(dungeon, false);
+        });
+    }
+
 }
