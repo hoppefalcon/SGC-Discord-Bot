@@ -154,8 +154,15 @@ public class ActivityReportTool {
             HashMap<String, Instant> clanMembersLastDatePlayed = allMembersLastDatePlayed.get(clan);
 
             for (String bungieDisplayName : clanMembersLastDatePlayed.keySet()) {
-                boolean isActive = clanMembersLastDatePlayed.get(bungieDisplayName)
-                        .isAfter(Instant.now().minus(10, ChronoUnit.DAYS));
+                boolean isActive = false;
+
+                try {
+                    isActive = clanMembersLastDatePlayed.get(bungieDisplayName)
+                            .isAfter(Instant.now().minus(10, ChronoUnit.DAYS));
+                } catch (Exception e) {
+                    LOGGER.error("An error occured getting game active activity for " + bungieDisplayName, e);
+                }
+
                 boolean found = false;
 
                 for (SGC_Member member : members.get(clan)) {
@@ -173,6 +180,7 @@ public class ActivityReportTool {
                     newMember.setGameActivity(isActive);
                     members.get(clan).add(newMember);
                 }
+
             }
         }
     }
