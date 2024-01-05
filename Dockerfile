@@ -12,4 +12,4 @@ RUN mvn -f /home/app/pom.xml clean package
 FROM amazoncorretto:21
 COPY --from=build /home/app/target/sgc-discord-bot-*.jar /usr/local/lib/SGC-Discord-Bot.jar
 EXPOSE 8080
-ENTRYPOINT ["java", "-XX:+ExitOnOutOfMemoryError","-jar","/usr/local/lib/SGC-Discord-Bot.jar","</dev/null 2>&1 &"] 
+ENTRYPOINT ["java", "-Xms256m -Xmx512m","-jar","/usr/local/lib/SGC-Discord-Bot.jar","</dev/null 2>&1 &"] 
