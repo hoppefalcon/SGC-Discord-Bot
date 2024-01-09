@@ -65,6 +65,7 @@ public class RaidReportTool {
     private static final HashMap<String, String> psClanIdMap = new HashMap<>();
 
     private static ExecutorService executorService = Executors.newFixedThreadPool(5);
+    public static ReentrantLock resourceLock = new ReentrantLock();
 
     /**
      * Initializes the clan ID maps.
@@ -799,62 +800,67 @@ public class RaidReportTool {
             InteractionOriginalResponseUpdater interactionOriginalResponseUpdater, TextChannel textChannel,
             User discordUser)
             throws IOException, InterruptedException {
-        LOGGER.info("Starting SGC Activity Report");
+        try {
+            resourceLock.lock();
+            LOGGER.info("Starting SGC Activity Report");
 
-        AtomicLong TOTAL_PGCR_COUNT = new AtomicLong(0);
-        AtomicLong SCORED_PGCR_COUNT = new AtomicLong(0);
-        if (interactionOriginalResponseUpdater != null) {
-            interactionOriginalResponseUpdater.setContent(String
-                    .format("Building a SGC activity report from %s to %s\nThis will take a while.",
-                            startDate,
-                            endDate))
-                    .update().join();
-        }
-        List<Clan> clanList = initializeClanList();
-        HashMap<String, Member> sgcClanMembersMap = initializeClanMembersMap(clanList);
+            AtomicLong TOTAL_PGCR_COUNT = new AtomicLong(0);
+            AtomicLong SCORED_PGCR_COUNT = new AtomicLong(0);
+            if (interactionOriginalResponseUpdater != null) {
+                interactionOriginalResponseUpdater.setContent(String
+                        .format("Building a SGC activity report from %s to %s\nThis will take a while.",
+                                startDate,
+                                endDate))
+                        .update().join();
+            }
+            List<Clan> clanList = initializeClanList();
+            HashMap<String, Member> sgcClanMembersMap = initializeClanMembersMap(clanList);
 
-        for (int i = 0; i < clanList.size(); i++) {
-            Clan clan = clanList.get(i);
+            for (int i = 0; i < clanList.size(); i++) {
+                Clan clan = clanList.get(i);
 
-            List<Callable<Object>> tasks = new ArrayList<>();
-            LOGGER.info("Starting to process " + clan.getCallsign());
-            clan.getMembers().forEach((memberId, member) -> {
-                tasks.add(() -> {
+                List<Callable<Object>> tasks = new ArrayList<>();
+                LOGGER.info("Starting to process " + clan.getCallsign());
+                clan.getMembers().forEach((memberId, member) -> {
+                    tasks.add(() -> {
 
-                    if (member.hasNewBungieName()) {
-                        try {
-                            LOGGER.debug("Starting to process " + member.getDisplayName());
-                            TOTAL_PGCR_COUNT.addAndGet(
-                                    getMembersClearedActivities(member, startDate, endDate,
-                                            sgcClanMembersMap, 0, false));
+                        if (member.hasNewBungieName()) {
+                            try {
+                                LOGGER.debug("Starting to process " + member.getDisplayName());
+                                TOTAL_PGCR_COUNT.addAndGet(
+                                        getMembersClearedActivities(member, startDate, endDate,
+                                                sgcClanMembersMap, 0, false));
 
-                            SCORED_PGCR_COUNT.addAndGet(member.getWeeklySGCActivity().get("COUNT"));
-                            LOGGER.debug("Finished processing " + member.getDisplayName());
-                        } catch (Throwable ex) {
-                            LOGGER.error("Error processing " + member.getDisplayName(), ex);
+                                SCORED_PGCR_COUNT.addAndGet(member.getWeeklySGCActivity().get("COUNT"));
+                                LOGGER.debug("Finished processing " + member.getDisplayName());
+                            } catch (Throwable ex) {
+                                LOGGER.error("Error processing " + member.getDisplayName(), ex);
+                            }
                         }
-                    }
-                    return null;
+                        return null;
+                    });
                 });
-            });
 
-            try {
-                executorService.invokeAll(tasks);
-                if (textChannel != null && discordUser != null) {
-                    sendClanSGCActivityMessage(startDate, endDate, clan, textChannel, discordUser);
+                try {
+                    executorService.invokeAll(tasks);
+                    if (textChannel != null && discordUser != null) {
+                        sendClanSGCActivityMessage(startDate, endDate, clan, textChannel, discordUser);
+                    }
+                } finally {
+
+                    LOGGER.info("Finished processing " + clan.getCallsign());
                 }
-            } finally {
 
-                LOGGER.info("Finished processing " + clan.getCallsign());
             }
 
+            LOGGER.info("Finished processing All Clans for SGC Activity Report");
+
+            HashMap<Platform, String> potwActivityReportAsCsv = getPlatformActivityReportsAsCsv(clanList);
+            LOGGER.info("SGC Activity Report Complete");
+            return potwActivityReportAsCsv;
+        } finally {
+            resourceLock.unlock();
         }
-
-        LOGGER.info("Finished processing All Clans for SGC Activity Report");
-
-        HashMap<Platform, String> potwActivityReportAsCsv = getPlatformActivityReportsAsCsv(clanList);
-        LOGGER.info("SGC Activity Report Complete");
-        return potwActivityReportAsCsv;
     }
 
     public static HashMap<Platform, String> getSGCAnnualActivityReport(LocalDate startDate, LocalDate endDate,

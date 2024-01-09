@@ -41,6 +41,7 @@ public class ActivityReportTool {
     public static void runActivitySheets() {
 
         try {
+            RaidReportTool.resourceLock.lock();
             LOGGER.info("Starting the SGC Activity sheet update at " +
                     ZonedDateTime.now(BotApplication.ZID).format(BotApplication.DATE_TIME_FORMATTER));
 
@@ -61,6 +62,8 @@ public class ActivityReportTool {
             sendErrorMessage("An Error occurred while running the SGC Activity sheet update at " +
                     ZonedDateTime.now(BotApplication.ZID).format(BotApplication.DATE_TIME_FORMATTER));
 
+        } finally {
+            RaidReportTool.resourceLock.unlock();
         }
     }
 
