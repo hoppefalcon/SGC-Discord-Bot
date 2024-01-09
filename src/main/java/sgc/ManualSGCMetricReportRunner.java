@@ -47,7 +47,7 @@ public class ManualSGCMetricReportRunner {
                             LOGGER.error("Error processing " + member.getDisplayName(), ex);
                         }
                     }
-                    System.gc();
+
                     return null;
                 });
             });
@@ -55,7 +55,7 @@ public class ManualSGCMetricReportRunner {
             try {
                 executorService.invokeAll(tasks);
             } finally {
-                System.gc();
+
                 LOGGER.info("Finished processing " + clan.getCallsign());
             }
 

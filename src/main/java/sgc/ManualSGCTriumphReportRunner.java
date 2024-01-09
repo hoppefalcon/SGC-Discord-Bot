@@ -54,7 +54,7 @@ public class ManualSGCTriumphReportRunner {
                             LOGGER.error("Error processing " + member.getDisplayName(), ex);
                         }
                     }
-                    System.gc();
+
                     return null;
                 });
             });
@@ -62,7 +62,7 @@ public class ManualSGCTriumphReportRunner {
             try {
                 executorService.invokeAll(tasks);
             } finally {
-                System.gc();
+
                 LOGGER.info("Finished processing " + clan.getCallsign());
             }
 

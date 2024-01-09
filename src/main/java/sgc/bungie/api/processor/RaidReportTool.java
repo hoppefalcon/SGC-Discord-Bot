@@ -175,7 +175,7 @@ public class RaidReportTool {
         List<Callable<Object>> tasks = new ArrayList<>();
         clan.getMembers().forEach((memberId, member) -> {
             tasks.add(() -> {
-                System.gc();
+
                 try {
                     getClanMemberRaidReport(member);
 
@@ -281,7 +281,7 @@ public class RaidReportTool {
                 JsonObject json = JsonParser.parseString(content.toString()).getAsJsonObject();
                 JsonArray results = json.getAsJsonObject("Response").getAsJsonArray("results");
                 results.forEach((entry) -> {
-                    System.gc();
+
                     try {
                         JsonObject userInfo = entry.getAsJsonObject().getAsJsonObject("destinyUserInfo");
                         String membershipType = userInfo.get("membershipType").getAsString();
@@ -820,7 +820,7 @@ public class RaidReportTool {
             LOGGER.info("Starting to process " + clan.getCallsign());
             clan.getMembers().forEach((memberId, member) -> {
                 tasks.add(() -> {
-                    System.gc();
+
                     if (member.hasNewBungieName()) {
                         try {
                             LOGGER.debug("Starting to process " + member.getDisplayName());
@@ -844,7 +844,7 @@ public class RaidReportTool {
                     sendClanSGCActivityMessage(startDate, endDate, clan, textChannel, discordUser);
                 }
             } finally {
-                System.gc();
+
                 LOGGER.info("Finished processing " + clan.getCallsign());
             }
 
@@ -890,10 +890,10 @@ public class RaidReportTool {
 
             clan.getMembers().forEach((memberId, member) -> {
                 tasks.add(() -> {
-                    System.gc();
+
                     if (member.hasNewBungieName()) {
                         for (int k = 0; k < weeksList.size(); k++) {
-                            System.gc();
+
                             try {
                                 LOGGER.debug("Starting to process " + member.getDisplayName());
                                 TOTAL_PGCR_COUNT.addAndGet(
@@ -906,10 +906,10 @@ public class RaidReportTool {
                             } catch (Throwable ex) {
                                 LOGGER.error("Error processing " + member.getDisplayName(), ex);
                             }
-                        }
 
-                        appendWeeklyResultsToAnnual(member, annualValues);
-                        member.zeroOut();
+                            appendWeeklyResultsToAnnual(member, annualValues);
+                            member.zeroOut();
+                        }
                     }
                     LOGGER.info(String.format("Finished processing %d/%d", completed.incrementAndGet(), totalMembers));
                     return null;
@@ -919,7 +919,7 @@ public class RaidReportTool {
         try {
             executorService.invokeAll(tasks);
         } finally {
-            System.gc();
+
         }
 
         LOGGER.info("Finished processing All Clans for SGC Activity Report");
@@ -950,6 +950,7 @@ public class RaidReportTool {
         if (values == null) {
             values = new HashMap<>();
         }
+
         if (member.hasNewBungieName()) {
             // Base CPOTW
             setAnnualValue(values, "Community POTW Points", member.getWeeklySGCActivity().get("SCORE"));
@@ -960,7 +961,6 @@ public class RaidReportTool {
             for (Mode mode : Mode.validModesForCPOTW()) {
                 setAnnualValue(values, mode.getName(), totalActivitiesWithSGCMembersByMode.get(mode));
             }
-
             // POTW Modes
             for (Mode mode : Mode.validModesForPOTW()) {
                 setAnnualValue(values, mode.getName() + " [POTW]", potwModeCompletions.get(mode));
@@ -1007,7 +1007,7 @@ public class RaidReportTool {
         LOGGER.info("Starting to process " + clan.getCallsign());
         clan.getMembers().forEach((memberId, member) -> {
             tasks.add(() -> {
-                System.gc();
+
                 if (member.hasNewBungieName()) {
                     try {
                         LOGGER.debug("Starting to process " + member.getDisplayName());
@@ -1025,7 +1025,7 @@ public class RaidReportTool {
         try {
             executorService.invokeAll(tasks);
         } finally {
-            System.gc();
+
             LOGGER.info("Finished processing " + clan.getCallsign());
         }
         return getClanInternalActivityReportAsCsv(clan);
@@ -1039,7 +1039,7 @@ public class RaidReportTool {
 
         for (SGC_Clan sgc_clan : SGC_Clan.values()) {
             tasks.add(() -> {
-                System.gc();
+
                 try {
                     Clan clan = new Clan(sgc_clan.Bungie_ID, sgc_clan.Primary_Platform);
                     getClanInfo(clan);
@@ -1697,7 +1697,7 @@ public class RaidReportTool {
                 clan.getMembers().forEach((memberId, member) -> {
                     try {
                         tasks.add(() -> {
-                            System.gc();
+
                             LOGGER.trace("Processing " + member.getCombinedBungieGlobalDisplayName());
                             getMembersActiveCharacters(member);
                             List<Instant> lastPlayedDates = new ArrayList<>();
@@ -1859,7 +1859,7 @@ public class RaidReportTool {
         List<Callable<Object>> tasks = new ArrayList<>();
         clan.getMembers().forEach((memberId, member) -> {
             tasks.add(() -> {
-                System.gc();
+
                 try {
                     getClanMemberDungeonReport(member);
                     if (interactionOriginalResponseUpdater != null)
@@ -2004,7 +2004,7 @@ public class RaidReportTool {
                             List<Callable<Object>> tasks = new ArrayList<>();
                             results.forEach((result) -> {
                                 tasks.add(() -> {
-                                    System.gc();
+
                                     int activityMode = result.getAsJsonObject().getAsJsonObject("activityDetails")
                                             .getAsJsonPrimitive("mode").getAsInt();
 
