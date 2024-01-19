@@ -9,7 +9,8 @@ package sgc.discord.infographics;
  * @author chris hoppe
  */
 public enum Infographic {
-    POTW("1vne74ymV4yYl6aJJASCF624Frdn4BoQA");
+    POTW("1vne74ymV4yYl6aJJASCF624Frdn4BoQA"),
+    ROLES("1EIHyoAy0bo5y6zSXX91tJZE2lJvFvrQI");
 
     public final String folderID;
 
