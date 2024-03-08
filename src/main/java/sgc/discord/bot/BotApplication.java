@@ -95,7 +95,6 @@ public class BotApplication {
 		Runnable taskWrapper;
 
 		if (firstRun) {
-			System.out.println(System.getenv("GOOGLE_API_PRIVATE_KEY"));
 			int checks = 24 / increment;
 			long shortestDelay = 0;
 			int nextTarget = targetHour;

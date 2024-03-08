@@ -7,6 +7,7 @@ import java.net.URI;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -114,10 +115,11 @@ public class GoogleDriveUtil {
         final ServiceAccountCredentials serviceAccountCredentials = ServiceAccountCredentials.newBuilder()
                 .setProjectId(System.getenv("GOOGLE_API_PROJECT_ID"))
                 .setPrivateKeyId(System.getenv("GOOGLE_API_PRIVATE_KEY_ID"))
-                .setPrivateKeyString(System.getenv("GOOGLE_API_PRIVATE_KEY"))
+                .setPrivateKeyString(new String(Base64.getDecoder().decode(System.getenv("GOOGLE_API_PRIVATE_KEY"))))
                 .setClientEmail(System.getenv("GOOGLE_API_CLIENT_EMAIL"))
                 .setClientId(System.getenv("GOOGLE_API_CLIENT_ID"))
                 .setTokenServerUri(URI.create(System.getenv("GOOGLE_API_TOKEN_URI")))
+                .setUniverseDomain(System.getenv("GOOGLE_API_UNIVERSE_DOMAIN"))
                 .build();
 
         GoogleCredentials credentials = serviceAccountCredentials.createScoped(SCOPES);
