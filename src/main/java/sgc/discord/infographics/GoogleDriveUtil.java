@@ -39,7 +39,7 @@ import sgc.bungie.api.processor.activity.SGC_Member;
 /* Class to demonstrate use-case of drive's download file. */
 public class GoogleDriveUtil {
     private static final Logger LOGGER = LoggerFactory.getLogger(GoogleDriveUtil.class);
-    private static final String APPLICATION_NAME = "SGC Bot";
+    private static final String APPLICATION_NAME = "sgc-discord-bot";
     private static final List<String> SCOPES = Arrays
             .asList(new String[] { SheetsScopes.SPREADSHEETS, DriveScopes.DRIVE_FILE, DriveScopes.DRIVE });
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
