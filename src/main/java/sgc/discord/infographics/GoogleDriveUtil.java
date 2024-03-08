@@ -1,10 +1,9 @@
 package sgc.discord.infographics;
 
 import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URI;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,14 +34,12 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 
 import sgc.SGC_Clan;
-import sgc.bungie.api.processor.activity.ActivityReportTool;
 import sgc.bungie.api.processor.activity.SGC_Member;
 
 /* Class to demonstrate use-case of drive's download file. */
 public class GoogleDriveUtil {
     private static final Logger LOGGER = LoggerFactory.getLogger(GoogleDriveUtil.class);
     private static final String APPLICATION_NAME = "SGC Bot";
-    private static final String CREDENTIALS_FILE_PATH = "/credentials.json";
     private static final List<String> SCOPES = Arrays
             .asList(new String[] { SheetsScopes.SPREADSHEETS, DriveScopes.DRIVE_FILE, DriveScopes.DRIVE });
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
@@ -113,13 +110,15 @@ public class GoogleDriveUtil {
      */
     private static HttpRequestInitializer getGoogleSheetsHttpRequestInitializer() throws IOException {
         // Load service account secrets.
-        InputStream resourceAsStream = ActivityReportTool.class.getResourceAsStream(CREDENTIALS_FILE_PATH);
-        if (resourceAsStream == null) {
-            throw new FileNotFoundException("Resource not found: " + CREDENTIALS_FILE_PATH);
-        }
 
-        final ServiceAccountCredentials serviceAccountCredentials = ServiceAccountCredentials
-                .fromStream(resourceAsStream);
+        final ServiceAccountCredentials serviceAccountCredentials = ServiceAccountCredentials.newBuilder()
+                .setProjectId(System.getenv("GOOGLE_API_PROJECT_ID"))
+                .setPrivateKeyId(System.getenv("GOOGLE_API_PRIVATE_KEY_ID"))
+                .setPrivateKeyString(System.getenv("GOOGLE_API_PRIVATE_KEY"))
+                .setClientEmail(System.getenv("GOOGLE_API_CLIENT_EMAIL"))
+                .setClientId(System.getenv("GOOGLE_API_CLIENT_ID"))
+                .setTokenServerUri(URI.create(System.getenv("GOOGLE_API_TOKEN_URI")))
+                .build();
 
         GoogleCredentials credentials = serviceAccountCredentials.createScoped(SCOPES);
 
