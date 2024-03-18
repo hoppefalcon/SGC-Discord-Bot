@@ -30,7 +30,7 @@ public class UserRedeemablesCommand implements Command {
                 if (!missingList.isEmpty()) {
                     response.append("These Collectables have not been redeemed").append("\n").append(missingList);
                 }
-                response.append("These Collectables may or may not have been redeemed").append("\n")
+                response.append("\n").append("These Collectables may or may not have been redeemed").append("\n")
                         .append(nonCollectables);
 
                 interactionOriginalResponseUpdater.addEmbed(new EmbedBuilder().setTitle(bungieID + " Redeemables List")
