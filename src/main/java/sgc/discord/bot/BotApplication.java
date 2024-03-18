@@ -321,6 +321,13 @@ public class BotApplication {
 				.setDescription("Posts a selected SGC Information Message.")
 				.addOption(infomationMessageOption.build()));
 
+		commandList.add(new SlashCommandBuilder().setName("user-redeemable-report").setDescription(
+				"Pulls the a Redeemable Report for the User.")
+				.addOption(bungieIdOption.build()));
+
+		commandList.add(new SlashCommandBuilder().setName("all-redeemables-list").setDescription(
+				"Displays all Redeemables for Bungie.net."));
+
 		API.bulkOverwriteGlobalApplicationCommands(commandList).join();
 
 		API.addSlashCommandCreateListener(slashCommandListener);

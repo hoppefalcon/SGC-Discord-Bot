@@ -45,7 +45,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-
 import sgc.Platform;
 import sgc.SGC_Clan;
 import sgc.discord.infographics.GoogleDriveUtil;
@@ -2084,6 +2083,7 @@ public class RaidReportTool {
     }
 
     private static String getActivityName(String directorActivityHash) {
+        String activityName = null;
         try {
             URL url = new URI(
                     String.format("https://www.bungie.net/Platform/Destiny2/Manifest/DestinyActivityDefinition/%s/",
@@ -2104,12 +2104,9 @@ public class RaidReportTool {
                 while ((inputLine = in.readLine()) != null) {
                     content.append(inputLine);
                 }
-                String activityName = JsonParser.parseString(content.toString()).getAsJsonObject()
+                activityName = JsonParser.parseString(content.toString()).getAsJsonObject()
                         .getAsJsonObject("Response").getAsJsonObject("originalDisplayProperties")
                         .getAsJsonPrimitive("name").getAsString();
-                if (activityName != null) {
-                    return activityName;
-                }
                 in.close();
             }
             conn.disconnect();
@@ -2119,7 +2116,117 @@ public class RaidReportTool {
                             + directorActivityHash,
                     ex);
         }
-        return null;
+        return activityName;
     }
 
+    public static String getMemberMissingRedeemableCollectables(String bungieId) throws Exception {
+        Member member = getMemberInformationWithCharacters(bungieId, true);
+        HashMap<String, Boolean> membersCollections = getMembersCollections(member,
+                RedeemableCollectable.getAllCollectableHashes());
+        ArrayList<String> missingCollectableHashes = new ArrayList<>();
+        membersCollections.forEach((hash, flag) -> {
+            if (!flag) {
+                missingCollectableHashes.add(hash);
+            }
+        });
+        return getRedeemableCollectableList(missingCollectableHashes);
+    }
+
+    public static String getRedeemableCollectableList(List<String> collectableHashes) {
+        StringBuilder sb = new StringBuilder();
+        collectableHashes.forEach(hash -> {
+            RedeemableCollectable redeemableCollectable = RedeemableCollectable.getRedeemableCollectable(hash);
+            String collectibleName = getCollectibleName(redeemableCollectable.getCollectableHash());
+            sb.append(collectibleName).append(" | ").append(RedeemableCollectable.BungieRedeemURL)
+                    .append(redeemableCollectable.getCode()).append("\n");
+        });
+        return sb.toString();
+    }
+
+    public static String getNonCollectableRedeemables() {
+        StringBuilder sb = new StringBuilder();
+        List<String> allNonCollectableHashes = RedeemableCollectable.getAllNonCollectableHashes();
+        allNonCollectableHashes.forEach(hash -> {
+            RedeemableCollectable redeemableCollectable = RedeemableCollectable.getRedeemableCollectable(hash);
+            String collectibleName = getItemName(redeemableCollectable.getCollectableHash());
+            sb.append(collectibleName).append(" | ").append(RedeemableCollectable.BungieRedeemURL)
+                    .append(redeemableCollectable.getCode()).append("\n");
+        });
+        return sb.toString();
+    }
+
+    private static String getCollectibleName(String collectibleHash) {
+        String collectableName = null;
+        try {
+            URL url = new URI(
+                    String.format("https://www.bungie.net/Platform/Destiny2/Manifest/DestinyCollectibleDefinition/%s/",
+                            collectibleHash))
+                    .toURL();
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.addRequestProperty("X-API-Key", apiKey);
+            conn.addRequestProperty("Accept", "Application/Json");
+            conn.connect();
+            // Getting the response code
+            int responsecode = conn.getResponseCode();
+
+            if (responsecode == 200) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                String inputLine;
+                StringBuffer content = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    content.append(inputLine);
+                }
+                collectableName = JsonParser.parseString(content.toString()).getAsJsonObject()
+                        .getAsJsonObject("Response").getAsJsonObject("displayProperties")
+                        .getAsJsonPrimitive("name").getAsString();
+                in.close();
+            }
+            conn.disconnect();
+        } catch (Exception ex) {
+            LOGGER.error(
+                    "Error Processing Activity Name for for directorActivityHash: "
+                            + collectibleHash,
+                    ex);
+        }
+        return collectableName;
+    }
+
+    private static String getItemName(String itemHash) {
+        String collectableName = null;
+        try {
+            URL url = new URI(
+                    String.format(
+                            "https://www.bungie.net/Platform/Destiny2/Manifest/DestinyInventoryItemDefinition/%s/",
+                            itemHash))
+                    .toURL();
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.addRequestProperty("X-API-Key", apiKey);
+            conn.addRequestProperty("Accept", "Application/Json");
+            conn.connect();
+            // Getting the response code
+            int responsecode = conn.getResponseCode();
+
+            if (responsecode == 200) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                String inputLine;
+                StringBuffer content = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    content.append(inputLine);
+                }
+                collectableName = JsonParser.parseString(content.toString()).getAsJsonObject()
+                        .getAsJsonObject("Response").getAsJsonObject("displayProperties")
+                        .getAsJsonPrimitive("name").getAsString();
+                in.close();
+            }
+            conn.disconnect();
+        } catch (Exception ex) {
+            LOGGER.error(
+                    "Error Processing Activity Name for for directorActivityHash: "
+                            + itemHash,
+                    ex);
+        }
+        return collectableName;
+    }
 }

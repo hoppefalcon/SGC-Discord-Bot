@@ -4,6 +4,7 @@ import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 import org.javacord.api.interaction.SlashCommandInteraction;
 import org.springframework.stereotype.Component;
 
+import sgc.discord.bot.commands.impl.AllRedeemablesCommand;
 import sgc.discord.bot.commands.impl.ClanChatReportCommand;
 import sgc.discord.bot.commands.impl.ClanInternalActivityReportCommand;
 import sgc.discord.bot.commands.impl.ClanRaidReportCommand;
@@ -15,6 +16,7 @@ import sgc.discord.bot.commands.impl.SGCActivityReportCommand;
 import sgc.discord.bot.commands.impl.UserCommunityActivityReportCommand;
 import sgc.discord.bot.commands.impl.UserPOTWActivityReportCommand;
 import sgc.discord.bot.commands.impl.UserRaidReportCommand;
+import sgc.discord.bot.commands.impl.UserRedeemablesCommand;
 import sgc.discord.bot.commands.impl.UserWeeklyRaidReportCommand;
 import sgc.discord.bot.listeners.interfaces.SlashCommandListener;
 
@@ -88,6 +90,15 @@ public class SlashCommandListenerImpl implements SlashCommandListener {
             case "information":
                 new InformationMessageCommand().handle(slashCommandInteraction);
                 break;
+
+            case "user-redeemable-report":
+                new UserRedeemablesCommand().handle(slashCommandInteraction);
+                break;
+
+            case "all-redeemables-list":
+                new AllRedeemablesCommand().handle(slashCommandInteraction);
+                break;
+
             default:
                 break;
         }
