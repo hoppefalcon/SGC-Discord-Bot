@@ -28,11 +28,12 @@ public class UserRedeemablesCommand implements Command {
                 String nonCollectables = RaidReportTool.getNonCollectableRedeemables();
                 StringBuilder response = new StringBuilder();
                 if (!missingList.isEmpty()) {
-                    response.append("These Collectables have not been redeemed").append(missingList);
+                    response.append("These Collectables have not been redeemed").append("\n").append(missingList);
                 }
-                response.append("These Collectables may or may not have been redeemed").append(nonCollectables);
+                response.append("These Collectables may or may not have been redeemed").append("\n")
+                        .append(nonCollectables);
 
-                interactionOriginalResponseUpdater.addEmbed(new EmbedBuilder().setTitle(bungieID + " Raid Report")
+                interactionOriginalResponseUpdater.addEmbed(new EmbedBuilder().setTitle(bungieID + " Redeemables List")
                         .setDescription(response.toString()).setFooter("#AreYouShrouded")
                         .setThumbnail(getClass().getClassLoader().getResourceAsStream("thumbnail.jpg"))
                         .setColor(Color.GREEN)).update();
