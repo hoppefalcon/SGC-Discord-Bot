@@ -152,6 +152,7 @@ public enum Mode {
         list.add(Mode.PRIVATE_MATCHES_SURVIVAL);
 
         list.add(Mode.PATROL);
+        list.add(Mode.RUMBLE);
 
         list.add(Mode.RESERVED_9);
         list.add(Mode.RESERVED_11);

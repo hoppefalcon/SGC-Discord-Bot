@@ -72,7 +72,7 @@ public class GenericActivity {
         }
 
         // One Point For A Full SGC Fireteam
-        if (allSGCActivity) {
+        if (otherSGCMembers > 0 && allSGCActivity) {
             total += 1;
         }
 

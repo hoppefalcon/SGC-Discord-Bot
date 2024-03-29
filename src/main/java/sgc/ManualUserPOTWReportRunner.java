@@ -14,14 +14,15 @@ public class ManualUserPOTWReportRunner {
 
         public static void main(String[] args) throws InterruptedException, IOException, URISyntaxException {
 
-                int year = 2023;
+                int year = 2024;
                 // LocalDate startDate = YearMonth.of(year, 1).atDay(1);
                 // LocalDate endDate = YearMonth.of(year, 12).atEndOfMonth();
-                LocalDate startDate = YearMonth.of(year, 11).atDay(21);
-                LocalDate endDate = YearMonth.of(year, 11).atDay(27);
-                String userBungieId = "hoppefalcon";
-                System.out.printf("%s POTW Score: %d", userBungieId,
-                                RaidReportTool.getUserPOTWScore(userBungieId, startDate, endDate));
+                LocalDate startDate = YearMonth.of(year, 3).atDay(12);
+                LocalDate endDate = YearMonth.of(year, 3).atDay(18);
+                String userBungieId = "AGreeNer#7080";
+                System.out.printf("%s CPOTW Score: %d", userBungieId,
+                                RaidReportTool.getUserCommunityActivityReport(userBungieId, startDate, endDate)
+                                                .getWeeklySGCActivity());
 
         }
 }
