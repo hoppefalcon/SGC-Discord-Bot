@@ -48,7 +48,8 @@ public enum RedeemableCollectable {
     SUNFLOWER(CollectableType.EMBLEM, "JVG-VNT-GGG", "2006613205"),
     TANGLED_WEB(CollectableType.EMBLEM, "PKH-JL6-L4R", "3299225966"),
     THE_VISIONARY(CollectableType.EMBLEM, "XFV-KHP-N97", "930889102"),
-    VISIO_SPEI(CollectableType.EMBLEM, "993-H3H-M6K", "1822059430");
+    VISIO_SPEI(CollectableType.EMBLEM, "993-H3H-M6K", "1822059430"),
+    TIGRIS_FATI(CollectableType.EMBLEM, "6AJ-XFR-9ND", "802420307");
 
     public static final String BungieRedeemURL = "https://www.bungie.net/7/en/codes/redeem?token=";
     private final String code;
