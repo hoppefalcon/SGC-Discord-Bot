@@ -9,7 +9,7 @@ RUN mvn -f /home/app/pom.xml clean package
 #
 # Package stage
 #
-FROM amazoncorretto:21
+FROM amazoncorretto:21.0.3
 COPY --from=build /home/app/target/sgc-discord-bot-*.jar /usr/local/lib/SGC-Discord-Bot.jar
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "/usr/local/lib/SGC-Discord-Bot.jar", "-Xmx512m", "-Xms512m", "</dev/null 2>&1 &"] 
