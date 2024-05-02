@@ -23,7 +23,11 @@ public enum Raid {
             Arrays.asList("1441982566", "2906950631", "3889634515", "4156879541", "4217492330")),
     KINGS_FALL("King's Fall", Arrays.asList("1374392663", "1063970578", "2897223272", "2964135793", "3257594522")),
     ROOT_OF_NIGHTMARES("Root of Nightmares", Arrays.asList("2381413764", "1191701339", "2918919505")),
-    CROTAS_END("Crota's End", Arrays.asList("156253568", "4179289725", "1507509200"));
+    CROTAS_END("Crota's End", Arrays.asList("156253568", "4179289725", "1507509200")),
+    PANTHEON_ATRAKS_SOVEREIGN("The Pantheon: Atraks Sovereign", Arrays.asList("4169648179")),
+    PANTHEON_ORYX_EXALTED("The Pantheon: Oryx Exalted", Arrays.asList("4169648176")),
+    PANTHEON_RHULK_INDOMITABLE("The Pantheon: Rhulk Indomitable", Arrays.asList("4169648177")),
+    PANTHEON_NEZAREC_SUBLIME("The Pantheon: Nezarec Sublime", Arrays.asList("4169648182"));
 
     public final String name;
     private final List<String> validHashes;
@@ -68,6 +72,10 @@ public enum Raid {
         raids.add(DEEP_STONE_CRYPT);
         raids.add(GARDEN_OF_SALVATION);
         raids.add(LAST_WISH);
+        raids.add(PANTHEON_ATRAKS_SOVEREIGN);
+        raids.add(PANTHEON_ORYX_EXALTED);
+        raids.add(PANTHEON_RHULK_INDOMITABLE);
+        raids.add(PANTHEON_NEZAREC_SUBLIME);
         return raids;
     }
 }

@@ -28,14 +28,15 @@ public class ManualSGCTriumphReportRunner {
         LOGGER.info("Starting SGC Triumph Report");
 
         HashMap<String, String> triumphs = new HashMap<>();
-        triumphs.put("2572383496", "Crota's End Flawless");
-        triumphs.put("397062446", "Root Of Nightmares Flawless");
-        triumphs.put("1360511082", "King's Fall Flawless");
-        triumphs.put("4019717242", "Vow of the Disciple Flawless");
-        triumphs.put("2750088202", "Vault of Glass Flawless");
-        triumphs.put("3560923614", "Deep Stone Crypt Flawless");
-        triumphs.put("1522774125", "Garden of Salvation Flawless");
-        triumphs.put("380332968", "Last Wish Flawless");
+        triumphs.put("1451427532", "Catching Waves");
+        // triumphs.put("2572383496", "Crota's End Flawless");
+        // triumphs.put("397062446", "Root Of Nightmares Flawless");
+        // triumphs.put("1360511082", "King's Fall Flawless");
+        // triumphs.put("4019717242", "Vow of the Disciple Flawless");
+        // triumphs.put("2750088202", "Vault of Glass Flawless");
+        // triumphs.put("3560923614", "Deep Stone Crypt Flawless");
+        // triumphs.put("1522774125", "Garden of Salvation Flawless");
+        // triumphs.put("380332968", "Last Wish Flawless");
 
         for (int i = 0; i < clanList.size(); i++) {
             Clan clan = clanList.get(i);
