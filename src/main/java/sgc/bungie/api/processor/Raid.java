@@ -27,7 +27,8 @@ public enum Raid {
     PANTHEON_ATRAKS_SOVEREIGN("The Pantheon: Atraks Sovereign", Arrays.asList("4169648179")),
     PANTHEON_ORYX_EXALTED("The Pantheon: Oryx Exalted", Arrays.asList("4169648176")),
     PANTHEON_RHULK_INDOMITABLE("The Pantheon: Rhulk Indomitable", Arrays.asList("4169648177")),
-    PANTHEON_NEZAREC_SUBLIME("The Pantheon: Nezarec Sublime", Arrays.asList("4169648182"));
+    PANTHEON_NEZAREC_SUBLIME("The Pantheon: Nezarec Sublime", Arrays.asList("4169648182")),
+    SALVATIONS_EDGE("Salvation's Edge", Arrays.asList("2192826039", "1541433876"));
 
     public final String name;
     private final List<String> validHashes;
@@ -64,6 +65,7 @@ public enum Raid {
 
     public static List<Raid> getRaidsOrdered() {
         List<Raid> raids = new ArrayList<>();
+        raids.add(SALVATIONS_EDGE);
         raids.add(CROTAS_END);
         raids.add(ROOT_OF_NIGHTMARES);
         raids.add(KINGS_FALL);

@@ -28,7 +28,7 @@ public class ManualSGCCollectibleReportRunner {
         LOGGER.info("Starting SGC Collectible Report");
 
         HashMap<String, String> collectibles = new HashMap<>();
-        collectibles.put("2791836439", "Reborn BRAVE");
+        collectibles.put("654071284", "Hunker Down");
         // collectibles.put("1988948484", "Divinity");
         // collectibles.put("4027219968", "Gjallarhorn");
         // collectibles.put("1660030044", "Wish-Ender");
