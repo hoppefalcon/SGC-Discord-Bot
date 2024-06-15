@@ -369,7 +369,8 @@ public class ActivityReportTool {
         });
         StringBuilder sb = new StringBuilder();
         userRoleMap.forEach((userString, value) -> {
-            sb.append(userString).append("\n");
+            if (value == 2)
+                sb.append(userString).append("\n");
         });
 
         return sb.toString();

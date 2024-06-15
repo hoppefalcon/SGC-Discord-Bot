@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 
 import sgc.discord.bot.BotApplication;
 import sgc.discord.bot.commands.Command;
-import sgc.discord.infographics.GoogleDriveUtil;
 import sgc.bungie.api.processor.activity.ActivityReportTool;
 
 public class NotRegisteredMembersCommand implements Command {
@@ -52,7 +51,7 @@ public class NotRegisteredMembersCommand implements Command {
                                                                                 .getResourceAsStream("thumbnail.jpg"))
                                                                 .setColor(Color.CYAN))
                                                 .addAttachment(discordRoleMembers.getBytes(),
-                                                                String.format("%s [%s].csv", clanTag.toUpperCase(),
+                                                                String.format("%s [%s].txt", clanTag.toUpperCase(),
                                                                                 LocalDate.now().format(
                                                                                                 DateTimeFormatter.BASIC_ISO_DATE)))
                                                 .send(slashCommandInteraction.getChannel().get());
