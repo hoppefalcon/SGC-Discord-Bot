@@ -369,6 +369,7 @@ public class ActivityReportTool {
         });
         StringBuilder sb = new StringBuilder();
         userRoleMap.forEach((userString, value) -> {
+            LOGGER.info("DEBUG TEST: %s :: %s", userString, value);
             if (value == 2)
                 sb.append(userString).append("\n");
         });
