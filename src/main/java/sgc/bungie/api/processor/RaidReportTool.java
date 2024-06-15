@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -2228,5 +2229,156 @@ public class RaidReportTool {
                     ex);
         }
         return collectableName;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static HashMap<Mode, HashMap<String, ArrayList>> getLatestModeToActivityMap()
+            throws IOException, URISyntaxException {
+        String activityManifestLocation = getLatestActivityManifestLocation();
+        String activityModeManifestLocation = getLatestActivityModeManifestLocation();
+        JsonObject rawActivityManifest = fetchManifestFromBungie(activityManifestLocation);
+        JsonObject rawActivityModeManifest = fetchManifestFromBungie(activityModeManifestLocation);
+        Set<String> activitySet = rawActivityManifest.keySet();
+        HashMap<Mode, HashMap<String, ArrayList>> modeToActivities = new HashMap<>();
+
+        AtomicInteger count = new AtomicInteger(0);
+        AtomicInteger badCount = new AtomicInteger(0);
+        activitySet.forEach(activityHash -> {
+            try {
+                String activityName = rawActivityManifest.getAsJsonObject(activityHash)
+                        .getAsJsonObject("displayProperties").get("name").getAsString();
+
+                String activityTypeHash = "";
+                try {
+                    activityTypeHash = rawActivityManifest.getAsJsonObject(activityHash)
+                            .get("directActivityModeHash").getAsString();
+                } catch (Exception e) {
+                    // TODO: handle exception
+                }
+                if (activityTypeHash.isEmpty()) {
+                    try {
+                        activityTypeHash = rawActivityManifest.getAsJsonObject(activityHash)
+                                .get("activityTypeHash").getAsString();
+                    } catch (Exception e) {
+                        // TODO: handle exception
+                    }
+                }
+                // displayProperties -> name
+                // activityTypeHash
+                if (!activityName.isEmpty() && !activityHash.isEmpty()) {
+                    String modeType = rawActivityModeManifest.getAsJsonObject(activityTypeHash).get("modeType")
+                            .getAsString();
+                    Mode mode = Mode.getFromValue(Integer.parseInt(modeType));
+                    if (Mode.validModesForCPOTW().contains(mode)) {
+                        modeToActivities.putIfAbsent(mode, new HashMap());
+                        modeToActivities.get(mode).putIfAbsent(
+                                activityName, new ArrayList<>());
+                        modeToActivities.get(mode).get(activityName)
+                                .add(activityHash);
+                        count.addAndGet(1);
+                    }
+
+                }
+            } catch (Exception ex) {
+                badCount.addAndGet(1);
+                System.out.println(String.format("%s | %s", activityHash,
+                        rawActivityManifest.getAsJsonObject(activityHash)
+                                .getAsJsonObject("displayProperties").get("name").getAsString()));
+            }
+        });
+
+        return modeToActivities;
+    }
+
+    private static JsonObject fetchManifestFromBungie(String manifestLocation)
+            throws IOException, URISyntaxException {
+        URL url = new URI(String.format("https://www.bungie.net%s", manifestLocation)).toURL();
+
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.addRequestProperty("X-API-Key", apiKey);
+        conn.addRequestProperty("Accept", "Application/Json");
+        conn.connect();
+
+        // Getting the response code
+        int responseCode = conn.getResponseCode();
+        JsonObject json = null;
+        if (responseCode == 200) {
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+                String inputLine;
+                StringBuilder content = new StringBuilder();
+                while ((inputLine = in.readLine()) != null) {
+                    content.append(inputLine);
+                }
+                json = JsonParser.parseString(content.toString()).getAsJsonObject();
+                in.close();
+            }
+        }
+        conn.disconnect();
+        return json;
+    }
+
+    private static String getLatestActivityManifestLocation() throws IOException, URISyntaxException {
+        URL url = new URI(String.format("https://www.bungie.net/Platform/Destiny2/Manifest/")).toURL();
+
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.addRequestProperty("X-API-Key", apiKey);
+        conn.addRequestProperty("Accept", "Application/Json");
+        conn.connect();
+
+        // Getting the response code
+        int responseCode = conn.getResponseCode();
+        String manifestLocation = "";
+        if (responseCode == 200) {
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+                String inputLine;
+                StringBuilder content = new StringBuilder();
+                while ((inputLine = in.readLine()) != null) {
+                    content.append(inputLine);
+                }
+                manifestLocation = JsonParser.parseString(content.toString()).getAsJsonObject()
+                        .getAsJsonObject("Response")
+                        .getAsJsonObject("jsonWorldComponentContentPaths")
+                        .getAsJsonObject("en")
+                        .get("DestinyActivityDefinition")
+                        .getAsString();
+                in.close();
+            }
+        }
+        conn.disconnect();
+        return manifestLocation;
+    }
+
+    private static String getLatestActivityModeManifestLocation() throws IOException, URISyntaxException {
+        URL url = new URI(String.format("https://www.bungie.net/Platform/Destiny2/Manifest/")).toURL();
+
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.addRequestProperty("X-API-Key", apiKey);
+        conn.addRequestProperty("Accept", "Application/Json");
+        conn.connect();
+
+        // Getting the response code
+        int responseCode = conn.getResponseCode();
+        String manifestLocation = "";
+        if (responseCode == 200) {
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+                String inputLine;
+                StringBuilder content = new StringBuilder();
+                while ((inputLine = in.readLine()) != null) {
+                    content.append(inputLine);
+                }
+                manifestLocation = JsonParser.parseString(content.toString()).getAsJsonObject()
+                        .getAsJsonObject("Response")
+                        .getAsJsonObject("jsonWorldComponentContentPaths")
+                        .getAsJsonObject("en")
+                        .get("DestinyActivityModeDefinition")
+                        .getAsString();
+                in.close();
+            }
+        }
+        conn.disconnect();
+        return manifestLocation;
     }
 }

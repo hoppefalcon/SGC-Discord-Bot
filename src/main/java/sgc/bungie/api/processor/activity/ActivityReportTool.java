@@ -31,6 +31,8 @@ public class ActivityReportTool {
 
     private static DiscordApi API = null;
 
+    public static final HashMap<String, String> CLAN_ROLE_ID_MAP = initializeClanRoleDiscordIDMap();
+
     public static void setDiscordAPI(DiscordApi api) {
         API = api;
     }
@@ -322,9 +324,8 @@ public class ActivityReportTool {
      *         or null if the role is not found.
      */
     public static String getDiscordRoleMembers(String discordRoleID) {
-        Optional<Role> roleById = API.getRoleById(discordRoleID);
-        if (roleById.isPresent()) {
-            Set<User> users = roleById.get().getUsers();
+        ArrayList<User> users = getDiscordRoleMembersList(discordRoleID);
+        if (users.isEmpty()) {
             StringBuilder sb = new StringBuilder();
             users.forEach(user -> {
                 sb.append(user.getDisplayName(BotApplication.SGC_SERVER)).append("\n");
@@ -333,6 +334,53 @@ public class ActivityReportTool {
         } else {
             return null;
         }
+    }
+
+    private static ArrayList<User> getDiscordRoleMembersList(String discordRoleID) {
+        ArrayList<User> memberList = new ArrayList<>();
+        Optional<Role> roleById = API.getRoleById(discordRoleID);
+        if (roleById.isPresent()) {
+            Set<User> users = roleById.get().getUsers();
+            users.forEach(user -> {
+                memberList.add(user);
+            });
+        }
+        return memberList;
+    }
+
+    private static String crossreferenceRoleMemberLists(String discordRoleID1, String discordRoleID2) {
+        ArrayList<User> role1UserList = getDiscordRoleMembersList(discordRoleID1);
+        ArrayList<User> role2UserList = getDiscordRoleMembersList(discordRoleID2);
+
+        HashMap<String, Integer> userRoleMap = new HashMap<>();
+        role1UserList.forEach(user -> {
+            String userString = String.format("%s (%s)",
+                    user.getDisplayName(BotApplication.SGC_SERVER),
+                    user.getMentionTag());
+            userRoleMap.putIfAbsent(userString, 0);
+            userRoleMap.put(userString, userRoleMap.get(userString) + 1);
+        });
+        role2UserList.forEach(user -> {
+            String userString = String.format("%s (%s)",
+                    user.getDisplayName(BotApplication.SGC_SERVER),
+                    user.getMentionTag());
+            userRoleMap.putIfAbsent(userString, 0);
+            userRoleMap.put(userString, userRoleMap.get(userString) + 1);
+        });
+        StringBuilder sb = new StringBuilder();
+        userRoleMap.forEach((userString, value) -> {
+            sb.append(userString).append("\n");
+        });
+
+        return sb.toString();
+    }
+
+    public static String getClanNonRegisteredMembers(String discordClanRoleID) {
+        return crossreferenceRoleMemberLists(discordClanRoleID, GoogleDriveUtil.getNotRegisteredRoleID());
+    }
+
+    private static HashMap<String, String> initializeClanRoleDiscordIDMap() {
+        return (HashMap<String, String>) GoogleDriveUtil.getClanRoleIDs();
     }
 
 }

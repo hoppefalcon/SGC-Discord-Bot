@@ -250,4 +250,50 @@ public class GoogleDriveUtil {
         getPOTWWeights();
     }
 
+    public static Map<String, String> getClanRoleIDs() {
+        HashMap<String, String> clans = new HashMap<>();
+        try {
+            final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
+            final String spreadsheetId = "1bcW1yT-j_RxlQLGvHWOqisW-xFDPvRaOjR2cByIQHu8";
+            final String range = "Clans!A2:B";
+            Sheets service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getGoogleSheetsHttpRequestInitializer())
+                    .setApplicationName(APPLICATION_NAME)
+                    .build();
+            ValueRange response = service.spreadsheets().values()
+                    .get(spreadsheetId, range)
+                    .execute();
+            List<List<Object>> values = response.getValues();
+            for (List<Object> row : values) {
+                clans.put((String) row.get(0),
+                        (String) row.get(1));
+            }
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+        return clans;
+    }
+
+    public static String getNotRegisteredRoleID() {
+        String roleID = "";
+        try {
+            final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
+            final String spreadsheetId = "1bcW1yT-j_RxlQLGvHWOqisW-xFDPvRaOjR2cByIQHu8";
+            final String range = "Misc!A2:B";
+            Sheets service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getGoogleSheetsHttpRequestInitializer())
+                    .setApplicationName(APPLICATION_NAME)
+                    .build();
+            ValueRange response = service.spreadsheets().values()
+                    .get(spreadsheetId, range)
+                    .execute();
+            List<List<Object>> values = response.getValues();
+            for (List<Object> row : values) {
+                if (((String) row.get(0)).equals("Not Registered")) {
+                    roleID = (String) row.get(0);
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+        return roleID;
+    }
 }

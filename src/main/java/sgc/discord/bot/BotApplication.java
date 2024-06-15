@@ -243,6 +243,11 @@ public class BotApplication {
 			infomationMessageOption.addChoice(message.name(), message.name());
 		}
 
+		final SlashCommandOptionBuilder clanCallSignOption = new SlashCommandOptionBuilder().setName("ClanTag")
+				.setType(SlashCommandOptionType.STRING)
+				.setRequired(true)
+				.setDescription("SGC Clan Tag (eg SLS, SOL, KOTR, etc.)");
+
 		Set<SlashCommandBuilder> commandList = new HashSet<>();
 
 		commandList.add(new SlashCommandBuilder().setName("user-raid-report")
@@ -327,6 +332,10 @@ public class BotApplication {
 
 		commandList.add(new SlashCommandBuilder().setName("all-redeemables-list").setDescription(
 				"Displays all Redeemables for Bungie.net."));
+
+		commandList.add(new SlashCommandBuilder().setName("non-registered-members-list")
+				.setDescription("Pulls a list of members from the clan that haven registered with Charlemagne")
+				.addOption(clanCallSignOption.build()));
 
 		API.bulkOverwriteGlobalApplicationCommands(commandList).join();
 

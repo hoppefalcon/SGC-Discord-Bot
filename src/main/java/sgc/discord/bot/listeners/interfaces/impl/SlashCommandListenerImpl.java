@@ -10,6 +10,7 @@ import sgc.discord.bot.commands.impl.ClanInternalActivityReportCommand;
 import sgc.discord.bot.commands.impl.ClanRaidReportCommand;
 import sgc.discord.bot.commands.impl.InfographicCommand;
 import sgc.discord.bot.commands.impl.InformationMessageCommand;
+import sgc.discord.bot.commands.impl.NotRegisteredMembersCommand;
 import sgc.discord.bot.commands.impl.RaidCarnageReportCommand;
 import sgc.discord.bot.commands.impl.RoleMemberListCommand;
 import sgc.discord.bot.commands.impl.SGCActivityReportCommand;
@@ -97,6 +98,9 @@ public class SlashCommandListenerImpl implements SlashCommandListener {
 
             case "all-redeemables-list":
                 new AllRedeemablesCommand().handle(slashCommandInteraction);
+                break;
+            case "non-registered-members-list":
+                new NotRegisteredMembersCommand().handle(slashCommandInteraction);
                 break;
 
             default:
