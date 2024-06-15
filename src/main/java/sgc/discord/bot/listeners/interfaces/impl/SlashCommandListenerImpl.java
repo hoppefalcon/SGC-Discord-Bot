@@ -99,6 +99,7 @@ public class SlashCommandListenerImpl implements SlashCommandListener {
             case "all-redeemables-list":
                 new AllRedeemablesCommand().handle(slashCommandInteraction);
                 break;
+
             case "non-registered-members-list":
                 new NotRegisteredMembersCommand().handle(slashCommandInteraction);
                 break;

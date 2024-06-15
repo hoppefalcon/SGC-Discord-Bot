@@ -288,7 +288,7 @@ public class GoogleDriveUtil {
             List<List<Object>> values = response.getValues();
             for (List<Object> row : values) {
                 if (((String) row.get(0)).equals("Not Registered")) {
-                    roleID = (String) row.get(0);
+                    roleID = (String) row.get(1);
                 }
             }
         } catch (Exception e) {
