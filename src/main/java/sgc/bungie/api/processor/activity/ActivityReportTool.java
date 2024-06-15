@@ -352,26 +352,16 @@ public class ActivityReportTool {
         ArrayList<User> role1UserList = getDiscordRoleMembersList(discordRoleID1);
         ArrayList<User> role2UserList = getDiscordRoleMembersList(discordRoleID2);
 
-        HashMap<String, Integer> userRoleMap = new HashMap<>();
-        role1UserList.forEach(user -> {
-            String userString = String.format("%s (%s)",
-                    user.getDisplayName(BotApplication.SGC_SERVER),
-                    user.getMentionTag());
-            userRoleMap.putIfAbsent(userString, 0);
-            userRoleMap.put(userString, userRoleMap.get(userString) + 1);
-        });
-        role2UserList.forEach(user -> {
-            String userString = String.format("%s (%s)",
-                    user.getDisplayName(BotApplication.SGC_SERVER),
-                    user.getMentionTag());
-            userRoleMap.putIfAbsent(userString, 0);
-            userRoleMap.put(userString, userRoleMap.get(userString) + 1);
-        });
         StringBuilder sb = new StringBuilder();
-        userRoleMap.forEach((userString, value) -> {
-            LOGGER.info(String.format("DEBUG TEST: %s :: %s", userString, value));
-            if (value == 2)
+
+        role1UserList.forEach(user -> {
+            if (role2UserList.contains(user)) {
+                String userString = String.format("%s (%s)",
+                        user.getDisplayName(BotApplication.SGC_SERVER),
+                        user.getMentionTag());
+
                 sb.append(userString).append("\n");
+            }
         });
 
         return sb.toString();
