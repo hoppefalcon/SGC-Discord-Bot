@@ -28,12 +28,11 @@ public class ManualSGCCollectibleReportRunner {
         LOGGER.info("Starting SGC Collectible Report");
 
         HashMap<String, String> collectibles = new HashMap<>();
-        collectibles.put("654071284", "Hunker Down");
-        // collectibles.put("1988948484", "Divinity");
-        // collectibles.put("4027219968", "Gjallarhorn");
-        // collectibles.put("1660030044", "Wish-Ender");
-        // collectibles.put("1258579677", "Xenophage");
-        // collectibles.put("2300465938", "Vex Mythoclast");
+        collectibles.put("1988948484", "Divinity");
+        collectibles.put("4027219968", "Gjallarhorn");
+        collectibles.put("1660030044", "Wish-Ender");
+        collectibles.put("1258579677", "Xenophage");
+        collectibles.put("2300465938", "Vex Mythoclast");
 
         for (int i = 0; i < clanList.size(); i++) {
             Clan clan = clanList.get(i);

@@ -2381,4 +2381,36 @@ public class RaidReportTool {
         conn.disconnect();
         return manifestLocation;
     }
+
+    public static String getLatestGlobalVendorInventory() throws IOException, URISyntaxException {
+        URL url = new URI(String.format("https://www.bungie.net/Platform/Destiny2/Vendors/")).toURL();
+
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.addRequestProperty("X-API-Key", apiKey);
+        conn.addRequestProperty("Accept", "Application/Json");
+        conn.connect();
+
+        // Getting the response code
+        int responseCode = conn.getResponseCode();
+        String manifestLocation = "";
+        if (responseCode == 200) {
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+                String inputLine;
+                StringBuilder content = new StringBuilder();
+                while ((inputLine = in.readLine()) != null) {
+                    content.append(inputLine);
+                }
+                manifestLocation = JsonParser.parseString(content.toString()).getAsJsonObject()
+                        .getAsJsonObject("Response")
+                        .getAsJsonObject("jsonWorldComponentContentPaths")
+                        .getAsJsonObject("en")
+                        .get("DestinyActivityModeDefinition")
+                        .getAsString();
+                in.close();
+            }
+        }
+        conn.disconnect();
+        return manifestLocation;
+    }
 }
