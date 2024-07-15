@@ -1,4 +1,4 @@
-package sgc;
+package sgc.manual;
 
 import java.util.Random;
 import java.util.Timer;
@@ -12,7 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ManualDiscordMessageSpam {
-        private static final Logger LOGGER = LoggerFactory.getLogger(ManualUserDiscordActivityRunner.class);
+        private static final Logger LOGGER = LoggerFactory.getLogger(ManualDiscordMessageSpam.class);
 
         private static final DiscordApi API = new DiscordApiBuilder().setToken(System.getenv("DISCORD_TOKEN"))
                         .setAllIntents().login().join();
