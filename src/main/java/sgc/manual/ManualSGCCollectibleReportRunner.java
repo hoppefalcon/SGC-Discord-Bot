@@ -1,4 +1,4 @@
-package sgc;
+package sgc.manual;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -22,7 +22,7 @@ import sgc.bungie.api.processor.RaidReportTool;
 public class ManualSGCCollectibleReportRunner {
     private static final Logger LOGGER = LoggerFactory.getLogger(ManualSGCCollectibleReportRunner.class);
     private static ExecutorService executorService = Executors.newFixedThreadPool(15);
-    private static List<String> filteredClanList = Arrays.asList(SGC_Clan.SOL.Bungie_ID);
+    private static List<String> filteredClanList = Arrays.asList();
 
     public static void main(String[] args) throws InterruptedException, IOException {
         List<Clan> clanList = RaidReportTool.initializeClanList();
@@ -30,10 +30,20 @@ public class ManualSGCCollectibleReportRunner {
         LOGGER.info("Starting SGC Collectible Report");
 
         HashMap<String, String> collectibles = new HashMap<>();
-        collectibles.put("2289185883", "Still Hunt");
+        collectibles.put("1763610692", "Whisper of the Worm");
         collectibles.put("3613141427", "Microcosm");
         collectibles.put("1988948484", "Divinity");
-        collectibles.put("3935854305", "The Lament");
+        collectibles.put("360254771", "Outbreak Perfected");
+        collectibles.put("4027219968", "Gjallarhorn");
+        collectibles.put("3324472233", "Dead Man's Tale");
+        collectibles.put("360554695", "Dead Messenger");
+        collectibles.put("2176629195", "Choir of One");
+        collectibles.put("2629609052", "Vexcalibur");
+        collectibles.put("3826612761", "Wish-Keeper");
+        collectibles.put("1161231112", "Revision Zero");
+        collectibles.put("3860168553", "Solipsism");
+        collectibles.put("1026253929", "Relativism");
+        collectibles.put("2371517663", "Stoicism");
 
         for (int i = 0; i < clanList.size(); i++) {
             Clan clan = clanList.get(i);
@@ -41,7 +51,6 @@ public class ManualSGCCollectibleReportRunner {
 
             if (filteredClanList.contains(clan.getClanId()) || filteredClanList.isEmpty()) {
                 clan.getMembers().forEach((memberId, member) -> {
-                    LOGGER.info("Starting to process " + clan.getCallsign());
                     tasks.add(() -> {
                         if (member.hasNewBungieName()) {
                             try {

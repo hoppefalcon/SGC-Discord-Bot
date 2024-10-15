@@ -2,7 +2,7 @@ package sgc.bungie.api.processor.activity;
 
 import java.util.HashMap;
 
-import sgc.SGC_Clan;
+import sgc.types.SGC_Clan;
 
 public class SGC_Member {
     private final SGC_Clan clan;

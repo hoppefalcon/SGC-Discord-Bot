@@ -1,4 +1,4 @@
-package sgc;
+package sgc.manual;
 
 import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;

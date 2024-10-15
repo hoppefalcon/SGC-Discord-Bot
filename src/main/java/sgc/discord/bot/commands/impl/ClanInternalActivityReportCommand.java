@@ -11,7 +11,7 @@ import org.slf4j.Logger;
 
 import sgc.discord.bot.BotApplication;
 import sgc.discord.bot.commands.Command;
-import sgc.SGC_Clan;
+import sgc.types.SGC_Clan;
 import sgc.bungie.api.processor.*;
 
 public class ClanInternalActivityReportCommand implements Command {

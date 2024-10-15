@@ -1,4 +1,4 @@
-package sgc;
+package sgc.manual;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -28,15 +28,15 @@ public class ManualSGCTriumphReportRunner {
         LOGGER.info("Starting SGC Triumph Report");
 
         HashMap<String, String> triumphs = new HashMap<>();
-        triumphs.put("1451427532", "Catching Waves");
-        // triumphs.put("2572383496", "Crota's End Flawless");
-        // triumphs.put("397062446", "Root Of Nightmares Flawless");
-        // triumphs.put("1360511082", "King's Fall Flawless");
-        // triumphs.put("4019717242", "Vow of the Disciple Flawless");
-        // triumphs.put("2750088202", "Vault of Glass Flawless");
-        // triumphs.put("3560923614", "Deep Stone Crypt Flawless");
-        // triumphs.put("1522774125", "Garden of Salvation Flawless");
-        // triumphs.put("380332968", "Last Wish Flawless");
+        triumphs.put("448634049", "Grandmaster");
+        triumphs.put("2401440738", "Crota's End");
+        triumphs.put("2216324956", "Root Of Nightmares");
+        triumphs.put("3990841777", "King's Fall");
+        triumphs.put("426817434", "Vow of the Disciple");
+        triumphs.put("426817418", "Vault of Glass");
+        triumphs.put("88999500", "Deep Stone Crypt");
+        triumphs.put("1711561705", "Garden of Salvation");
+        triumphs.put("2899839432", "Last Wish");
 
         for (int i = 0; i < clanList.size(); i++) {
             Clan clan = clanList.get(i);

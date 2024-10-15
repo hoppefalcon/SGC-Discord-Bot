@@ -1,4 +1,4 @@
-package sgc;
+package sgc.types;
 
 /**
  * Enum representing the clans in the SGC Discord Bot.

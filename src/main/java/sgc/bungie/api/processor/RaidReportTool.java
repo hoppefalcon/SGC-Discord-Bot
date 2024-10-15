@@ -46,9 +46,10 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import sgc.Platform;
-import sgc.SGC_Clan;
+
 import sgc.discord.infographics.GoogleDriveUtil;
+import sgc.types.Platform;
+import sgc.types.SGC_Clan;
 
 /**
  * @author chris hoppe

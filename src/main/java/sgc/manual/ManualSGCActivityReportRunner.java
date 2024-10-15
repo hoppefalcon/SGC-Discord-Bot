@@ -1,4 +1,4 @@
-package sgc;
+package sgc.manual;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import sgc.bungie.api.processor.RaidReportTool;
+import sgc.types.Platform;
 
 public class ManualSGCActivityReportRunner {
         private static final Logger LOGGER = LoggerFactory.getLogger(ManualSGCActivityReportRunner.class);

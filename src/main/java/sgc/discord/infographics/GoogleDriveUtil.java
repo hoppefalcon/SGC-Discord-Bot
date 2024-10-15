@@ -34,8 +34,8 @@ import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 
-import sgc.SGC_Clan;
 import sgc.bungie.api.processor.activity.SGC_Member;
+import sgc.types.SGC_Clan;
 
 /* Class to demonstrate use-case of drive's download file. */
 public class GoogleDriveUtil {

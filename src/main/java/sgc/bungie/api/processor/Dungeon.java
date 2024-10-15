@@ -22,7 +22,8 @@ public enum Dungeon {
     DUALITY("Duality", Arrays.asList("3012587626", "2823159265", "1668217731")),
     SPIRE_OF_THE_WATCHER("Spire of the Watcher", Arrays.asList("2296818662", "1801496203", "1262462921")),
     GHOSTS_OF_THE_DEEP("Ghosts of the Deep", Arrays.asList("2716998124", "313828469")),
-    WARLORDS_RUIN("Warlord's Ruin", Arrays.asList("2004855007", "2534833093"));
+    WARLORDS_RUIN("Warlord's Ruin", Arrays.asList("2004855007", "2534833093")),
+    VESPERS_HOST("Vesper's Host", Arrays.asList("300092127", "1915770060", "3492566689", "4293676253"));
 
     public final String name;
     private final List<String> validHashes;
@@ -59,6 +60,7 @@ public enum Dungeon {
 
     public static List<Dungeon> getDungeonsOrdered() {
         List<Dungeon> dungeons = new ArrayList<>();
+        dungeons.add(VESPERS_HOST);
         dungeons.add(WARLORDS_RUIN);
         dungeons.add(GHOSTS_OF_THE_DEEP);
         dungeons.add(SPIRE_OF_THE_WATCHER);

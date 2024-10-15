@@ -1,4 +1,4 @@
-package sgc;
+package sgc.manual;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import sgc.bungie.api.processor.Clan;
 import sgc.bungie.api.processor.RaidReportTool;
+import sgc.types.SGC_Clan;
 
 public class ManualDungeonReportRunner {
     private static final Logger LOGGER = LoggerFactory.getLogger(ManualSGCCollectibleReportRunner.class);

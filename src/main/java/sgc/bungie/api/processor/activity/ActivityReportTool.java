@@ -20,10 +20,10 @@ import org.javacord.api.entity.permission.Role;
 import org.javacord.api.entity.user.User;
 import org.slf4j.Logger;
 
-import sgc.SGC_Clan;
 import sgc.bungie.api.processor.RaidReportTool;
 import sgc.discord.bot.BotApplication;
 import sgc.discord.infographics.GoogleDriveUtil;
+import sgc.types.SGC_Clan;
 
 public class ActivityReportTool {
 
@@ -325,7 +325,7 @@ public class ActivityReportTool {
      */
     public static String getDiscordRoleMembers(String discordRoleID) {
         ArrayList<User> users = getDiscordRoleMembersList(discordRoleID);
-        if (users.isEmpty()) {
+        if (!users.isEmpty()) {
             StringBuilder sb = new StringBuilder();
             users.forEach(user -> {
                 sb.append(user.getDisplayName(BotApplication.SGC_SERVER)).append("\n");

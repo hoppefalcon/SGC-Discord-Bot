@@ -4,8 +4,8 @@ import java.util.ArrayList;
 
 import org.slf4j.Logger;
 
-import sgc.Platform;
 import sgc.discord.bot.BotApplication;
+import sgc.types.Platform;
 
 public class GenericActivity {
     private static final Logger LOGGER = BotApplication.getLogger();
