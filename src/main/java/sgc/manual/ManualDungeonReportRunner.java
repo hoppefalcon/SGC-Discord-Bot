@@ -25,7 +25,7 @@ public class ManualDungeonReportRunner {
         LOGGER.info("Starting SGC Dungeon Report");
         Clan sol = null;
         for (Clan clan : clanList) {
-            if (clan.getClanId().equals(SGC_Clan.SOL.Bungie_ID)) {
+            if (clan.getClanId().equals(SGC_Clan.BSTN.Bungie_ID)) {
                 sol = clan;
             }
         }

@@ -542,6 +542,21 @@ public class RaidReportTool {
         return response.toString();
     }
 
+    public static String getUserDungeonReport(String bungieId) throws Exception {
+        Member user = getMemberInformationWithCharacters(bungieId, false);
+        final StringBuilder response = new StringBuilder();
+
+        if (user != null) {
+            getMemberDungeonInfo(user);
+            HashMap<Dungeon, Integer> dungeonClears = user.getDungeonClears();
+            Dungeon.getDungeonsOrdered().forEach((Dungeon dungeon) -> {
+                response.append(dungeon.name).append(": ").append(dungeonClears.get(dungeon)).append("\n");
+            });
+            response.append("\nTOTAL: ").append(user.getTotalRaidClears());
+        }
+        return response.toString();
+    }
+
     public static Member getMemberInformationWithCharacters(String bungieId, boolean OnlyActiveCharacters)
             throws Exception {
         String[] splitBungieId = bungieId.split("#");
