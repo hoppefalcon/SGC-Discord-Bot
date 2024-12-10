@@ -143,14 +143,15 @@ public enum Mode {
         list.add(Mode.NONE);
 
         list.add(Mode.PRIVATE_MATCHES_ALL);
+        list.add(Mode.PRIVATE_MATCHES_RUMBLE);
+/*
         list.add(Mode.PRIVATE_MATCHES_CLASH);
         list.add(Mode.PRIVATE_MATCHES_CONTROL);
         list.add(Mode.PRIVATE_MATCHES_COUNTDOWN);
         list.add(Mode.PRIVATE_MATCHES_MAYHEM);
-        list.add(Mode.PRIVATE_MATCHES_RUMBLE);
         list.add(Mode.PRIVATE_MATCHES_SUPREMACY);
         list.add(Mode.PRIVATE_MATCHES_SURVIVAL);
-
+*/
         list.add(Mode.PATROL);
         list.add(Mode.RUMBLE);
 
