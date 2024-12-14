@@ -1628,7 +1628,12 @@ public class RaidReportTool {
 
         int total = 0;
         for (Mode mode : potwModeCompletions.keySet()) {
-            total += potwWeights.get(mode.name) * potwModeCompletions.get(mode);
+            try {
+                total += potwWeights.get(mode.name) * potwModeCompletions.get(mode);
+            }
+            catch (Exception ex) {
+                LOGGER.error("Error processing the following mode: " + mode.name, ex);
+            }
         }
         for (Raid raid : potwRaidCompletions.keySet()) {
             total += potwWeights.get(raid.name) * potwRaidCompletions.get(raid);
