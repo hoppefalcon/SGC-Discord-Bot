@@ -17,9 +17,9 @@ public class ManualUserPOTWReportRunner {
                 int year = 2024;
                 // LocalDate startDate = YearMonth.of(year, 1).atDay(1);
                 // LocalDate endDate = YearMonth.of(year, 12).atEndOfMonth();
-                LocalDate startDate = YearMonth.of(year, 10).atDay(8);
-                LocalDate endDate = YearMonth.of(year, 10).atDay(14);
-                String userBungieId = "hoppefalcon#7599";
+                LocalDate startDate = YearMonth.of(year, 12).atDay(24);
+                LocalDate endDate = YearMonth.of(year, 12).atDay(31);
+                String userBungieId = "Ace#8145";
                 System.out.printf("%s POTW Score: %d", userBungieId,
                                 RaidReportTool.getUserPOTWScore(userBungieId, startDate, endDate));
 

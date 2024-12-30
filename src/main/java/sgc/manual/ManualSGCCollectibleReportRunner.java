@@ -30,20 +30,7 @@ public class ManualSGCCollectibleReportRunner {
         LOGGER.info("Starting SGC Collectible Report");
 
         HashMap<String, String> collectibles = new HashMap<>();
-        collectibles.put("1763610692", "Whisper of the Worm");
-        collectibles.put("3613141427", "Microcosm");
-        collectibles.put("1988948484", "Divinity");
-        collectibles.put("360254771", "Outbreak Perfected");
-        collectibles.put("4027219968", "Gjallarhorn");
-        collectibles.put("3324472233", "Dead Man's Tale");
-        collectibles.put("360554695", "Dead Messenger");
-        collectibles.put("2176629195", "Choir of One");
-        collectibles.put("2629609052", "Vexcalibur");
-        collectibles.put("3826612761", "Wish-Keeper");
-        collectibles.put("1161231112", "Revision Zero");
-        collectibles.put("3860168553", "Solipsism");
-        collectibles.put("1026253929", "Relativism");
-        collectibles.put("2371517663", "Stoicism");
+        collectibles.put("1499082842", "Anomalous");
 
         for (int i = 0; i < clanList.size(); i++) {
             Clan clan = clanList.get(i);

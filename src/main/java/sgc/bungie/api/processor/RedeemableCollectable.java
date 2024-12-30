@@ -49,7 +49,8 @@ public enum RedeemableCollectable {
     TANGLED_WEB(CollectableType.EMBLEM, "PKH-JL6-L4R", "3299225966"),
     THE_VISIONARY(CollectableType.EMBLEM, "XFV-KHP-N97", "930889102"),
     VISIO_SPEI(CollectableType.EMBLEM, "993-H3H-M6K", "1822059430"),
-    TIGRIS_FATI(CollectableType.EMBLEM, "6AJ-XFR-9ND", "802420307");
+    TIGRIS_FATI(CollectableType.EMBLEM, "6AJ-XFR-9ND", "802420307"),
+    CONQUEROR_OF_INFINITY(CollectableType.EMBLEM, "VHT-6A7-3MM", "3015791435");
 
     public static final String BungieRedeemURL = "https://www.bungie.net/7/en/codes/redeem?token=";
     private final String code;
