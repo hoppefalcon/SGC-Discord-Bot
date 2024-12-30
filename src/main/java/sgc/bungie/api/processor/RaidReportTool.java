@@ -1187,17 +1187,31 @@ public class RaidReportTool {
                                             // POTW Calculations
 
                                             if (Mode.getFromValue(activityMode).equals(Mode.RAID)) {
-                                                character.addCompletedRaid(
-                                                        Raid.getRaid(result.getAsJsonObject()
-                                                                .getAsJsonObject("activityDetails")
-                                                                .getAsJsonPrimitive("directorActivityHash")
-                                                                .getAsString()));
+                                                Raid raid = Raid.getRaid(result.getAsJsonObject()
+                                                        .getAsJsonObject("activityDetails")
+                                                        .getAsJsonPrimitive("directorActivityHash")
+                                                        .getAsString());
+                                                if (raid == null) {
+                                                    LOGGER.error(result.getAsJsonObject()
+                                                            .getAsJsonObject("activityDetails")
+                                                            .getAsJsonPrimitive("directorActivityHash")
+                                                            .getAsString()
+                                                            + " is returning as Mode.RAID but is not associated to a raid.");
+                                                }
+                                                character.addCompletedRaid(raid);
                                             } else if (Mode.getFromValue(activityMode).equals(Mode.DUNGEON)) {
-                                                character.addCompletedDungeon(
-                                                        Dungeon.getDungeon(result.getAsJsonObject()
-                                                                .getAsJsonObject("activityDetails")
-                                                                .getAsJsonPrimitive("directorActivityHash")
-                                                                .getAsString()));
+                                                Dungeon dungeon = Dungeon.getDungeon(result.getAsJsonObject()
+                                                        .getAsJsonObject("activityDetails")
+                                                        .getAsJsonPrimitive("directorActivityHash")
+                                                        .getAsString());
+                                                if (dungeon == null) {
+                                                    LOGGER.error(result.getAsJsonObject()
+                                                            .getAsJsonObject("activityDetails")
+                                                            .getAsJsonPrimitive("directorActivityHash")
+                                                            .getAsString()
+                                                            + " is returning as Mode.DUNGEON but is not associated to a dungeon.");
+                                                }
+                                                character.addCompletedDungeon(dungeon);
                                             } else {
                                                 character.addCompletedMode(Mode.getFromValue(activityMode));
                                             }
@@ -1630,13 +1644,16 @@ public class RaidReportTool {
         for (Mode mode : potwModeCompletions.keySet()) {
             try {
                 total += potwWeights.get(mode.name) * potwModeCompletions.get(mode);
-            }
-            catch (Exception ex) {
+            } catch (Exception ex) {
                 LOGGER.error("Error processing the following mode: " + mode.name, ex);
             }
         }
         for (Raid raid : potwRaidCompletions.keySet()) {
-            total += potwWeights.get(raid.name) * potwRaidCompletions.get(raid);
+            try {
+                total += potwWeights.get(raid.name) * potwRaidCompletions.get(raid);
+            } catch (Exception ex) {
+                LOGGER.error("Error processing the following mode: " + raid.name, ex);
+            }
         }
         for (Dungeon dungeon : potwDungeonCompletions.keySet()) {
             total += potwWeights.get(dungeon.name) * potwDungeonCompletions.get(dungeon);
