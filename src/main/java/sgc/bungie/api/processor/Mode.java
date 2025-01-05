@@ -15,7 +15,7 @@ public enum Mode {
     NONE("None", 0, 1.0),
     STORY("Story", 2, 1.0),
     STRIKE("Strike", 3, 1.0),
-    RAID("Raid", 4, 1.0),
+    RAID("Raid", 4, 2.0),
     ALL_PVP("AllPvP", 5, 1.0),
     PATROL("Patrol", 6, 1.0),
     ALL_PVE("AllPvE", 7, 1.0),
@@ -86,7 +86,7 @@ public enum Mode {
     NIGHTMARE_HUNT("NightmareHunt", 79, 1.0),
     ELIMINATION("Elimination", 80, 1.0),
     MOMENTUM("Momentum", 81, 1.0),
-    DUNGEON("Dungeon", 82, 1.0),
+    DUNGEON("Dungeon", 82, 2.0),
     SUNDIAL("Sundial", 83, 1.0),
     TRIALS_OF_OSIRIS("TrialsOfOsiris", 84, 1.0),
     DARES("Dares", 85, 1.0),
@@ -144,14 +144,14 @@ public enum Mode {
 
         list.add(Mode.PRIVATE_MATCHES_ALL);
         list.add(Mode.PRIVATE_MATCHES_RUMBLE);
-/*
-        list.add(Mode.PRIVATE_MATCHES_CLASH);
-        list.add(Mode.PRIVATE_MATCHES_CONTROL);
-        list.add(Mode.PRIVATE_MATCHES_COUNTDOWN);
-        list.add(Mode.PRIVATE_MATCHES_MAYHEM);
-        list.add(Mode.PRIVATE_MATCHES_SUPREMACY);
-        list.add(Mode.PRIVATE_MATCHES_SURVIVAL);
-*/
+        /*
+         * list.add(Mode.PRIVATE_MATCHES_CLASH);
+         * list.add(Mode.PRIVATE_MATCHES_CONTROL);
+         * list.add(Mode.PRIVATE_MATCHES_COUNTDOWN);
+         * list.add(Mode.PRIVATE_MATCHES_MAYHEM);
+         * list.add(Mode.PRIVATE_MATCHES_SUPREMACY);
+         * list.add(Mode.PRIVATE_MATCHES_SURVIVAL);
+         */
         list.add(Mode.PATROL);
         list.add(Mode.RUMBLE);
 
