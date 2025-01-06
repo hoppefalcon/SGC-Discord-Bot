@@ -339,7 +339,7 @@ public class BotApplication {
 
 		commandList.add(new SlashCommandBuilder().setName("balance-teams")
 				.setDescription(
-						"Balances the user's fireteam members across two teams for private Crucible. (Requires full Bungie ID)")
+						"Balances fireteam members for private Crucible. (Requires full Bungie ID)")
 				.addOption(bungieIdOption.build()));
 
 		API.bulkOverwriteGlobalApplicationCommands(commandList).join();
