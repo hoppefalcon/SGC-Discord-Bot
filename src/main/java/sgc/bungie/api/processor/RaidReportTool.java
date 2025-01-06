@@ -567,76 +567,73 @@ public class RaidReportTool {
         Member user = null;
         if (splitBungieId.length == 2) {
             AtomicInteger page = new AtomicInteger(0);
-            boolean morePages = true;
             final HashMap<String, Member> searchResults = new HashMap<>();
 
-            while (morePages) {
-                URL url = new URI(String.format("https://www.bungie.net/Platform/User/Search/GlobalName/%d/",
-                        page.getAndIncrement())).toURL();
+            URL url = new URI(
+                    String.format("https://www.bungie.net/Platform/Destiny2/SearchDestinyPlayerByBungieName/-1/",
+                            page.getAndIncrement()))
+                    .toURL();
 
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("POST");
-                conn.addRequestProperty("X-API-Key", apiKey);
-                conn.addRequestProperty("Content-Type", "Application/Json");
-                conn.addRequestProperty("Accept", "Application/Json");
-                conn.setDoOutput(true);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.addRequestProperty("X-API-Key", apiKey);
+            conn.addRequestProperty("Content-Type", "Application/Json");
+            conn.addRequestProperty("Accept", "Application/Json");
+            conn.setDoOutput(true);
 
-                String jsonInputString = String.format("{\"displayNamePrefix\" : \"%s\"}",
-                        splitBungieId[0].trim().replace(" ", "%20"));
+            String jsonInputString = String.format("{\"displayName\" : \"%s\", displayNameCode: \"%s\"}",
+                    splitBungieId[0], splitBungieId[1]);
 
-                try (OutputStream os = conn.getOutputStream()) {
-                    byte[] input = jsonInputString.getBytes("utf-8");
-                    os.write(input, 0, input.length);
+            try (OutputStream os = conn.getOutputStream()) {
+                byte[] input = jsonInputString.getBytes("utf-8");
+                os.write(input, 0, input.length);
+            }
+
+            // Getting the response code
+            int responsecode = conn.getResponseCode();
+            if (responsecode == 200) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                StringBuffer content = new StringBuffer();
+                String inputLine;
+                while ((inputLine = in.readLine()) != null) {
+                    content.append(inputLine);
                 }
 
-                // Getting the response code
-                int responsecode = conn.getResponseCode();
-                if (responsecode == 200) {
-                    BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                    StringBuffer content = new StringBuffer();
-                    String inputLine;
-                    while ((inputLine = in.readLine()) != null) {
-                        content.append(inputLine);
-                    }
+                JsonArray results = (JsonArray) JsonParser.parseString(content.toString()).getAsJsonObject()
+                        .get("Response");
 
-                    morePages = JsonParser.parseString(content.toString()).getAsJsonObject().getAsJsonObject("Response")
-                            .get("hasMore").getAsBoolean();
-
-                    JsonArray results = (JsonArray) JsonParser.parseString(content.toString()).getAsJsonObject()
-                            .getAsJsonObject("Response").get("searchResults");
-
-                    results.forEach((entry) -> {
-                        try {
-                            JsonArray userInfo = (JsonArray) entry.getAsJsonObject().get("destinyMemberships");
-                            String membershipType = userInfo.get(0).getAsJsonObject().get("membershipType")
+                results.forEach((entry) -> {
+                    try {
+                        JsonArray applicableMembershipTypes = entry.getAsJsonObject()
+                                .getAsJsonArray("applicableMembershipTypes");
+                        if (applicableMembershipTypes.size() > 0) {
+                            String membershipType = entry.getAsJsonObject().get("membershipType")
                                     .getAsString();
-                            String membershipId = userInfo.get(0).getAsJsonObject().get("membershipId").getAsString();
-                            String displayName = userInfo.get(0).getAsJsonObject().get("displayName").getAsString();
+                            String membershipId = entry.getAsJsonObject().get("membershipId").getAsString();
+                            String displayName = entry.getAsJsonObject().get("displayName").getAsString();
                             String bungieGlobalDisplayName = "";
                             String bungieGlobalDisplayNameCode = "";
                             try {
-                                bungieGlobalDisplayName = userInfo.get(0).getAsJsonObject()
+                                bungieGlobalDisplayName = entry.getAsJsonObject()
                                         .get("bungieGlobalDisplayName").getAsString();
-                                bungieGlobalDisplayNameCode = userInfo.get(0).getAsJsonObject()
+                                bungieGlobalDisplayNameCode = entry.getAsJsonObject()
                                         .get("bungieGlobalDisplayNameCode").getAsString();
                             } catch (NullPointerException ex) {
 
                             }
                             searchResults.put(membershipId, new Member(membershipId, displayName, membershipType,
                                     bungieGlobalDisplayName, bungieGlobalDisplayNameCode, null));
-
-                        } catch (Exception ex) {
-                            LOGGER.error("Error processing JSON result from "
-                                    + url.toExternalForm(), ex);
                         }
-                    });
+                    } catch (Exception ex) {
+                        LOGGER.error("Error processing JSON result from "
+                                + url.toExternalForm(), ex);
+                    }
+                });
 
-                    in.close();
-                } else {
-                    morePages = false;
-                }
-                conn.disconnect();
+                in.close();
             }
+            conn.disconnect();
+
             for (Member member : searchResults.values()) {
                 if (member.getBungieGlobalDisplayName().equalsIgnoreCase(splitBungieId[0].trim())
                         && Integer.parseInt(member.getBungieGlobalDisplayNameCode()) == Integer
@@ -2484,7 +2481,7 @@ public class RaidReportTool {
                 }
             });
         }
-        mmrs.sort((mmr1, mmr2) -> (mmr1).compareTo(mmr2));
+        mmrs.sort((mmr1, mmr2) -> (mmr2).compareTo(mmr1));
         for (int i = 0; i < mmrs.size(); i++) {
             Member found = null;
             for (Entry<Member, Double> entry : fireteamMmrMap.entrySet()) {
@@ -2505,24 +2502,30 @@ public class RaidReportTool {
                 team = 1;
             }
         }
+
         if (sortedFireteamMmrMap.size() % 2 == 1) {
             fireteamBalanceMap.put(sortedFireteamMmrMap.lastEntry().getKey(), 2);
         }
 
-        response.append("Team 1\n-----\n");
-        for (Entry<Member, Integer> entry : fireteamBalanceMap.entrySet()) {
-            if (entry.getValue() == 1) {
-                response.append(String.format("%s#%s | %.2f\n", entry.getKey().getBungieGlobalDisplayName(),
-                        entry.getKey().getBungieGlobalDisplayNameCode(), sortedFireteamMmrMap.get(entry.getKey())));
+        StringBuilder teamOne = new StringBuilder();
+        teamOne.append("\nTeam 1\n-----\n");
+        StringBuilder teamTwo = new StringBuilder();
+        teamTwo.append("\nTeam 2\n-----\n");
+        response.append("Fireteam Sorted by MMR\n---------\n");
+
+        for (Entry<Member, Double> entry : sortedFireteamMmrMap.entrySet()) {
+            response.append(String.format("%s#%s | %.2f\n", entry.getKey().getBungieGlobalDisplayName(),
+                    entry.getKey().getBungieGlobalDisplayNameCode(), sortedFireteamMmrMap.get(entry.getKey())));
+
+            if (fireteamBalanceMap.get(entry.getKey()) == 1) {
+                teamOne.append(String.format("%s#%s\n", entry.getKey().getBungieGlobalDisplayName(),
+                        entry.getKey().getBungieGlobalDisplayNameCode()));
+            } else {
+                teamTwo.append(String.format("%s#%s\n", entry.getKey().getBungieGlobalDisplayName(),
+                        entry.getKey().getBungieGlobalDisplayNameCode()));
             }
         }
-        response.append("Team 2\n-----\n");
-        for (Entry<Member, Integer> entry : fireteamBalanceMap.entrySet()) {
-            if (entry.getValue() == 2) {
-                response.append(String.format("%s#%s | %.2f\n", entry.getKey().getBungieGlobalDisplayName(),
-                        entry.getKey().getBungieGlobalDisplayNameCode(), sortedFireteamMmrMap.get(entry.getKey())));
-            }
-        }
+        response.append(teamOne).append(teamTwo);
         return response.toString();
     }
 
