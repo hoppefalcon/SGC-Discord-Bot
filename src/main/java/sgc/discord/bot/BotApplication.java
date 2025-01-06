@@ -337,6 +337,11 @@ public class BotApplication {
 				.setDescription("Pulls a list of members from the clan that haven registered with Charlemagne")
 				.addOption(clanCallSignOption.build()));
 
+		commandList.add(new SlashCommandBuilder().setName("balance-teams")
+				.setDescription(
+						"Balances the user's fireteam members across two teams for private Crucible. (Requires full Bungie ID)")
+				.addOption(bungieIdOption.build()));
+
 		API.bulkOverwriteGlobalApplicationCommands(commandList).join();
 
 		API.addSlashCommandCreateListener(slashCommandListener);

@@ -5,6 +5,7 @@ import org.javacord.api.interaction.SlashCommandInteraction;
 import org.springframework.stereotype.Component;
 
 import sgc.discord.bot.commands.impl.AllRedeemablesCommand;
+import sgc.discord.bot.commands.impl.BalancePrivateCrucibleCommand;
 import sgc.discord.bot.commands.impl.ClanChatReportCommand;
 import sgc.discord.bot.commands.impl.ClanInternalActivityReportCommand;
 import sgc.discord.bot.commands.impl.ClanRaidReportCommand;
@@ -104,6 +105,9 @@ public class SlashCommandListenerImpl implements SlashCommandListener {
                 new NotRegisteredMembersCommand().handle(slashCommandInteraction);
                 break;
 
+            case "balance-teams":
+                new BalancePrivateCrucibleCommand().handle(slashCommandInteraction);
+                break;
             default:
                 break;
         }

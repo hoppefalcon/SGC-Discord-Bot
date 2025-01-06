@@ -19,10 +19,13 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -557,7 +560,7 @@ public class RaidReportTool {
         return response.toString();
     }
 
-    public static Member getMemberInformationWithCharacters(String bungieId, boolean OnlyActiveCharacters)
+    public static Member getMemberInformation(String bungieId)
             throws Exception {
         String[] splitBungieId = bungieId.split("#");
 
@@ -644,11 +647,18 @@ public class RaidReportTool {
             if (user == null) {
                 user = getMemberFromClanList(bungieId);
             }
-            if (user != null) {
-                getMembersActiveCharacters(user);
-                if (!OnlyActiveCharacters) {
-                    getMembersDeletedCharacters(user);
-                }
+        }
+        return user;
+    }
+
+    public static Member getMemberInformationWithCharacters(String bungieId, boolean OnlyActiveCharacters)
+            throws Exception {
+        Member user = getMemberInformation(bungieId);
+
+        if (user != null) {
+            getMembersActiveCharacters(user);
+            if (!OnlyActiveCharacters) {
+                getMembersDeletedCharacters(user);
             }
         }
         return user;
@@ -2451,4 +2461,211 @@ public class RaidReportTool {
         conn.disconnect();
         return manifestLocation;
     }
+
+    public static String getFireteamBalance(String bungieId) throws Exception {
+        Member member = getMemberInformation(bungieId);
+        final StringBuilder response = new StringBuilder();
+        HashMap<Member, Double> fireteamMmrMap = new HashMap<>();
+        LinkedHashMap<Member, Double> sortedFireteamMmrMap = new LinkedHashMap<>();
+        HashMap<Member, Integer> fireteamBalanceMap = new HashMap<>();
+        ArrayList<Double> mmrs = new ArrayList<>();
+        ArrayList<Member> fireteamMembers = null;
+        if (member != null) {
+            fireteamMembers = getFireteamMembers(member);
+            fireteamMembers.forEach(fireteamMember -> {
+                try {
+                    Double memberMmr = calculateMemberMmr(fireteamMember);
+                    fireteamMmrMap.put(fireteamMember,
+                            memberMmr);
+                    mmrs.add(memberMmr);
+                } catch (IOException | URISyntaxException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            });
+        }
+        mmrs.sort((mmr1, mmr2) -> (mmr1).compareTo(mmr2));
+        for (int i = 0; i < mmrs.size(); i++) {
+            Member found = null;
+            for (Entry<Member, Double> entry : fireteamMmrMap.entrySet()) {
+                if (mmrs.get(i).equals(entry.getValue()) && found == null) {
+                    sortedFireteamMmrMap.put(entry.getKey(), entry.getValue());
+                    found = entry.getKey();
+                }
+            }
+
+            fireteamMmrMap.remove(found);
+        }
+        int team = 1;
+        for (Entry<Member, Double> entry : sortedFireteamMmrMap.entrySet()) {
+            fireteamBalanceMap.put(entry.getKey(), team);
+            if (team == 1) {
+                team = 2;
+            } else {
+                team = 1;
+            }
+        }
+        if (sortedFireteamMmrMap.size() % 2 == 1) {
+            fireteamBalanceMap.put(sortedFireteamMmrMap.lastEntry().getKey(), 2);
+        }
+
+        response.append("Team 1\n-----\n");
+        for (Entry<Member, Integer> entry : fireteamBalanceMap.entrySet()) {
+            if (entry.getValue() == 1) {
+                response.append(String.format("%s#%s | %.2f\n", entry.getKey().getBungieGlobalDisplayName(),
+                        entry.getKey().getBungieGlobalDisplayNameCode(), sortedFireteamMmrMap.get(entry.getKey())));
+            }
+        }
+        response.append("Team 2\n-----\n");
+        for (Entry<Member, Integer> entry : fireteamBalanceMap.entrySet()) {
+            if (entry.getValue() == 2) {
+                response.append(String.format("%s#%s | %.2f\n", entry.getKey().getBungieGlobalDisplayName(),
+                        entry.getKey().getBungieGlobalDisplayNameCode(), sortedFireteamMmrMap.get(entry.getKey())));
+            }
+        }
+        return response.toString();
+    }
+
+    private static ArrayList<Member> getFireteamMembers(Member member) throws URISyntaxException, IOException {
+        ArrayList<Member> fireteamMembers = new ArrayList<>();
+
+        URL url = new URI(String.format("https://www.bungie.net/Platform/Destiny2/%s/Profile/%s/?components=1000",
+                member.getMemberType(), member.getUID())).toURL();
+
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.addRequestProperty("X-API-Key", apiKey);
+        conn.addRequestProperty("Accept", "Application/Json");
+        conn.connect();
+
+        // Getting the response code
+        int responseCode = conn.getResponseCode();
+        if (responseCode == 200) {
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+                String inputLine;
+                StringBuilder content = new StringBuilder();
+                while ((inputLine = in.readLine()) != null) {
+                    content.append(inputLine);
+                }
+                JsonArray results = JsonParser.parseString(content.toString()).getAsJsonObject()
+                        .getAsJsonObject("Response")
+                        .getAsJsonObject("profileTransitoryData")
+                        .getAsJsonObject("data")
+                        .getAsJsonArray("partyMembers");
+
+                results.forEach((entry) -> {
+
+                    try {
+                        String membershipId = entry.getAsJsonObject().get("membershipId").getAsString();
+                        Member fireteamMember = getMemberByDestinyMembershipId(membershipId);
+                        if (fireteamMember != null) {
+                            fireteamMembers.add(fireteamMember);
+                        }
+                    } catch (Exception ex) {
+                        LOGGER.error("Error processing JSON result from " + url.toExternalForm(), ex);
+                    }
+
+                });
+                in.close();
+            }
+        }
+        conn.disconnect();
+
+        return fireteamMembers;
+    }
+
+    private static Member getMemberByDestinyMembershipId(String destinyMembershipId)
+            throws URISyntaxException, IOException {
+        Member member = null;
+        URL url = new URI(String.format("https://www.bungie.net/Platform/User/GetMembershipsById/%s/0/",
+                destinyMembershipId)).toURL();
+
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.addRequestProperty("X-API-Key", apiKey);
+        conn.addRequestProperty("Accept", "Application/Json");
+        conn.connect();
+
+        // Getting the response code
+        int responseCode = conn.getResponseCode();
+        if (responseCode == 200) {
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+                String inputLine;
+                StringBuilder content = new StringBuilder();
+                while ((inputLine = in.readLine()) != null) {
+                    content.append(inputLine);
+                }
+                JsonArray results = JsonParser.parseString(content.toString()).getAsJsonObject()
+                        .getAsJsonObject("Response")
+                        .getAsJsonArray("destinyMemberships");
+                JsonElement entry = results.get(0);
+                try {
+                    String bungieGlobalDisplayName = entry.getAsJsonObject().get("bungieGlobalDisplayName")
+                            .getAsString();
+                    String bungieGlobalDisplayNameCode = entry.getAsJsonObject().get("bungieGlobalDisplayNameCode")
+                            .getAsString();
+                    member = getMemberInformation(bungieGlobalDisplayName + "#" + bungieGlobalDisplayNameCode);
+
+                } catch (Exception ex) {
+                    LOGGER.error("Error processing JSON result from " + url.toExternalForm(), ex);
+                }
+                in.close();
+            }
+        }
+        conn.disconnect();
+        return member;
+    }
+
+    private static Double calculateMemberMmr(Member member) throws IOException, URISyntaxException {
+        Double memberSeasonalCrucibleKDA = getMemberSeasonalCrucibleKDA(member);
+        Double memberCareerCrucibleWinLossRatio = null;
+        Double memberCareerCrucibleKDA = null;
+
+        URL url = new URI(
+                String.format("https://www.bungie.net/Platform/Destiny2/%s/Account/%s/Stats/?groups=1",
+                        member.getMemberType(), member.getUID()))
+                .toURL();
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.addRequestProperty("X-API-Key", apiKey);
+        conn.addRequestProperty("Accept", "Application/Json");
+        conn.connect();
+
+        // Getting the response code
+        int responseCode = conn.getResponseCode();
+        if (responseCode == 200) {
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+                String inputLine;
+                StringBuilder content = new StringBuilder();
+                while ((inputLine = in.readLine()) != null) {
+                    content.append(inputLine);
+                }
+                JsonObject results = JsonParser.parseString(content.toString()).getAsJsonObject()
+                        .getAsJsonObject("Response")
+                        .getAsJsonObject("mergedAllCharacters")
+                        .getAsJsonObject("results")
+                        .getAsJsonObject("allPvP")
+                        .getAsJsonObject("allTime");
+
+                memberCareerCrucibleWinLossRatio = results.getAsJsonObject().getAsJsonObject("winLossRatio")
+                        .getAsJsonObject("basic").get("value").getAsDouble();
+                memberCareerCrucibleKDA = results.getAsJsonObject().getAsJsonObject("killsDeathsAssists")
+                        .getAsJsonObject("basic").get("value").getAsDouble();
+
+                in.close();
+            }
+        }
+        conn.disconnect();
+        if (memberSeasonalCrucibleKDA != null && memberCareerCrucibleWinLossRatio != null
+                && memberCareerCrucibleKDA != null)
+            return ((memberSeasonalCrucibleKDA + memberCareerCrucibleKDA) / 2.0) * memberCareerCrucibleWinLossRatio;
+        else
+            return null;
+    }
+
+    private static Double getMemberSeasonalCrucibleKDA(Member member) throws IOException, URISyntaxException {
+        HashMap<String, Integer> membersMetrics = getMembersMetrics(member, Arrays.asList("871184140"));
+        return membersMetrics.get("871184140") / 100.0;
+    }
+
 }
