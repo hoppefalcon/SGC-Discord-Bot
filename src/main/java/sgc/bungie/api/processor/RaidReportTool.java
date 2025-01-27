@@ -1876,26 +1876,34 @@ public class RaidReportTool {
         // Getting the response code
         int responsecode = conn.getResponseCode();
         if (responsecode == 200) {
-            BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            String inputLine;
-            StringBuffer content = new StringBuffer();
-            while ((inputLine = in.readLine()) != null) {
-                content.append(inputLine);
-            }
-            JsonObject results = JsonParser.parseString(content.toString()).getAsJsonObject()
-                    .getAsJsonObject("Response").getAsJsonObject("metrics").getAsJsonObject("data")
-                    .getAsJsonObject("metrics");
-            metricsHashIntegers.forEach((hash) -> {
-                try {
-                    JsonObject metric = results.getAsJsonObject(hash).getAsJsonObject("objectiveProgress");
-                    response.put(hash, metric.get("progress").getAsInt());
-                } catch (Exception ex) {
-                    LOGGER.error("Error processing JSON result from "
-                            + url.toExternalForm(), ex);
-                    response.put(hash, null);
+            try {
+                BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                String inputLine;
+                StringBuffer content = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    content.append(inputLine);
                 }
-            });
-            in.close();
+                JsonObject results = JsonParser.parseString(content.toString()).getAsJsonObject()
+                        .getAsJsonObject("Response").getAsJsonObject("metrics").getAsJsonObject("data")
+                        .getAsJsonObject("metrics");
+                metricsHashIntegers.forEach((hash) -> {
+                    try {
+                        JsonObject metric = results.getAsJsonObject(hash).getAsJsonObject("objectiveProgress");
+                        response.put(hash, metric.get("progress").getAsInt());
+                    } catch (Exception ex) {
+                        LOGGER.error("Error processing JSON result from "
+                                + url.toExternalForm(), ex);
+                        response.put(hash, null);
+                    }
+                });
+                in.close();
+            } catch (Exception ex) {
+                LOGGER.error("Error processing JSON result from "
+                        + url.toExternalForm(), ex);
+                metricsHashIntegers.forEach(hash -> {
+                    response.put(hash, null);
+                });
+            }
         }
         conn.disconnect();
         return response;
@@ -2467,6 +2475,7 @@ public class RaidReportTool {
         HashMap<Member, Integer> fireteamBalanceMap = new HashMap<>();
         ArrayList<Double> mmrs = new ArrayList<>();
         ArrayList<Member> fireteamMembers = null;
+        ArrayList<Member> privateFireteamMembers = new ArrayList<>();
         if (member != null) {
             fireteamMembers = getFireteamMembers(member);
             fireteamMembers.forEach(fireteamMember -> {
@@ -2474,8 +2483,12 @@ public class RaidReportTool {
                     Double memberMmr = calculateMemberMmr(fireteamMember);
                     fireteamMmrMap.put(fireteamMember,
                             memberMmr);
-                    mmrs.add(memberMmr);
-                } catch (IOException | URISyntaxException e) {
+                    if (memberMmr != null) {
+                        mmrs.add(memberMmr);
+                    } else {
+                        privateFireteamMembers.add(fireteamMember);
+                    }
+                } catch (Exception e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
@@ -2525,7 +2538,17 @@ public class RaidReportTool {
                         entry.getKey().getBungieGlobalDisplayNameCode()));
             }
         }
+
+        StringBuilder privateMembers = new StringBuilder();
+        privateMembers.append("\nFireteam Members with Privacy Settings\n-----\n");
+        for (Member pMember : privateFireteamMembers) {
+            privateMembers.append(String.format("%s#%s\n", pMember.getBungieGlobalDisplayName(),
+                    pMember.getBungieGlobalDisplayNameCode()));
+        }
         response.append(teamOne).append(teamTwo);
+        if (privateFireteamMembers.size() > 0) {
+            response.append(privateMembers);
+        }
         return response.toString();
     }
 
@@ -2570,6 +2593,8 @@ public class RaidReportTool {
 
                 });
                 in.close();
+            } catch (Exception ex) {
+                LOGGER.error("Error processing JSON result from " + url.toExternalForm(), ex);
             }
         }
         conn.disconnect();
@@ -2668,6 +2693,9 @@ public class RaidReportTool {
 
     private static Double getMemberSeasonalCrucibleKDA(Member member) throws IOException, URISyntaxException {
         HashMap<String, Integer> membersMetrics = getMembersMetrics(member, Arrays.asList("871184140"));
+        if (membersMetrics.get("871184140") == null) {
+            return null;
+        }
         return membersMetrics.get("871184140") / 100.0;
     }
 
