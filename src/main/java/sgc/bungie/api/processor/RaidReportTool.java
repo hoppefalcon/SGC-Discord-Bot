@@ -1102,6 +1102,13 @@ public class RaidReportTool {
         return clan;
     }
 
+    public static Clan initializeClan(String bungieID) throws IOException, URISyntaxException, InterruptedException {
+        Clan clan = new Clan(bungieID, Platform.PC);
+        getClanInfo(clan);
+        getClanMembers(clan);
+        return clan;
+    }
+
     public static HashMap<String, Member> initializeClanMembersMap(List<Clan> clanList) {
         HashMap<String, Member> sgcClanMembersMap = new HashMap<>();
 
@@ -1944,6 +1951,8 @@ public class RaidReportTool {
             stringBuilder.append(dungeon.name).append(",");
         });
 
+        stringBuilder.append("\n");
+
         clan.getMembers().forEach((id, member) -> {
             HashMap<Dungeon, Integer> dungeonClears = member.getDungeonClears();
             stringBuilder.append("\"").append(member.getDisplayName()).append("\",")
@@ -1958,6 +1967,17 @@ public class RaidReportTool {
     }
 
     private static void getClanMemberDungeonReport(Member member) {
+        LOGGER.trace("Processing " + member.getDisplayName());
+        try {
+            getAllMembersCharacters(member);
+            getMemberDungeonInfo(member);
+        } catch (Exception e) {
+            LOGGER.error("Error processing Clan Member Dungeon Report for " + member.getDisplayName(), e);
+        }
+        LOGGER.trace("Finished Processing " + member.getDisplayName());
+    }
+
+    private static void getClanMemberWeeklyDungeonReport(Member member) {
         LOGGER.trace("Processing " + member.getDisplayName());
         try {
             getAllMembersCharacters(member);
