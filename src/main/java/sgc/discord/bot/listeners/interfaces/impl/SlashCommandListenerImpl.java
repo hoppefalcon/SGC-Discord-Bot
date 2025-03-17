@@ -12,6 +12,7 @@ import sgc.discord.bot.commands.impl.ClanRaidReportCommand;
 import sgc.discord.bot.commands.impl.InfographicCommand;
 import sgc.discord.bot.commands.impl.InformationMessageCommand;
 import sgc.discord.bot.commands.impl.NotRegisteredMembersCommand;
+import sgc.discord.bot.commands.impl.PrivateCrucibleOptionGenerator;
 import sgc.discord.bot.commands.impl.RaidCarnageReportCommand;
 import sgc.discord.bot.commands.impl.RoleMemberListCommand;
 import sgc.discord.bot.commands.impl.SGCActivityReportCommand;
@@ -108,6 +109,11 @@ public class SlashCommandListenerImpl implements SlashCommandListener {
             case "balance-teams":
                 new BalancePrivateCrucibleCommand().handle(slashCommandInteraction);
                 break;
+
+            case "crucible-options":
+                new PrivateCrucibleOptionGenerator().handle(slashCommandInteraction);
+                break;
+
             default:
                 break;
         }

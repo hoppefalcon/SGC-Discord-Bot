@@ -37,6 +37,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
@@ -68,7 +69,7 @@ public class RaidReportTool {
     private static final HashMap<String, String> xbClanIdMap = new HashMap<>();
     private static final HashMap<String, String> psClanIdMap = new HashMap<>();
 
-    private static ExecutorService executorService = Executors.newFixedThreadPool(5);
+    private static ExecutorService executorService = Executors.newFixedThreadPool(10);
     public static ReentrantLock resourceLock = new ReentrantLock();
 
     /**
@@ -919,7 +920,6 @@ public class RaidReportTool {
 
             clan.getMembers().forEach((memberId, member) -> {
                 tasks.add(() -> {
-
                     if (member.hasNewBungieName()) {
                         for (int k = 0; k < weeksList.size(); k++) {
 
@@ -928,16 +928,17 @@ public class RaidReportTool {
                                 TOTAL_PGCR_COUNT.addAndGet(
                                         getMembersClearedActivities(member, weeksList.get(k),
                                                 weeksList.get(k).plusDays(6),
-                                                sgcClanMembersMap, 0, false));
+                                                sgcClanMembersMap, 0, true));
 
                                 SCORED_PGCR_COUNT.addAndGet(member.getWeeklySGCActivity().get("COUNT"));
-                                LOGGER.debug("Finished processing " + member.getDisplayName());
+                                appendWeeklyResultsToAnnual(member, annualValues);
+                                LOGGER.info(String.format("Finished processing %s week %d/%d", member.getDisplayName(),
+                                        k + 1, weeksList.size()));
                             } catch (Throwable ex) {
                                 LOGGER.error("Error processing " + member.getDisplayName(), ex);
+                            } finally {
+                                member.zeroOut();
                             }
-
-                            appendWeeklyResultsToAnnual(member, annualValues);
-                            member.zeroOut();
                         }
                     }
                     LOGGER.info(String.format("Finished processing %d/%d", completed.incrementAndGet(), totalMembers));
@@ -2719,4 +2720,30 @@ public class RaidReportTool {
         return membersMetrics.get("871184140") / 100.0;
     }
 
+    public static Pair<String, String> getRandomPrivateCrucibleOptions() {
+        Map<String, Integer> crucubleMapWeights = GoogleDriveUtil.getCrucubleMapWeights();
+        Map<String, Integer> crucubleModeWeights = GoogleDriveUtil.getCrucubleModeWeights();
+        try {
+            String randomMap = (String) getRandomSelectionWithWeights(crucubleMapWeights);
+            String randomMode = (String) getRandomSelectionWithWeights(crucubleModeWeights);
+            return Pair.of(randomMap, randomMode);
+        } catch (Exception ex) {
+            LOGGER.error("Error generating Random Private Crucible Options", ex);
+            return null;
+        }
+    }
+
+    private static Object getRandomSelectionWithWeights(Map<? extends Object, Integer> items) {
+        int completeWeight = 0;
+        for (Integer weight : items.values())
+            completeWeight += weight;
+        int r = (int) Math.round(Math.random() * completeWeight);
+        int countWeight = 0;
+        for (Object item : items.keySet()) {
+            countWeight += items.get(item);
+            if (countWeight >= r)
+                return item;
+        }
+        throw new RuntimeException("Should never be shown. I never got a random pick.");
+    }
 }

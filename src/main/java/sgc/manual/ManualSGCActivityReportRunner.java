@@ -20,11 +20,11 @@ public class ManualSGCActivityReportRunner {
 
         public static void main(String[] args) throws InterruptedException, IOException {
 
-                int year = 2023;
+                int year = 2024;
                 // LocalDate startDate = YearMonth.of(year, 1).atDay(1);
                 // LocalDate endDate = YearMonth.of(year, 12).atEndOfMonth();
                 LocalDate startDate = YearMonth.of(year, 1).atDay(1);
-                LocalDate endDate = YearMonth.of(year, 12).atDay(10);
+                LocalDate endDate = YearMonth.of(year, 12).atDay(31);
                 LOGGER.info(String.format("Starting %s to %s SGC Activity Report", startDate.toString(),
                                 endDate.toString()));
 

@@ -296,4 +296,50 @@ public class GoogleDriveUtil {
         }
         return roleID;
     }
+
+    public static Map<String, Integer> getCrucubleMapWeights() {
+        HashMap<String, Integer> weights = new HashMap<>();
+        try {
+            final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
+            final String spreadsheetId = "1vGH6LXObJBMigCbXAT86hpBF5hiZj-fJDzoXdBEGljg";
+            final String range = "Maps!A2:B";
+            Sheets service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getGoogleSheetsHttpRequestInitializer())
+                    .setApplicationName(APPLICATION_NAME)
+                    .build();
+            ValueRange response = service.spreadsheets().values()
+                    .get(spreadsheetId, range)
+                    .execute();
+            List<List<Object>> values = response.getValues();
+            for (List<Object> row : values) {
+                weights.put((String) row.get(0),
+                        Integer.parseInt((String) row.get(1)));
+            }
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+        return weights;
+    }
+
+    public static Map<String, Integer> getCrucubleModeWeights() {
+        HashMap<String, Integer> weights = new HashMap<>();
+        try {
+            final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
+            final String spreadsheetId = "1vGH6LXObJBMigCbXAT86hpBF5hiZj-fJDzoXdBEGljg";
+            final String range = "Modes!A2:B";
+            Sheets service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getGoogleSheetsHttpRequestInitializer())
+                    .setApplicationName(APPLICATION_NAME)
+                    .build();
+            ValueRange response = service.spreadsheets().values()
+                    .get(spreadsheetId, range)
+                    .execute();
+            List<List<Object>> values = response.getValues();
+            for (List<Object> row : values) {
+                weights.put((String) row.get(0),
+                        Integer.parseInt((String) row.get(1)));
+            }
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+        return weights;
+    }
 }

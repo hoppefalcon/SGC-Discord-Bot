@@ -342,6 +342,9 @@ public class BotApplication {
 						"Balances fireteam members for private Crucible. (Requires full Bungie ID)")
 				.addOption(bungieIdOption.build()));
 
+		commandList.add(new SlashCommandBuilder().setName("crucible-options").setDescription(
+				"Generates a Random Map and Mode for Private Crucible"));
+
 		API.bulkOverwriteGlobalApplicationCommands(commandList).join();
 
 		API.addSlashCommandCreateListener(slashCommandListener);
