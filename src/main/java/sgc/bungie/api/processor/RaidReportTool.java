@@ -2746,4 +2746,18 @@ public class RaidReportTool {
         }
         throw new RuntimeException("Should never be shown. I never got a random pick.");
     }
+
+    public static Pair<String, String> getRandomPrivateGambitOptions() {
+        Map<String, Integer> gambitMapWeights = GoogleDriveUtil.getGambitMapWeights();
+        try {
+            String randomMap = (String) getRandomSelectionWithWeights(gambitMapWeights);
+
+            Map<String, Integer> gambitCombatantWeights = GoogleDriveUtil.getGambitMapCombatantsWithWeights(randomMap);
+            String randomCombatant = (String) getRandomSelectionWithWeights(gambitCombatantWeights);
+            return Pair.of(randomMap, randomCombatant);
+        } catch (Exception ex) {
+            LOGGER.error("Error generating Random Private Gambit Options", ex);
+            return null;
+        }
+    }
 }

@@ -342,4 +342,66 @@ public class GoogleDriveUtil {
         }
         return weights;
     }
+
+    public static Map<String, Integer> getGambitMapWeights() {
+        HashMap<String, Integer> weights = new HashMap<>();
+        try {
+            final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
+            final String spreadsheetId = "1WEKNB0kY5DmkuP4PDzQC3t3D17t9iPjn5tr1W_fD8v0";
+            final String range = "Maps!A2:C";
+            Sheets service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getGoogleSheetsHttpRequestInitializer())
+                    .setApplicationName(APPLICATION_NAME)
+                    .build();
+            ValueRange response = service.spreadsheets().values()
+                    .get(spreadsheetId, range)
+                    .execute();
+            List<List<Object>> values = response.getValues();
+            for (List<Object> row : values) {
+                weights.put((String) row.get(0),
+                        Integer.parseInt((String) row.get(2)));
+            }
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+        return weights;
+    }
+
+    public static Map<String, Integer> getGambitMapCombatantsWithWeights(String map) {
+        HashMap<String, Integer> weights = new HashMap<>();
+        try {
+            final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
+            final String spreadsheetId = "1WEKNB0kY5DmkuP4PDzQC3t3D17t9iPjn5tr1W_fD8v0";
+            final String range = "Maps!A2:C";
+            Sheets service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getGoogleSheetsHttpRequestInitializer())
+                    .setApplicationName(APPLICATION_NAME)
+                    .build();
+            ValueRange response = service.spreadsheets().values()
+                    .get(spreadsheetId, range)
+                    .execute();
+            List<List<Object>> values = response.getValues();
+            List<String> combatantUIDs = null;
+            for (List<Object> row : values) {
+                if (map.equals((String) row.get(0))) {
+                    combatantUIDs = Arrays.asList(((String) row.get(1)).split(","));
+                }
+            }
+            if (combatantUIDs != null) {
+                final String range2 = "Combatants!A2:C";
+                response = service.spreadsheets().values()
+                        .get(spreadsheetId, range2)
+                        .execute();
+                values = response.getValues();
+
+                for (List<Object> row : values) {
+                    if (combatantUIDs.contains((String) row.get(0))) {
+                        weights.put((String) row.get(1),
+                                Integer.parseInt((String) row.get(2)));
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+        return weights;
+    }
 }

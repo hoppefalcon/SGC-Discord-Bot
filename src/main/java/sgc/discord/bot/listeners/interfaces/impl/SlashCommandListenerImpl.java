@@ -13,6 +13,7 @@ import sgc.discord.bot.commands.impl.InfographicCommand;
 import sgc.discord.bot.commands.impl.InformationMessageCommand;
 import sgc.discord.bot.commands.impl.NotRegisteredMembersCommand;
 import sgc.discord.bot.commands.impl.PrivateCrucibleOptionGenerator;
+import sgc.discord.bot.commands.impl.PrivateGambitOptionGenerator;
 import sgc.discord.bot.commands.impl.RaidCarnageReportCommand;
 import sgc.discord.bot.commands.impl.RoleMemberListCommand;
 import sgc.discord.bot.commands.impl.SGCActivityReportCommand;
@@ -114,6 +115,9 @@ public class SlashCommandListenerImpl implements SlashCommandListener {
                 new PrivateCrucibleOptionGenerator().handle(slashCommandInteraction);
                 break;
 
+            case "gambit-options":
+                new PrivateGambitOptionGenerator().handle(slashCommandInteraction);
+                break;
             default:
                 break;
         }

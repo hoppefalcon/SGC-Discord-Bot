@@ -345,6 +345,9 @@ public class BotApplication {
 		commandList.add(new SlashCommandBuilder().setName("crucible-options").setDescription(
 				"Generates a Random Map and Mode for Private Crucible"));
 
+		commandList.add(new SlashCommandBuilder().setName("gambit-options").setDescription(
+				"Generates a Random Map and Combatant for Private Gambit"));
+
 		API.bulkOverwriteGlobalApplicationCommands(commandList).join();
 
 		API.addSlashCommandCreateListener(slashCommandListener);
