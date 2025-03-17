@@ -11,28 +11,28 @@ import sgc.discord.bot.BotApplication;
 import sgc.discord.bot.commands.Command;
 import sgc.bungie.api.processor.RaidReportTool;
 
-public class PrivateCrucibleOptionGenerator implements Command {
+public class PrivateGambitOptionGenerator implements Command {
 
         private static final Logger LOGGER = BotApplication.getLogger();
 
         @Override
         public void handle(SlashCommandInteraction slashCommandInteraction) {
                 System.gc();
-                LOGGER.info("Running Private Crucible Option Generator");
+                LOGGER.info("Running Private Gambit Option Generator");
 
                 slashCommandInteraction.respondLater().thenAccept(interactionOriginalResponseUpdater -> {
                         interactionOriginalResponseUpdater
-                                        .setContent("Running Private Crucible Option Generator").update();
+                                        .setContent("Running Private Gambit Option Generator").update();
 
                         try {
-                                Pair<String, String> randomPrivateCrucibleOptions = RaidReportTool
-                                                .getRandomPrivateCrucibleOptions();
-                                if (randomPrivateCrucibleOptions == null) {
+                                Pair<String, String> randomPrivateGambitOptions = RaidReportTool
+                                                .getRandomPrivateGambitOptions();
+                                if (randomPrivateGambitOptions == null) {
                                         interactionOriginalResponseUpdater.setContent("")
                                                         .addEmbed(new EmbedBuilder()
-                                                                        .setTitle("Private Crucible Option Generator")
+                                                                        .setTitle("Private Gambit Option Generator")
                                                                         .setDescription(
-                                                                                        "An Error occured Generating Private Crucible Options")
+                                                                                        "An Error occured Generating Private Gambit Options")
                                                                         .setFooter("ERROR")
                                                                         .setThumbnail(getClass().getClassLoader()
                                                                                         .getResourceAsStream(
@@ -42,14 +42,14 @@ public class PrivateCrucibleOptionGenerator implements Command {
                                 } else {
                                         interactionOriginalResponseUpdater
                                                         .addEmbed(new EmbedBuilder()
-                                                                        .setTitle("Private Crucible Option Generator")
+                                                                        .setTitle("Private Gambit Option Generator")
                                                                         .setDescription(String.format(
-                                                                                        "Map: %s\nMode: %s",
-                                                                                        randomPrivateCrucibleOptions
+                                                                                        "Map: %s\nCombatant: %s",
+                                                                                        randomPrivateGambitOptions
                                                                                                         .getLeft(),
-                                                                                        randomPrivateCrucibleOptions
+                                                                                        randomPrivateGambitOptions
                                                                                                         .getRight()))
-                                                                        .setFooter("Throw More Grenades!")
+                                                                        .setFooter("Lock 'n Load, Guardian!")
                                                                         .setThumbnail(getClass().getClassLoader()
                                                                                         .getResourceAsStream(
                                                                                                         "thumbnail.jpg"))
@@ -60,8 +60,8 @@ public class PrivateCrucibleOptionGenerator implements Command {
                                 LOGGER.error(e.getMessage(), e);
                                 interactionOriginalResponseUpdater.setContent("")
                                                 .addEmbed(new EmbedBuilder()
-                                                                .setTitle("Private Crucible Option Generator")
-                                                                .setDescription("An Error occured Generating Private Crucible Options")
+                                                                .setTitle("Private Gambit Option Generator")
+                                                                .setDescription("An Error occured Generating Private Gambit Options")
                                                                 .setFooter("ERROR")
                                                                 .setThumbnail(getClass().getClassLoader()
                                                                                 .getResourceAsStream("thumbnail.jpg"))
