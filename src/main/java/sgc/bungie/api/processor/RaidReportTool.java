@@ -1212,8 +1212,9 @@ public class RaidReportTool {
                                                             .getAsJsonPrimitive("directorActivityHash")
                                                             .getAsString()
                                                             + " is returning as Mode.RAID but is not associated to a raid.");
+                                                } else {
+                                                    character.addCompletedRaid(raid);
                                                 }
-                                                character.addCompletedRaid(raid);
                                             } else if (Mode.getFromValue(activityMode).equals(Mode.DUNGEON)) {
                                                 Dungeon dungeon = Dungeon.getDungeon(result.getAsJsonObject()
                                                         .getAsJsonObject("activityDetails")
@@ -1225,8 +1226,9 @@ public class RaidReportTool {
                                                             .getAsJsonPrimitive("directorActivityHash")
                                                             .getAsString()
                                                             + " is returning as Mode.DUNGEON but is not associated to a dungeon.");
+                                                } else {
+                                                    character.addCompletedDungeon(dungeon);
                                                 }
-                                                character.addCompletedDungeon(dungeon);
                                             } else {
                                                 character.addCompletedMode(Mode.getFromValue(activityMode));
                                             }
