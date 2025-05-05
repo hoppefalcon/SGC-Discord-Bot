@@ -379,10 +379,13 @@ public class GoogleDriveUtil {
                     .get(spreadsheetId, range)
                     .execute();
             List<List<Object>> values = response.getValues();
-            List<String> combatantUIDs = null;
+            List<String> combatantUIDs = new ArrayList<>();
             for (List<Object> row : values) {
                 if (map.equals((String) row.get(0))) {
-                    combatantUIDs = Arrays.asList(((String) row.get(1)).split(","));
+                    // combatantUIDs = Arrays.asList(((String) row.get(1)).split(","));
+                    for (String str : ((String) row.get(1)).split(",")) {
+                        combatantUIDs.add(str.trim());
+                    }
                 }
             }
             if (combatantUIDs != null) {

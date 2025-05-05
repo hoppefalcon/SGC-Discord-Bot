@@ -72,6 +72,9 @@ public class RaidReportTool {
     private static ExecutorService executorService = Executors.newFixedThreadPool(10);
     public static ReentrantLock resourceLock = new ReentrantLock();
 
+    private static final int MAX_RETRIES = 5; // Maximum times to retry a Bungie API Call
+    private static final int TIME_DELAY = 30000; // Time Delay in Milliseconds between each Bungie API retry
+
     /**
      * Initializes the clan ID maps.
      */
@@ -227,16 +230,9 @@ public class RaidReportTool {
     public static void getClanInfo(Clan clan) throws IOException, URISyntaxException {
         URL url = new URI(String.format("https://www.bungie.net/Platform/GroupV2/%s/", clan.getClanId())).toURL();
 
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("GET");
-        conn.addRequestProperty("X-API-Key", apiKey);
-        conn.addRequestProperty("Accept", "Application/Json");
-        conn.connect();
-
-        // Getting the response code
-        int responseCode = conn.getResponseCode();
-
-        if (responseCode == 200) {
+        HttpURLConnection conn = getBungieAPIResponse(url,
+                String.format("getClanInfo: %s <%s>", clan.getCallsign(), clan.getClanId()));
+        if (conn != null) {
             try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
                 String inputLine;
                 StringBuilder content = new StringBuilder();
@@ -251,8 +247,9 @@ public class RaidReportTool {
                 clan.setCallsign(detail.getAsJsonObject("clanInfo").get("clanCallsign").getAsString());
                 in.close();
             }
+
+            conn.disconnect();
         }
-        conn.disconnect();
     }
 
     /**
@@ -267,16 +264,9 @@ public class RaidReportTool {
         URL url = new URI(String.format("https://www.bungie.net/Platform/GroupV2/%s/Members/", clan.getClanId()))
                 .toURL();
 
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("GET");
-        conn.addRequestProperty("X-API-Key", apiKey);
-        conn.addRequestProperty("Accept", "Application/Json");
-        conn.connect();
-
-        // Getting the response code
-        int responseCode = conn.getResponseCode();
-
-        if (responseCode == 200) {
+        HttpURLConnection conn = getBungieAPIResponse(url,
+                String.format("getClanMembers: %s <%s>", clan.getCallsign(), clan.getClanId()));
+        if (conn != null) {
             try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
                 String inputLine;
                 StringBuilder content = new StringBuilder();
@@ -311,8 +301,9 @@ public class RaidReportTool {
 
                 });
             }
+
+            conn.disconnect();
         }
-        conn.disconnect();
     }
 
     /**
@@ -337,16 +328,9 @@ public class RaidReportTool {
     public static void getMembersActiveCharacters(Member member) throws IOException, URISyntaxException {
         URL url = new URI(String.format("https://www.bungie.net/Platform/Destiny2/%s/Profile/%s/?components=Characters",
                 member.getMemberType(), member.getUID())).toURL();
-
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("GET");
-        conn.addRequestProperty("X-API-Key", apiKey);
-        conn.addRequestProperty("Accept", "Application/Json");
-        conn.connect();
-
-        // Getting the response code
-        int responseCode = conn.getResponseCode();
-        if (responseCode == 200) {
+        HttpURLConnection conn = getBungieAPIResponse(url,
+                String.format("getMembersActiveCharacters: %s", member.getCombinedBungieGlobalDisplayName()));
+        if (conn != null) {
             try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
                 String inputLine;
                 StringBuilder content = new StringBuilder();
@@ -376,8 +360,8 @@ public class RaidReportTool {
                 });
                 in.close();
             }
+            conn.disconnect();
         }
-        conn.disconnect();
     }
 
     /**
@@ -405,43 +389,37 @@ public class RaidReportTool {
 
         try {
             // Open connection and set request properties
-            conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
-            conn.addRequestProperty("X-API-Key", apiKey);
-            conn.addRequestProperty("Accept", "Application/Json");
-            conn.connect();
+            conn = getBungieAPIResponse(url,
+                    String.format("getMembersDeletedCharacters: %s", member.getCombinedBungieGlobalDisplayName()));
 
-            // Check the response code
-            int responseCode = conn.getResponseCode();
-            if (responseCode == 200) {
-                // Read the response
-                in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                StringBuilder content = new StringBuilder();
-                String inputLine;
+            // Read the response
+            in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            StringBuilder content = new StringBuilder();
+            String inputLine;
 
-                while ((inputLine = in.readLine()) != null) {
-                    content.append(inputLine);
-                }
-
-                // Parse the JSON response
-                JsonObject response = JsonParser.parseString(content.toString()).getAsJsonObject()
-                        .getAsJsonObject("Response");
-                JsonArray characters = response.getAsJsonArray("characters");
-
-                // Process each character entry
-                characters.forEach(entry -> {
-                    try {
-                        String characterId = entry.getAsJsonObject().get("characterId").getAsString();
-
-                        // Add new character entry if not already present
-                        if (member.getCharacters().get(characterId) == null) {
-                            member.getCharacters().put(characterId, new Character(characterId, null, null));
-                        }
-                    } catch (Exception ex) {
-                        LOGGER.error(ex.getMessage(), ex);
-                    }
-                });
+            while ((inputLine = in.readLine()) != null) {
+                content.append(inputLine);
             }
+
+            // Parse the JSON response
+            JsonObject response = JsonParser.parseString(content.toString()).getAsJsonObject()
+                    .getAsJsonObject("Response");
+            JsonArray characters = response.getAsJsonArray("characters");
+
+            // Process each character entry
+            characters.forEach(entry -> {
+                try {
+                    String characterId = entry.getAsJsonObject().get("characterId").getAsString();
+
+                    // Add new character entry if not already present
+                    if (member.getCharacters().get(characterId) == null) {
+                        member.getCharacters().put(characterId, new Character(characterId, null, null));
+                    }
+                } catch (Exception ex) {
+                    LOGGER.error(ex.getMessage(), ex);
+                }
+            });
+
         } finally {
             // Close resources in the finally block
             if (in != null) {
@@ -460,25 +438,16 @@ public class RaidReportTool {
                 URL url = new URI(String.format(
                         "https://www.bungie.net/Platform/Destiny2/%s/Account/%s/Character/%s/Stats/AggregateActivityStats",
                         member.getMemberType(), member.getUID(), character.getUID())).toURL();
-
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("GET");
-                conn.addRequestProperty("X-API-Key", apiKey);
-                conn.addRequestProperty("Accept", "Application/Json");
-                conn.connect();
-
-                // Getting the response code
-                int responsecode = conn.getResponseCode();
-
-                if (responsecode == 200) {
+                HttpURLConnection conn = getBungieAPIResponse(url,
+                        String.format("getMemberRaidInfo : %s[%s]", member.getCombinedBungieGlobalDisplayName(),
+                                characterId));
+                if (conn != null) {
                     BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
                     String inputLine;
                     StringBuffer content = new StringBuffer();
                     while ((inputLine = in.readLine()) != null) {
                         content.append(inputLine);
                     }
-                    // JsonObject json =
-                    // JsonParser.parseString(content.toString()).getAsJsonObject();
                     JsonArray results = (JsonArray) JsonParser.parseString(content.toString()).getAsJsonObject()
                             .getAsJsonObject("Response").get("activities");
                     List<JsonObject> raids = IntStream.range(0, results.size())
@@ -496,9 +465,8 @@ public class RaidReportTool {
                     });
 
                     in.close();
+                    conn.disconnect();
                 }
-                conn.disconnect();
-
             } catch (Exception ex) {
                 LOGGER.error("Error processing JSON result for characterID: "
                         + characterId, ex);
@@ -575,24 +543,14 @@ public class RaidReportTool {
                             page.getAndIncrement()))
                     .toURL();
 
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("POST");
-            conn.addRequestProperty("X-API-Key", apiKey);
-            conn.addRequestProperty("Content-Type", "Application/Json");
-            conn.addRequestProperty("Accept", "Application/Json");
-            conn.setDoOutput(true);
-
             String jsonInputString = String.format("{\"displayName\" : \"%s\", displayNameCode: \"%s\"}",
                     splitBungieId[0], splitBungieId[1]);
 
-            try (OutputStream os = conn.getOutputStream()) {
-                byte[] input = jsonInputString.getBytes("utf-8");
-                os.write(input, 0, input.length);
-            }
+            HttpURLConnection conn = getBungieAPIResponseWithJsonInput(url,
+                    String.format("Get Member Information: %s", bungieId),
+                    jsonInputString);
 
-            // Getting the response code
-            int responsecode = conn.getResponseCode();
-            if (responsecode == 200) {
+            if (conn != null) {
                 BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
                 StringBuffer content = new StringBuffer();
                 String inputLine;
@@ -688,19 +646,10 @@ public class RaidReportTool {
                             "https://www.bungie.net/Platform/Destiny2/%s/Account/%s/Character/%s/Stats/Activities/?page=%d&mode=4&count=250",
                             member.getMemberType(), member.getUID(), character.getUID(), page)).toURL();
 
-                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                    conn.setRequestMethod("GET");
-                    conn.addRequestProperty("X-API-Key", apiKey);
-                    conn.addRequestProperty("Accept", "Application/Json");
+                    HttpURLConnection conn = getBungieAPIResponse(url,
+                            String.format("getUserWeeklyClears: %s", member.getCombinedBungieGlobalDisplayName()));
 
-                    LOGGER.trace(String.format("Makking HTTP call #%d for %s:%s", page + 1,
-                            member.getCombinedBungieGlobalDisplayName(), character.getUID()));
-                    conn.connect();
-
-                    // Getting the response code
-                    int responsecode = conn.getResponseCode();
-
-                    if (responsecode == 200) {
+                    if (conn != null) {
                         BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
                         String inputLine;
                         StringBuffer content = new StringBuffer();
@@ -739,10 +688,10 @@ public class RaidReportTool {
                             next = true;
                         }
                         in.close();
+                        conn.disconnect();
                     } else {
                         next = true;
                     }
-                    conn.disconnect();
                 }
             } catch (Exception ex) {
                 LOGGER.error("Error Processing Weekly Clears for " + member.getCombinedBungieGlobalDisplayName(), ex);
@@ -756,16 +705,10 @@ public class RaidReportTool {
         URL url = new URI(String.format("https://stats.bungie.net/Platform/Destiny2/Stats/PostGameCarnageReport/%s/",
                 carnageReportId)).toURL();
 
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("GET");
-        conn.addRequestProperty("X-API-Key", apiKey);
-        conn.addRequestProperty("Accept", "Application/Json");
-        conn.connect();
-
-        // Getting the response code
-        int responsecode = conn.getResponseCode();
+        HttpURLConnection conn = getBungieAPIResponse(url, String.format("getRaidCarnageReport: %s", carnageReportId));
         RaidCarnageReport raidCarnageReport = null;
-        if (responsecode == 200) {
+
+        if (conn != null) {
             BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
             String inputLine;
             StringBuffer content = new StringBuffer();
@@ -814,8 +757,9 @@ public class RaidReportTool {
             });
             in.close();
             raidCarnageReport = tempRaidCarnageReport;
+
+            conn.disconnect();
         }
-        conn.disconnect();
         return raidCarnageReport;
 
     }
@@ -1139,19 +1083,10 @@ public class RaidReportTool {
                             "https://www.bungie.net/Platform/Destiny2/%s/Account/%s/Character/%s/Stats/Activities/?page=%d&mode=%d&count=250",
                             member.getMemberType(), member.getUID(), character.getUID(), page, mode)).toURL();
 
-                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                    conn.setRequestMethod("GET");
-                    conn.addRequestProperty("X-API-Key", apiKey);
-                    conn.addRequestProperty("Accept", "Application/Json");
+                    HttpURLConnection conn = getBungieAPIResponse(url, String.format(
+                            "getMembersClearedActivities: %s <%d>", member.getCombinedBungieGlobalDisplayName(), page));
 
-                    LOGGER.debug(String.format("Makking HTTP call #%d for %s:%s", page + 1,
-                            member.getCombinedBungieGlobalDisplayName(), character.getUID()));
-                    conn.connect();
-
-                    // Getting the response code
-                    int responsecode = conn.getResponseCode();
-
-                    if (responsecode == 200) {
+                    if (conn != null) {
                         BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
                         String inputLine;
                         StringBuffer content = new StringBuffer();
@@ -1249,10 +1184,10 @@ public class RaidReportTool {
                             next = true;
                         }
                         in.close();
+                        conn.disconnect();
                     } else {
                         next = true;
                     }
-                    conn.disconnect();
                 }
 
                 PGCR_COUNT.addAndGet(genericActivitiesToProcess.size());
@@ -1300,15 +1235,10 @@ public class RaidReportTool {
         URL url = new URI(String.format("https://stats.bungie.net/Platform/Destiny2/Stats/PostGameCarnageReport/%s/",
                 activityWithSGCMembers.getUID())).toURL();
 
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("GET");
-        conn.addRequestProperty("X-API-Key", apiKey);
-        conn.addRequestProperty("Accept", "Application/Json");
-        conn.connect();
+        HttpURLConnection conn = getBungieAPIResponse(url,
+                String.format("getSGCMemberCarnageReport: %s", member.getCombinedBungieGlobalDisplayName()));
 
-        // Getting the response code
-        int responsecode = conn.getResponseCode();
-        if (responsecode == 200) {
+        if (conn != null) {
             BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
             String inputLine;
             StringBuffer content = new StringBuffer();
@@ -1360,8 +1290,9 @@ public class RaidReportTool {
             });
             in.close();
             activityWithSGCMembers.setAllSGCActivity(allSGCActivity.get());
+
+            conn.disconnect();
         }
-        conn.disconnect();
     }
 
     public static String getClanActivityReportAsCsv(Clan clan) {
@@ -1789,15 +1720,10 @@ public class RaidReportTool {
 
         HashMap<String, Boolean> response = new HashMap<>();
 
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("GET");
-        conn.addRequestProperty("X-API-Key", apiKey);
-        conn.addRequestProperty("Accept", "Application/Json");
-        conn.connect();
+        HttpURLConnection conn = getBungieAPIResponse(url,
+                String.format("getMembersCollections: %s", member.getCombinedBungieGlobalDisplayName()));
 
-        // Getting the response code
-        int responsecode = conn.getResponseCode();
-        if (responsecode == 200) {
+        if (conn != null) {
             BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
             String inputLine;
             StringBuffer content = new StringBuffer();
@@ -1823,8 +1749,9 @@ public class RaidReportTool {
                 }
             });
             in.close();
+
+            conn.disconnect();
         }
-        conn.disconnect();
         return response;
     }
 
@@ -1834,16 +1761,10 @@ public class RaidReportTool {
                 member.getMemberType(), member.getUID())).toURL();
 
         HashMap<String, Boolean> response = new HashMap<>();
+        HttpURLConnection conn = getBungieAPIResponse(url,
+                String.format("Get %s Triumphs", member.getCombinedBungieGlobalDisplayName()));
 
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("GET");
-        conn.addRequestProperty("X-API-Key", apiKey);
-        conn.addRequestProperty("Accept", "Application/Json");
-        conn.connect();
-
-        // Getting the response code
-        int responsecode = conn.getResponseCode();
-        if (responsecode == 200) {
+        if (conn != null) {
             BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
             String inputLine;
             StringBuffer content = new StringBuffer();
@@ -1865,8 +1786,8 @@ public class RaidReportTool {
                 }
             });
             in.close();
+            conn.disconnect();
         }
-        conn.disconnect();
         return response;
     }
 
@@ -1877,15 +1798,10 @@ public class RaidReportTool {
         // 1765255052
         HashMap<String, Integer> response = new HashMap<>();
 
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("GET");
-        conn.addRequestProperty("X-API-Key", apiKey);
-        conn.addRequestProperty("Accept", "Application/Json");
-        conn.connect();
+        HttpURLConnection conn = getBungieAPIResponse(url,
+                String.format("getMembersMetrics: %s", member.getCombinedBungieGlobalDisplayName()));
 
-        // Getting the response code
-        int responsecode = conn.getResponseCode();
-        if (responsecode == 200) {
+        if (conn != null) {
             try {
                 BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
                 String inputLine;
@@ -1914,8 +1830,9 @@ public class RaidReportTool {
                     response.put(hash, null);
                 });
             }
+
+            conn.disconnect();
         }
-        conn.disconnect();
         return response;
     }
 
@@ -2000,16 +1917,10 @@ public class RaidReportTool {
                         "https://www.bungie.net/Platform/Destiny2/%s/Account/%s/Character/%s/Stats/AggregateActivityStats",
                         member.getMemberType(), member.getUID(), character.getUID())).toURL();
 
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("GET");
-                conn.addRequestProperty("X-API-Key", apiKey);
-                conn.addRequestProperty("Accept", "Application/Json");
-                conn.connect();
+                HttpURLConnection conn = getBungieAPIResponse(url,
+                        String.format("getMemberDungeonInfo: %s", member.getCombinedBungieGlobalDisplayName()));
 
-                // Getting the response code
-                int responsecode = conn.getResponseCode();
-
-                if (responsecode == 200) {
+                if (conn != null) {
                     BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
                     String inputLine;
                     StringBuffer content = new StringBuffer();
@@ -2035,9 +1946,8 @@ public class RaidReportTool {
                     });
 
                     in.close();
+                    conn.disconnect();
                 }
-                conn.disconnect();
-
             } catch (Exception ex) {
                 LOGGER.error("Error processing JSON result for characterID: "
                         + characterId, ex);
@@ -2059,19 +1969,10 @@ public class RaidReportTool {
                             member.getMemberType(), member.getUID(), character.getUID(), page, 0))
                             .toURL();
 
-                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                    conn.setRequestMethod("GET");
-                    conn.addRequestProperty("X-API-Key", apiKey);
-                    conn.addRequestProperty("Accept", "Application/Json");
+                    HttpURLConnection conn = getBungieAPIResponse(url,
+                            String.format("getActivitytoCodeWalk: %s <%d>", bungieId, page + 1));
 
-                    LOGGER.info(String.format("Makking HTTP call #%d for %s:%s", page + 1,
-                            member.getCombinedBungieGlobalDisplayName(), character.getUID()));
-                    conn.connect();
-
-                    // Getting the response code
-                    int responsecode = conn.getResponseCode();
-
-                    if (responsecode == 200) {
+                    if (conn != null) {
                         BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
                         String inputLine;
                         StringBuffer content = new StringBuffer();
@@ -2166,15 +2067,10 @@ public class RaidReportTool {
                     String.format("https://www.bungie.net/Platform/Destiny2/Manifest/DestinyActivityDefinition/%s/",
                             directorActivityHash))
                     .toURL();
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
-            conn.addRequestProperty("X-API-Key", apiKey);
-            conn.addRequestProperty("Accept", "Application/Json");
-            conn.connect();
-            // Getting the response code
-            int responsecode = conn.getResponseCode();
+            HttpURLConnection conn = getBungieAPIResponse(url,
+                    String.format("getActivityName: %s", directorActivityHash));
 
-            if (responsecode == 200) {
+            if (conn != null) {
                 BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
                 String inputLine;
                 StringBuffer content = new StringBuffer();
@@ -2185,8 +2081,9 @@ public class RaidReportTool {
                         .getAsJsonObject("Response").getAsJsonObject("originalDisplayProperties")
                         .getAsJsonPrimitive("name").getAsString();
                 in.close();
+
+                conn.disconnect();
             }
-            conn.disconnect();
         } catch (Exception ex) {
             LOGGER.error(
                     "Error Processing Activity Name for for directorActivityHash: "
@@ -2239,15 +2136,10 @@ public class RaidReportTool {
                     String.format("https://www.bungie.net/Platform/Destiny2/Manifest/DestinyCollectibleDefinition/%s/",
                             collectibleHash))
                     .toURL();
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
-            conn.addRequestProperty("X-API-Key", apiKey);
-            conn.addRequestProperty("Accept", "Application/Json");
-            conn.connect();
-            // Getting the response code
-            int responsecode = conn.getResponseCode();
+            HttpURLConnection conn = getBungieAPIResponse(url,
+                    String.format("getCollectibleName: %s", collectibleHash));
 
-            if (responsecode == 200) {
+            if (conn != null) {
                 BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
                 String inputLine;
                 StringBuffer content = new StringBuffer();
@@ -2258,8 +2150,9 @@ public class RaidReportTool {
                         .getAsJsonObject("Response").getAsJsonObject("displayProperties")
                         .getAsJsonPrimitive("name").getAsString();
                 in.close();
+
+                conn.disconnect();
             }
-            conn.disconnect();
         } catch (Exception ex) {
             LOGGER.error(
                     "Error Processing Activity Name for for directorActivityHash: "
@@ -2277,15 +2170,9 @@ public class RaidReportTool {
                             "https://www.bungie.net/Platform/Destiny2/Manifest/DestinyInventoryItemDefinition/%s/",
                             itemHash))
                     .toURL();
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
-            conn.addRequestProperty("X-API-Key", apiKey);
-            conn.addRequestProperty("Accept", "Application/Json");
-            conn.connect();
-            // Getting the response code
-            int responsecode = conn.getResponseCode();
+            HttpURLConnection conn = getBungieAPIResponse(url, String.format("getItemName: %s", itemHash));
 
-            if (responsecode == 200) {
+            if (conn != null) {
                 BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
                 String inputLine;
                 StringBuffer content = new StringBuffer();
@@ -2296,8 +2183,9 @@ public class RaidReportTool {
                         .getAsJsonObject("Response").getAsJsonObject("displayProperties")
                         .getAsJsonPrimitive("name").getAsString();
                 in.close();
+
+                conn.disconnect();
             }
-            conn.disconnect();
         } catch (Exception ex) {
             LOGGER.error(
                     "Error Processing Activity Name for for directorActivityHash: "
@@ -2369,17 +2257,12 @@ public class RaidReportTool {
     private static JsonObject fetchManifestFromBungie(String manifestLocation)
             throws IOException, URISyntaxException {
         URL url = new URI(String.format("https://www.bungie.net%s", manifestLocation)).toURL();
-
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("GET");
-        conn.addRequestProperty("X-API-Key", apiKey);
-        conn.addRequestProperty("Accept", "Application/Json");
-        conn.connect();
-
-        // Getting the response code
-        int responseCode = conn.getResponseCode();
         JsonObject json = null;
-        if (responseCode == 200) {
+
+        HttpURLConnection conn = getBungieAPIResponse(url,
+                String.format("fetchManifestFromBungie: %s", manifestLocation));
+
+        if (conn != null) {
             try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
                 String inputLine;
                 StringBuilder content = new StringBuilder();
@@ -2389,24 +2272,19 @@ public class RaidReportTool {
                 json = JsonParser.parseString(content.toString()).getAsJsonObject();
                 in.close();
             }
+
+            conn.disconnect();
         }
-        conn.disconnect();
         return json;
     }
 
     private static String getLatestActivityManifestLocation() throws IOException, URISyntaxException {
         URL url = new URI(String.format("https://www.bungie.net/Platform/Destiny2/Manifest/")).toURL();
 
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("GET");
-        conn.addRequestProperty("X-API-Key", apiKey);
-        conn.addRequestProperty("Accept", "Application/Json");
-        conn.connect();
-
-        // Getting the response code
-        int responseCode = conn.getResponseCode();
+        HttpURLConnection conn = getBungieAPIResponse(url, "getLatestActivityManifestLocation");
         String manifestLocation = "";
-        if (responseCode == 200) {
+
+        if (conn != null) {
             try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
                 String inputLine;
                 StringBuilder content = new StringBuilder();
@@ -2421,24 +2299,19 @@ public class RaidReportTool {
                         .getAsString();
                 in.close();
             }
+
+            conn.disconnect();
         }
-        conn.disconnect();
         return manifestLocation;
     }
 
     private static String getLatestActivityModeManifestLocation() throws IOException, URISyntaxException {
         URL url = new URI(String.format("https://www.bungie.net/Platform/Destiny2/Manifest/")).toURL();
 
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("GET");
-        conn.addRequestProperty("X-API-Key", apiKey);
-        conn.addRequestProperty("Accept", "Application/Json");
-        conn.connect();
-
-        // Getting the response code
-        int responseCode = conn.getResponseCode();
+        HttpURLConnection conn = getBungieAPIResponse(url, "getLatestActivityModeManifestLocation");
         String manifestLocation = "";
-        if (responseCode == 200) {
+
+        if (conn != null) {
             try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
                 String inputLine;
                 StringBuilder content = new StringBuilder();
@@ -2453,24 +2326,19 @@ public class RaidReportTool {
                         .getAsString();
                 in.close();
             }
+
+            conn.disconnect();
         }
-        conn.disconnect();
         return manifestLocation;
     }
 
     public static String getLatestGlobalVendorInventory() throws IOException, URISyntaxException {
         URL url = new URI(String.format("https://www.bungie.net/Platform/Destiny2/Vendors/")).toURL();
 
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("GET");
-        conn.addRequestProperty("X-API-Key", apiKey);
-        conn.addRequestProperty("Accept", "Application/Json");
-        conn.connect();
-
-        // Getting the response code
-        int responseCode = conn.getResponseCode();
+        HttpURLConnection conn = getBungieAPIResponse(url, "getLatestGlobalVendorInventory");
         String manifestLocation = "";
-        if (responseCode == 200) {
+
+        if (conn != null) {
             try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
                 String inputLine;
                 StringBuilder content = new StringBuilder();
@@ -2485,8 +2353,9 @@ public class RaidReportTool {
                         .getAsString();
                 in.close();
             }
+
+            conn.disconnect();
         }
-        conn.disconnect();
         return manifestLocation;
     }
 
@@ -2581,15 +2450,10 @@ public class RaidReportTool {
         URL url = new URI(String.format("https://www.bungie.net/Platform/Destiny2/%s/Profile/%s/?components=1000",
                 member.getMemberType(), member.getUID())).toURL();
 
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("GET");
-        conn.addRequestProperty("X-API-Key", apiKey);
-        conn.addRequestProperty("Accept", "Application/Json");
-        conn.connect();
+        HttpURLConnection conn = getBungieAPIResponse(url,
+                String.format("getFireteamMembers: %s", member.getCombinedBungieGlobalDisplayName()));
 
-        // Getting the response code
-        int responseCode = conn.getResponseCode();
-        if (responseCode == 200) {
+        if (conn != null) {
             try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
                 String inputLine;
                 StringBuilder content = new StringBuilder();
@@ -2619,9 +2483,9 @@ public class RaidReportTool {
             } catch (Exception ex) {
                 LOGGER.error("Error processing JSON result from " + url.toExternalForm(), ex);
             }
-        }
-        conn.disconnect();
 
+            conn.disconnect();
+        }
         return fireteamMembers;
     }
 
@@ -2631,15 +2495,10 @@ public class RaidReportTool {
         URL url = new URI(String.format("https://www.bungie.net/Platform/User/GetMembershipsById/%s/0/",
                 destinyMembershipId)).toURL();
 
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("GET");
-        conn.addRequestProperty("X-API-Key", apiKey);
-        conn.addRequestProperty("Accept", "Application/Json");
-        conn.connect();
+        HttpURLConnection conn = getBungieAPIResponse(url,
+                String.format("getMemberByDestinyMembershipId: %s", destinyMembershipId));
 
-        // Getting the response code
-        int responseCode = conn.getResponseCode();
-        if (responseCode == 200) {
+        if (conn != null) {
             try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
                 String inputLine;
                 StringBuilder content = new StringBuilder();
@@ -2662,8 +2521,9 @@ public class RaidReportTool {
                 }
                 in.close();
             }
+
+            conn.disconnect();
         }
-        conn.disconnect();
         return member;
     }
 
@@ -2676,15 +2536,10 @@ public class RaidReportTool {
                 String.format("https://www.bungie.net/Platform/Destiny2/%s/Account/%s/Stats/?groups=1",
                         member.getMemberType(), member.getUID()))
                 .toURL();
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("GET");
-        conn.addRequestProperty("X-API-Key", apiKey);
-        conn.addRequestProperty("Accept", "Application/Json");
-        conn.connect();
+        HttpURLConnection conn = getBungieAPIResponse(url,
+                String.format("calculateMemberMmr: %s", member.getCombinedBungieGlobalDisplayName()));
 
-        // Getting the response code
-        int responseCode = conn.getResponseCode();
-        if (responseCode == 200) {
+        if (conn != null) {
             try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
                 String inputLine;
                 StringBuilder content = new StringBuilder();
@@ -2705,8 +2560,9 @@ public class RaidReportTool {
 
                 in.close();
             }
+
+            conn.disconnect();
         }
-        conn.disconnect();
         if (memberSeasonalCrucibleKDA != null && memberCareerCrucibleWinLossRatio != null
                 && memberCareerCrucibleKDA != null)
             return ((memberSeasonalCrucibleKDA + memberCareerCrucibleKDA) / 2.0) * memberCareerCrucibleWinLossRatio;
@@ -2761,5 +2617,68 @@ public class RaidReportTool {
             LOGGER.error("Error generating Random Private Gambit Options", ex);
             return null;
         }
+    }
+
+    private static HttpURLConnection getBungieAPIResponse(URL url, String connectionReason)
+            throws IOException, URISyntaxException {
+        HttpURLConnection conn;
+        int attemptNumber = 1;
+        while (attemptNumber <= MAX_RETRIES) {
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.addRequestProperty("X-API-Key", apiKey);
+            conn.addRequestProperty("Accept", "Application/Json");
+            conn.connect();
+
+            // Getting the response code
+            int responsecode = conn.getResponseCode();
+            if (responsecode == 200) {
+                return conn;
+            } else {
+                LOGGER.error(String.format("%s | Response Code: %d | Attempt %d of %d",
+                        connectionReason, responsecode, attemptNumber++, MAX_RETRIES));
+                try {
+                    Thread.sleep(TIME_DELAY);
+                } catch (InterruptedException e) {
+                    LOGGER.error("Thread Interrupted", e);
+                }
+            }
+        }
+        return null;
+    }
+
+    private static HttpURLConnection getBungieAPIResponseWithJsonInput(URL url, String connectionReason,
+            String jsonInputString)
+            throws IOException, URISyntaxException {
+        HttpURLConnection conn;
+        int attemptNumber = 1;
+        while (attemptNumber <= MAX_RETRIES) {
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.addRequestProperty("X-API-Key", apiKey);
+            conn.addRequestProperty("Content-Type", "Application/Json");
+            conn.addRequestProperty("Accept", "Application/Json");
+            conn.setDoOutput(true);
+
+            try (OutputStream os = conn.getOutputStream()) {
+                byte[] input = jsonInputString.getBytes("utf-8");
+                os.write(input, 0, input.length);
+            }
+
+            // Getting the response code
+            int responsecode = conn.getResponseCode();
+            if (responsecode == 200) {
+                return conn;
+            } else {
+                LOGGER.error(String.format("%s | Response Code: %d | Attempt %d of %d",
+                        connectionReason, responsecode, attemptNumber++, MAX_RETRIES));
+                try {
+                    Thread.sleep(TIME_DELAY);
+                } catch (InterruptedException e) {
+                    LOGGER.error("Thread Interrupted", e);
+                }
+            }
+        }
+        return null;
     }
 }
