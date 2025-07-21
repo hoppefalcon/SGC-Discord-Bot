@@ -2205,6 +2205,16 @@ public class RaidReportTool {
         Set<String> activitySet = rawActivityManifest.keySet();
         HashMap<Mode, HashMap<String, ArrayList>> modeToActivities = new HashMap<>();
 
+        rawActivityModeManifest.keySet().forEach(t -> {
+            String modeName = rawActivityModeManifest.getAsJsonObject(t).getAsJsonObject("displayProperties")
+                    .get("name").getAsString();
+            String modeType = rawActivityModeManifest.getAsJsonObject(t).get("modeType").getAsString();
+            System.out.println(
+                    String.format("%s | %s(\"%s\", %s, 1.0)", modeType, modeName.toUpperCase().replace(' ', '_'),
+                            modeName, modeType));
+            AtomicInteger count = new AtomicInteger(0);
+        });
+
         AtomicInteger count = new AtomicInteger(0);
         AtomicInteger badCount = new AtomicInteger(0);
         activitySet.forEach(activityHash -> {
