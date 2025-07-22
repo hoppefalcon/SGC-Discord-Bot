@@ -28,7 +28,8 @@ public enum Raid {
     PANTHEON_ORYX_EXALTED("The Pantheon: Oryx Exalted", Arrays.asList("4169648176")),
     PANTHEON_RHULK_INDOMITABLE("The Pantheon: Rhulk Indomitable", Arrays.asList("4169648177")),
     PANTHEON_NEZAREC_SUBLIME("The Pantheon: Nezarec Sublime", Arrays.asList("4169648182")),
-    SALVATIONS_EDGE("Salvation's Edge", Arrays.asList("2192826039", "1541433876", "940375169", "4129614942"));
+    SALVATIONS_EDGE("Salvation's Edge", Arrays.asList("2192826039", "1541433876", "940375169", "4129614942")),
+    THE_DESERT_PERPETUAL("The Desert Perpetual", Arrays.asList("1044919065", "3896382790"));
 
     public final String name;
     private final List<String> validHashes;
@@ -65,6 +66,7 @@ public enum Raid {
 
     public static List<Raid> getRaidsOrdered() {
         List<Raid> raids = new ArrayList<>();
+        raids.add(THE_DESERT_PERPETUAL);
         raids.add(SALVATIONS_EDGE);
         raids.add(CROTAS_END);
         raids.add(ROOT_OF_NIGHTMARES);
