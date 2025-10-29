@@ -29,7 +29,7 @@ public enum Raid {
     PANTHEON_RHULK_INDOMITABLE("The Pantheon: Rhulk Indomitable", Arrays.asList("4169648177")),
     PANTHEON_NEZAREC_SUBLIME("The Pantheon: Nezarec Sublime", Arrays.asList("4169648182")),
     SALVATIONS_EDGE("Salvation's Edge", Arrays.asList("2192826039", "1541433876", "940375169", "4129614942")),
-    THE_DESERT_PERPETUAL("The Desert Perpetual", Arrays.asList("1044919065", "3896382790"));
+    THE_DESERT_PERPETUAL("The Desert Perpetual", Arrays.asList("1044919065", "3896382790", "3817322389"));
 
     public final String name;
     private final List<String> validHashes;

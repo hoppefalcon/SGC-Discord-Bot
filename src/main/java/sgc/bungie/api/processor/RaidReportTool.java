@@ -70,7 +70,7 @@ public class RaidReportTool {
     public static ReentrantLock resourceLock = new ReentrantLock();
 
     private static final int MAX_RETRIES = 5; // Maximum times to retry a Bungie API Call
-    private static final int TIME_DELAY = 30000; // Time Delay in Milliseconds between each Bungie API retry
+    private static final int TIME_DELAY = 5000; // Time Delay in Milliseconds between each Bungie API retry
 
     /**
      * Initializes the clan ID maps.
@@ -740,13 +740,12 @@ public class RaidReportTool {
             List<Clan> clanList = initializeClanList();
             HashMap<String, Member> sgcClanMembersMap = initializeClanMembersMap(clanList);
 
-            for (int i = 0; i < clanList.size(); i++) {
-                Clan clan = clanList.get(i);
+            List<Callable<Object>> tasks = new ArrayList<>();
+            clanList.forEach(clan -> {
+                tasks.add(() -> {
 
-                List<Callable<Object>> tasks = new ArrayList<>();
-                LOGGER.info("Starting to process " + clan.getCallsign());
-                clan.getMembers().forEach((memberId, member) -> {
-                    tasks.add(() -> {
+                    LOGGER.info("Starting to process " + clan.getCallsign());
+                    clan.getMembers().forEach((memberId, member) -> {
 
                         if (member.hasNewBungieName()) {
                             try {
@@ -761,23 +760,18 @@ public class RaidReportTool {
                                 LOGGER.error("Error processing " + member.getDisplayName(), ex);
                             }
                         }
-                        return null;
                     });
-                });
-
-                try {
-                    executorService.invokeAll(tasks);
-                    if (textChannel != null && discordUser != null) {
-                        sendClanSGCActivityMessage(startDate, endDate, clan, textChannel, discordUser);
-                    }
-                } finally {
 
                     LOGGER.info("Finished processing " + clan.getCallsign());
-                }
+                    return null;
+                });
+            });
+            try {
+                executorService.invokeAll(tasks);
+            } finally {
 
+                LOGGER.info("Finished processing All Clans for SGC Activity Report");
             }
-
-            LOGGER.info("Finished processing All Clans for SGC Activity Report");
 
             String potwActivityReportAsCsv = getPlatformActivityReportsAsCsv(clanList);
             LOGGER.info("SGC Activity Report Complete");
@@ -2584,7 +2578,7 @@ public class RaidReportTool {
             if (responsecode == 200) {
                 return conn;
             } else {
-                LOGGER.error(String.format("%s | Response Code: %d | Attempt %d of %d",
+                LOGGER.info(String.format("%s | Response Code: %d | Attempt %d of %d",
                         connectionReason, responsecode, attemptNumber++, MAX_RETRIES));
                 try {
                     Thread.sleep(TIME_DELAY);

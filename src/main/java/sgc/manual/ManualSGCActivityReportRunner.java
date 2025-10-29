@@ -18,16 +18,16 @@ public class ManualSGCActivityReportRunner {
 
         public static void main(String[] args) throws InterruptedException, IOException {
 
-                int year = 2024;
+                int year = 2025;
                 // LocalDate startDate = YearMonth.of(year, 1).atDay(1);
                 // LocalDate endDate = YearMonth.of(year, 12).atEndOfMonth();
-                LocalDate startDate = YearMonth.of(year, 1).atDay(1);
-                LocalDate endDate = YearMonth.of(year, 12).atDay(31);
+                LocalDate startDate = YearMonth.of(year, 10).atDay(21);
+                LocalDate endDate = YearMonth.of(year, 10).atDay(28);
                 LOGGER.info(String.format("Starting %s to %s SGC Activity Report", startDate.toString(),
                                 endDate.toString()));
 
                 String potwActivityReportAsCsv = RaidReportTool
-                                .getSGCAnnualActivityReport(startDate,
+                                .getSGCWeeklyActivityReport(startDate,
                                                 endDate,
                                                 null,
                                                 null,
