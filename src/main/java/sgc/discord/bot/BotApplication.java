@@ -240,7 +240,7 @@ public class BotApplication {
 				.setDescription("Pulls the Raid Report of the user. (Requires full Bungie ID)")
 				.addOption(bungieIdOption.build()));
 
-		commandList.add(new SlashCommandBuilder().setName("pc-clan-raid-report")
+		commandList.add(new SlashCommandBuilder().setName("clan-raid-report")
 				.setDescription("Pulls a full clan raid report.")
 				.addOption(clanOption.build()));
 
@@ -281,7 +281,7 @@ public class BotApplication {
 				.addOption(discordChannelIdOption.build())
 				.addOption(daysOption.build()));
 
-		commandList.add(new SlashCommandBuilder().setName("pc-clan-iar")
+		commandList.add(new SlashCommandBuilder().setName("clan-iar")
 				.setDescription("Pulls a clan internal activity report.")
 				.addOption(clanOption.build())
 				.addOption(timeframe.build()));
