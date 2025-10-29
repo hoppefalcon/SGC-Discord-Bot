@@ -1022,156 +1022,166 @@ public class RaidReportTool {
             throws IOException, URISyntaxException, InterruptedException {
         LOGGER.debug(String.format("Getting Cleared Activities for %s", member.getCombinedBungieGlobalDisplayName()));
         AtomicInteger PGCR_COUNT = new AtomicInteger(0);
+        AtomicBoolean skip_all = new AtomicBoolean(false);
         getMembersActiveCharacters(member);
         member.getCharacters().forEach((characteruid, character) -> {
-            try {
-                boolean next = false;
-                List<GenericActivity> genericActivitiesToProcess = new ArrayList<>();
+            if (!skip_all.get()) {
+                try {
+                    boolean next = false;
+                    List<GenericActivity> genericActivitiesToProcess = new ArrayList<>();
 
-                for (int page = 0; !next; page++) {
-                    URL url = new URI(String.format(
-                            "https://www.bungie.net/Platform/Destiny2/%s/Account/%s/Character/%s/Stats/Activities/?page=%d&mode=%d&count=250",
-                            member.getMemberType(), member.getUID(), character.getUID(), page, mode)).toURL();
+                    for (int page = 0; !next; page++) {
+                        URL url = new URI(String.format(
+                                "https://www.bungie.net/Platform/Destiny2/%s/Account/%s/Character/%s/Stats/Activities/?page=%d&mode=%d&count=250",
+                                member.getMemberType(), member.getUID(), character.getUID(), page, mode)).toURL();
 
-                    HttpURLConnection conn = getBungieAPIResponse(url, String.format(
-                            "getMembersClearedActivities: %s <%d>", member.getCombinedBungieGlobalDisplayName(), page));
+                        HttpURLConnection conn = getBungieAPIResponse(url, String.format(
+                                "getMembersClearedActivities: %s <%d>", member.getCombinedBungieGlobalDisplayName(),
+                                page));
 
-                    if (conn != null) {
-                        BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                        String inputLine;
-                        StringBuffer content = new StringBuffer();
-                        while ((inputLine = in.readLine()) != null) {
-                            content.append(inputLine);
-                        }
-                        JsonArray results = (JsonArray) JsonParser.parseString(content.toString()).getAsJsonObject()
-                                .getAsJsonObject("Response").get("activities");
-                        if (results != null) {
-                            AtomicInteger recordsAfterEndDate = new AtomicInteger(0);
+                        if (conn != null) {
+                            BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                            String inputLine;
+                            StringBuffer content = new StringBuffer();
+                            while ((inputLine = in.readLine()) != null) {
+                                content.append(inputLine);
+                            }
+                            JsonArray results = (JsonArray) JsonParser.parseString(content.toString()).getAsJsonObject()
+                                    .getAsJsonObject("Response").get("activities");
+                            if (results != null) {
+                                AtomicInteger recordsAfterEndDate = new AtomicInteger(0);
 
-                            results.forEach((result) -> {
-                                int activityMode = result.getAsJsonObject().getAsJsonObject("activityDetails")
-                                        .getAsJsonPrimitive("mode").getAsInt();
+                                results.forEach((result) -> {
+                                    int activityMode = result.getAsJsonObject().getAsJsonObject("activityDetails")
+                                            .getAsJsonPrimitive("mode").getAsInt();
 
-                                if (Mode.validModeValuesForCPOTW().contains(activityMode)) {
-                                    String activityDateStr = result.getAsJsonObject().getAsJsonPrimitive("period")
-                                            .getAsString();
-                                    LocalDate dateCompleted = ZonedDateTime.parse(activityDateStr)
-                                            .withZoneSameInstant(ZoneId.of("US/Eastern")).toLocalDate();
-                                    if ((dateCompleted.isAfter(startDate) && dateCompleted.isBefore(endDate))
-                                            || dateCompleted.isEqual(startDate) || dateCompleted.isEqual(endDate)) {
-                                        boolean completed = result.getAsJsonObject().getAsJsonObject("values")
-                                                .getAsJsonObject("completed")
-                                                .getAsJsonObject("basic").getAsJsonPrimitive("value")
-                                                .getAsDouble() == 1.0;
-                                        if (completed) {
-                                            if (!potwOnly) {
-                                                String instanceId = result.getAsJsonObject()
-                                                        .getAsJsonObject("activityDetails")
-                                                        .getAsJsonPrimitive("instanceId").toString().replace("\"", "");
-                                                double team = 0.0;
-                                                try {
-                                                    team = result.getAsJsonObject().getAsJsonObject("values")
-                                                            .getAsJsonObject("team")
-                                                            .getAsJsonObject("basic").getAsJsonPrimitive("value")
-                                                            .getAsDouble();
-                                                    GenericActivity genericActivity = new GenericActivity(instanceId,
-                                                            Mode.getFromValue(activityMode), result.getAsJsonObject()
-                                                                    .getAsJsonObject("activityDetails")
-                                                                    .getAsJsonPrimitive("directorActivityHash")
-                                                                    .getAsString());
-                                                    genericActivity.setTeam(team);
-                                                    genericActivitiesToProcess.add(genericActivity);
-                                                } catch (Throwable ex) {
-                                                    LOGGER.error(ex.getMessage(), ex);
+                                    if (Mode.validModeValuesForCPOTW().contains(activityMode)) {
+                                        String activityDateStr = result.getAsJsonObject().getAsJsonPrimitive("period")
+                                                .getAsString();
+                                        LocalDate dateCompleted = ZonedDateTime.parse(activityDateStr)
+                                                .withZoneSameInstant(ZoneId.of("US/Eastern")).toLocalDate();
+                                        if ((dateCompleted.isAfter(startDate) && dateCompleted.isBefore(endDate))
+                                                || dateCompleted.isEqual(startDate) || dateCompleted.isEqual(endDate)) {
+                                            boolean completed = result.getAsJsonObject().getAsJsonObject("values")
+                                                    .getAsJsonObject("completed")
+                                                    .getAsJsonObject("basic").getAsJsonPrimitive("value")
+                                                    .getAsDouble() == 1.0;
+                                            if (completed) {
+                                                if (!potwOnly) {
+                                                    String instanceId = result.getAsJsonObject()
+                                                            .getAsJsonObject("activityDetails")
+                                                            .getAsJsonPrimitive("instanceId").toString()
+                                                            .replace("\"", "");
+                                                    double team = 0.0;
+                                                    try {
+                                                        team = result.getAsJsonObject().getAsJsonObject("values")
+                                                                .getAsJsonObject("team")
+                                                                .getAsJsonObject("basic").getAsJsonPrimitive("value")
+                                                                .getAsDouble();
+                                                        GenericActivity genericActivity = new GenericActivity(
+                                                                instanceId,
+                                                                Mode.getFromValue(activityMode),
+                                                                result.getAsJsonObject()
+                                                                        .getAsJsonObject("activityDetails")
+                                                                        .getAsJsonPrimitive("directorActivityHash")
+                                                                        .getAsString());
+                                                        genericActivity.setTeam(team);
+                                                        genericActivitiesToProcess.add(genericActivity);
+                                                    } catch (Throwable ex) {
+                                                        LOGGER.error(ex.getMessage(), ex);
+                                                    }
                                                 }
-                                            }
 
-                                            // POTW Calculations
+                                                // POTW Calculations
 
-                                            if (Mode.getFromValue(activityMode).equals(Mode.RAID)) {
-                                                Raid raid = Raid.getRaid(result.getAsJsonObject()
-                                                        .getAsJsonObject("activityDetails")
-                                                        .getAsJsonPrimitive("directorActivityHash")
-                                                        .getAsString());
-                                                if (raid == null) {
-                                                    LOGGER.error(result.getAsJsonObject()
+                                                if (Mode.getFromValue(activityMode).equals(Mode.RAID)) {
+                                                    Raid raid = Raid.getRaid(result.getAsJsonObject()
                                                             .getAsJsonObject("activityDetails")
                                                             .getAsJsonPrimitive("directorActivityHash")
-                                                            .getAsString()
-                                                            + " is returning as Mode.RAID but is not associated to a raid.");
-                                                } else {
-                                                    character.addCompletedRaid(raid);
-                                                }
-                                            } else if (Mode.getFromValue(activityMode).equals(Mode.DUNGEON)) {
-                                                Dungeon dungeon = Dungeon.getDungeon(result.getAsJsonObject()
-                                                        .getAsJsonObject("activityDetails")
-                                                        .getAsJsonPrimitive("directorActivityHash")
-                                                        .getAsString());
-                                                if (dungeon == null) {
-                                                    LOGGER.error(result.getAsJsonObject()
+                                                            .getAsString());
+                                                    if (raid == null) {
+                                                        LOGGER.error(result.getAsJsonObject()
+                                                                .getAsJsonObject("activityDetails")
+                                                                .getAsJsonPrimitive("directorActivityHash")
+                                                                .getAsString()
+                                                                + " is returning as Mode.RAID but is not associated to a raid.");
+                                                    } else {
+                                                        character.addCompletedRaid(raid);
+                                                    }
+                                                } else if (Mode.getFromValue(activityMode).equals(Mode.DUNGEON)) {
+                                                    Dungeon dungeon = Dungeon.getDungeon(result.getAsJsonObject()
                                                             .getAsJsonObject("activityDetails")
                                                             .getAsJsonPrimitive("directorActivityHash")
-                                                            .getAsString()
-                                                            + " is returning as Mode.DUNGEON but is not associated to a dungeon.");
+                                                            .getAsString());
+                                                    if (dungeon == null) {
+                                                        LOGGER.error(result.getAsJsonObject()
+                                                                .getAsJsonObject("activityDetails")
+                                                                .getAsJsonPrimitive("directorActivityHash")
+                                                                .getAsString()
+                                                                + " is returning as Mode.DUNGEON but is not associated to a dungeon.");
+                                                    } else {
+                                                        character.addCompletedDungeon(dungeon);
+                                                    }
                                                 } else {
-                                                    character.addCompletedDungeon(dungeon);
+                                                    character.addCompletedMode(Mode.getFromValue(activityMode));
                                                 }
-                                            } else {
-                                                character.addCompletedMode(Mode.getFromValue(activityMode));
                                             }
+                                        } else if (dateCompleted.isAfter(endDate)) {
+                                            recordsAfterEndDate.incrementAndGet();
                                         }
-                                    } else if (dateCompleted.isAfter(endDate)) {
-                                        recordsAfterEndDate.incrementAndGet();
                                     }
-                                }
 
-                            });
+                                });
 
-                            LOGGER.debug(String.format(
-                                    "Finished processing HTTP call #%d for %s:%s", page + 1,
-                                    member.getCombinedBungieGlobalDisplayName(), character.getUID()));
+                                LOGGER.debug(String.format(
+                                        "Finished processing HTTP call #%d for %s:%s", page + 1,
+                                        member.getCombinedBungieGlobalDisplayName(), character.getUID()));
 
-                            next = (results.size() < 250) || (recordsAfterEndDate.get() == results.size());
+                                next = (results.size() < 250) || (recordsAfterEndDate.get() == results.size());
+                            } else {
+                                next = true;
+                            }
+                            in.close();
+                            conn.disconnect();
                         } else {
                             next = true;
-                        }
-                        in.close();
-                        conn.disconnect();
-                    } else {
-                        next = true;
-                    }
-                }
-
-                PGCR_COUNT.addAndGet(genericActivitiesToProcess.size());
-                if (!potwOnly) {
-                    genericActivitiesToProcess.forEach((activityWithSGCMembers) -> {
-                        try {
-                            LOGGER.debug(String.format(
-                                    "Processing Activity %s for %s (%s)",
-                                    activityWithSGCMembers.getUID(), member.getCombinedBungieGlobalDisplayName(),
-                                    character.getUID()));
-                            getSGCMemberCarnageReport(member, activityWithSGCMembers, sgcClanMembersMap);
-                            if (activityWithSGCMembers.earnsPoints()) {
-                                character.addClearedActivitiesWithSGCMembers(activityWithSGCMembers);
+                            if (page <= 1) {
+                                skip_all.set(true);
                             }
-                        } catch (Exception ex) {
-                            LOGGER.error(String.format(
-                                    "Error Processing Activity %s for %s (%s)",
-                                    activityWithSGCMembers.getUID(), member.getCombinedBungieGlobalDisplayName(),
-                                    character.getUID()), ex);
                         }
-                    });
+                    }
+
+                    PGCR_COUNT.addAndGet(genericActivitiesToProcess.size());
+                    if (!potwOnly) {
+                        genericActivitiesToProcess.forEach((activityWithSGCMembers) -> {
+                            try {
+                                LOGGER.debug(String.format(
+                                        "Processing Activity %s for %s (%s)",
+                                        activityWithSGCMembers.getUID(), member.getCombinedBungieGlobalDisplayName(),
+                                        character.getUID()));
+                                getSGCMemberCarnageReport(member, activityWithSGCMembers, sgcClanMembersMap);
+                                if (activityWithSGCMembers.earnsPoints()) {
+                                    character.addClearedActivitiesWithSGCMembers(activityWithSGCMembers);
+                                }
+                            } catch (Exception ex) {
+                                LOGGER.error(String.format(
+                                        "Error Processing Activity %s for %s (%s)",
+                                        activityWithSGCMembers.getUID(), member.getCombinedBungieGlobalDisplayName(),
+                                        character.getUID()), ex);
+                            }
+                        });
+                    }
+
+                    LOGGER.debug(
+                            "Finished Processing Cleared Activities for "
+                                    + member.getCombinedBungieGlobalDisplayName());
+
+                } catch (Exception ex) {
+                    LOGGER.error(
+                            "Error Processing Cleared Activities for "
+                                    + member.getCombinedBungieGlobalDisplayName(),
+                            ex);
                 }
-
-                LOGGER.debug(
-                        "Finished Processing Cleared Activities for "
-                                + member.getCombinedBungieGlobalDisplayName());
-
-            } catch (Exception ex) {
-                LOGGER.error(
-                        "Error Processing Cleared Activities for "
-                                + member.getCombinedBungieGlobalDisplayName(),
-                        ex);
             }
         });
 
