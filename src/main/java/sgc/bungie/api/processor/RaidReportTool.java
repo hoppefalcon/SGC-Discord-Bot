@@ -52,7 +52,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import sgc.discord.infographics.GoogleDriveUtil;
-import sgc.types.Platform;
 import sgc.types.SGC_Clan;
 
 /**
@@ -65,9 +64,7 @@ public class RaidReportTool {
 
     private static String apiKey = System.getenv("BUNGIE_TOKEN");
 
-    private static final HashMap<String, String> pcClanIdMap = new HashMap<>();
-    private static final HashMap<String, String> xbClanIdMap = new HashMap<>();
-    private static final HashMap<String, String> psClanIdMap = new HashMap<>();
+    private static final HashMap<String, String> clanIdMap = new HashMap<>();
 
     private static ExecutorService executorService = Executors.newFixedThreadPool(10);
     public static ReentrantLock resourceLock = new ReentrantLock();
@@ -82,9 +79,7 @@ public class RaidReportTool {
         LOGGER.debug("Initializing Clan Map");
 
         // Clear the existing maps
-        pcClanIdMap.clear();
-        xbClanIdMap.clear();
-        psClanIdMap.clear();
+        clanIdMap.clear();
 
         // Iterate over each SGC_Clan enum value
         for (SGC_Clan clan : SGC_Clan.values()) {
@@ -92,19 +87,8 @@ public class RaidReportTool {
                 // Add the clan ID to the appropriate map based on the primary platform
                 String clanName = clan.name();
                 String bungieId = clan.Bungie_ID;
-                Platform primaryPlatform = clan.Primary_Platform;
+                clanIdMap.put(clanName, bungieId);
 
-                switch (primaryPlatform) {
-                    case PC:
-                        pcClanIdMap.put(clanName, bungieId);
-                        break;
-                    case XBOX:
-                        xbClanIdMap.put(clanName, bungieId);
-                        break;
-                    case PSN:
-                        psClanIdMap.put(clanName, bungieId);
-                        break;
-                }
             } catch (Exception e) {
                 LOGGER.error("Error Initializing Clan Map", e);
             }
@@ -113,30 +97,12 @@ public class RaidReportTool {
     }
 
     /**
-     * Retrieves the PC clan ID map.
+     * Retrieves the clan ID map.
      *
-     * @return the PC clan ID map
+     * @return the clan ID map
      */
-    public static HashMap<String, String> getPcClanIdMap() {
-        return pcClanIdMap;
-    }
-
-    /**
-     * Retrieves the Xbox clan ID map.
-     *
-     * @return the Xbox clan ID map
-     */
-    public static HashMap<String, String> getXbClanIdMap() {
-        return xbClanIdMap;
-    }
-
-    /**
-     * Retrieves the PlayStation clan ID map.
-     *
-     * @return the PlayStation clan ID map
-     */
-    public static HashMap<String, String> getPsClanIdMap() {
-        return psClanIdMap;
+    public static HashMap<String, String> getClanIdMap() {
+        return clanIdMap;
     }
 
     /**
@@ -147,22 +113,12 @@ public class RaidReportTool {
      * @throws Exception if an error occurs while retrieving the clan information
      */
     public static Clan getClanInformation(String clanId) throws Exception {
-        Clan clan = new Clan(clanId, getClanPlatform(clanId));
+        Clan clan = new Clan(clanId);
 
         getClanInfo(clan);
         getClanMembers(clan);
 
         return clan;
-    }
-
-    /**
-     * Retrieves the primary platform for the clan with the given clan ID.
-     *
-     * @param clanId the clan ID
-     * @return the primary platform of the clan
-     */
-    private static Platform getClanPlatform(String clanId) {
-        return SGC_Clan.getClansPrimaryPlatform(clanId);
     }
 
     /**
@@ -764,7 +720,7 @@ public class RaidReportTool {
 
     }
 
-    public static HashMap<Platform, String> getSGCWeeklyActivityReport(LocalDate startDate, LocalDate endDate,
+    public static String getSGCWeeklyActivityReport(LocalDate startDate, LocalDate endDate,
             InteractionOriginalResponseUpdater interactionOriginalResponseUpdater, TextChannel textChannel,
             User discordUser)
             throws IOException, InterruptedException {
@@ -823,7 +779,7 @@ public class RaidReportTool {
 
             LOGGER.info("Finished processing All Clans for SGC Activity Report");
 
-            HashMap<Platform, String> potwActivityReportAsCsv = getPlatformActivityReportsAsCsv(clanList);
+            String potwActivityReportAsCsv = getPlatformActivityReportsAsCsv(clanList);
             LOGGER.info("SGC Activity Report Complete");
             return potwActivityReportAsCsv;
         } finally {
@@ -831,7 +787,7 @@ public class RaidReportTool {
         }
     }
 
-    public static HashMap<Platform, String> getSGCAnnualActivityReport(LocalDate startDate, LocalDate endDate,
+    public static String getSGCAnnualActivityReport(LocalDate startDate, LocalDate endDate,
             InteractionOriginalResponseUpdater interactionOriginalResponseUpdater, TextChannel textChannel,
             User discordUser)
             throws IOException, InterruptedException {
@@ -898,7 +854,7 @@ public class RaidReportTool {
 
         LOGGER.info("Finished processing All Clans for SGC Activity Report");
 
-        HashMap<Platform, String> potwAnnualActivityReportAsCsv = getPlatformAnnualActivityReportsAsCsv(clanList,
+        String potwAnnualActivityReportAsCsv = getPlatformAnnualActivityReportsAsCsv(clanList,
                 annualValues);
         LOGGER.info("SGC Annual Activity Report Complete");
         return potwAnnualActivityReportAsCsv;
@@ -1015,7 +971,7 @@ public class RaidReportTool {
             tasks.add(() -> {
 
                 try {
-                    Clan clan = new Clan(sgc_clan.Bungie_ID, sgc_clan.Primary_Platform);
+                    Clan clan = new Clan(sgc_clan.Bungie_ID);
                     getClanInfo(clan);
                     getClanMembers(clan);
                     clanListLock.lock();
@@ -1041,14 +997,14 @@ public class RaidReportTool {
     }
 
     public static Clan initializeClan(SGC_Clan sgc_clan) throws IOException, URISyntaxException, InterruptedException {
-        Clan clan = new Clan(sgc_clan.Bungie_ID, sgc_clan.Primary_Platform);
+        Clan clan = new Clan(sgc_clan.Bungie_ID);
         getClanInfo(clan);
         getClanMembers(clan);
         return clan;
     }
 
     public static Clan initializeClan(String bungieID) throws IOException, URISyntaxException, InterruptedException {
-        Clan clan = new Clan(bungieID, Platform.PC);
+        Clan clan = new Clan(bungieID);
         getClanInfo(clan);
         getClanMembers(clan);
         return clan;
@@ -1125,8 +1081,10 @@ public class RaidReportTool {
                                                             .getAsJsonObject("basic").getAsJsonPrimitive("value")
                                                             .getAsDouble();
                                                     GenericActivity genericActivity = new GenericActivity(instanceId,
-                                                            Mode.getFromValue(activityMode),
-                                                            member.getClan().getClanPlatform());
+                                                            Mode.getFromValue(activityMode), result.getAsJsonObject()
+                                                                    .getAsJsonObject("activityDetails")
+                                                                    .getAsJsonPrimitive("directorActivityHash")
+                                                                    .getAsString());
                                                     genericActivity.setTeam(team);
                                                     genericActivitiesToProcess.add(genericActivity);
                                                 } catch (Throwable ex) {
@@ -1404,47 +1362,28 @@ public class RaidReportTool {
         return csvPart.toString();
     }
 
-    public static HashMap<Platform, String> getPlatformActivityReportsAsCsv(List<Clan> clanList) {
-        HashMap<Platform, StringBuilder> platformToReportBuilderMap = new HashMap<>();
-        platformToReportBuilderMap.put(Platform.PC, new StringBuilder());
-        platformToReportBuilderMap.put(Platform.XBOX, new StringBuilder());
-        platformToReportBuilderMap.put(Platform.PSN, new StringBuilder());
+    public static String getPlatformActivityReportsAsCsv(List<Clan> clanList) {
+        StringBuilder platformToReportBuilder = new StringBuilder();
 
-        platformToReportBuilderMap.values().forEach((strBuilder) -> {
-            strBuilder.append(getActivityReportCsvHeader());
-        });
+        platformToReportBuilder.append(getActivityReportCsvHeader());
 
         clanList.forEach((clan) -> {
-            platformToReportBuilderMap.get(clan.getClanPlatform())
-                    .append(getClanActivityCsvPart(clan));
+            platformToReportBuilder.append(getClanActivityCsvPart(clan));
         });
-        HashMap<Platform, String> output = new HashMap<>();
-        platformToReportBuilderMap.forEach((platform, reportBuilder) -> {
-            output.put(platform, reportBuilder.toString());
-        });
-        return output;
+
+        return platformToReportBuilder.toString();
     }
 
-    private static HashMap<Platform, String> getPlatformAnnualActivityReportsAsCsv(List<Clan> clanList,
+    private static String getPlatformAnnualActivityReportsAsCsv(List<Clan> clanList,
             HashMap<Member, HashMap<String, Integer>> annualValues) {
-        HashMap<Platform, StringBuilder> platformToReportBuilderMap = new HashMap<>();
-        platformToReportBuilderMap.put(Platform.PC, new StringBuilder());
-        platformToReportBuilderMap.put(Platform.XBOX, new StringBuilder());
-        platformToReportBuilderMap.put(Platform.PSN, new StringBuilder());
+        StringBuilder platformToReportBuilder = new StringBuilder();
 
-        platformToReportBuilderMap.values().forEach((strBuilder) -> {
-            strBuilder.append(getActivityReportCsvHeader());
-        });
+        platformToReportBuilder.append(getActivityReportCsvHeader());
 
         clanList.forEach((clan) -> {
-            platformToReportBuilderMap.get(clan.getClanPlatform())
-                    .append(getClanAnnualActivityCsvPart(clan, annualValues));
+            platformToReportBuilder.append(getClanAnnualActivityCsvPart(clan, annualValues));
         });
-        HashMap<Platform, String> output = new HashMap<>();
-        platformToReportBuilderMap.forEach((platform, reportBuilder) -> {
-            output.put(platform, reportBuilder.toString());
-        });
-        return output;
+        return platformToReportBuilder.toString();
     }
 
     private static Object getClanAnnualActivityCsvPart(Clan clan,
@@ -2690,5 +2629,290 @@ public class RaidReportTool {
             }
         }
         return null;
+    }
+
+    public static int getMembersClearedClanWars2025Activities(Member member, LocalDate startDate, LocalDate endDate,
+            HashMap<String, Member> sgcClanMembersMap, int mode)
+            throws IOException, URISyntaxException, InterruptedException {
+        LOGGER.debug(String.format("Getting Cleared Activities for %s", member.getCombinedBungieGlobalDisplayName()));
+        AtomicInteger PGCR_COUNT = new AtomicInteger(0);
+        getMembersActiveCharacters(member);
+        member.getCharacters().forEach((characteruid, character) -> {
+            try {
+                boolean next = false;
+                List<GenericActivity> genericActivitiesToProcess = new ArrayList<>();
+
+                for (int page = 0; !next; page++) {
+                    URL url = new URI(String.format(
+                            "https://www.bungie.net/Platform/Destiny2/%s/Account/%s/Character/%s/Stats/Activities/?page=%d&mode=%d&count=250",
+                            member.getMemberType(), member.getUID(), character.getUID(), page, mode)).toURL();
+
+                    HttpURLConnection conn = getBungieAPIResponse(url, String.format(
+                            "getMembersClearedActivities: %s <%d>", member.getCombinedBungieGlobalDisplayName(), page));
+
+                    if (conn != null) {
+                        BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                        String inputLine;
+                        StringBuffer content = new StringBuffer();
+                        while ((inputLine = in.readLine()) != null) {
+                            content.append(inputLine);
+                        }
+                        JsonArray results = (JsonArray) JsonParser.parseString(content.toString()).getAsJsonObject()
+                                .getAsJsonObject("Response").get("activities");
+                        if (results != null) {
+                            AtomicInteger recordsAfterEndDate = new AtomicInteger(0);
+
+                            results.forEach((result) -> {
+                                int activityMode = result.getAsJsonObject().getAsJsonObject("activityDetails")
+                                        .getAsJsonPrimitive("mode").getAsInt();
+
+                                if (Mode.validModeValuesForCPOTW().contains(activityMode)) {
+                                    String activityDateStr = result.getAsJsonObject().getAsJsonPrimitive("period")
+                                            .getAsString();
+                                    LocalDate dateCompleted = ZonedDateTime.parse(activityDateStr)
+                                            .withZoneSameInstant(ZoneId.of("US/Eastern")).toLocalDate();
+                                    if ((dateCompleted.isAfter(startDate) && dateCompleted.isBefore(endDate))
+                                            || dateCompleted.isEqual(startDate) || dateCompleted.isEqual(endDate)) {
+                                        boolean completed = result.getAsJsonObject().getAsJsonObject("values")
+                                                .getAsJsonObject("completed")
+                                                .getAsJsonObject("basic").getAsJsonPrimitive("value")
+                                                .getAsDouble() == 1.0;
+                                        if (completed) {
+                                            String instanceId = result.getAsJsonObject()
+                                                    .getAsJsonObject("activityDetails")
+                                                    .getAsJsonPrimitive("instanceId").toString().replace("\"", "");
+                                            double team = 0.0;
+                                            try {
+                                                team = result.getAsJsonObject().getAsJsonObject("values")
+                                                        .getAsJsonObject("team")
+                                                        .getAsJsonObject("basic").getAsJsonPrimitive("value")
+                                                        .getAsDouble();
+                                                GenericActivity genericActivity = new GenericActivity(instanceId,
+                                                        Mode.getFromValue(activityMode), result.getAsJsonObject()
+                                                                .getAsJsonObject("activityDetails")
+                                                                .getAsJsonPrimitive("directorActivityHash")
+                                                                .getAsString());
+                                                genericActivity.setTeam(team);
+                                                genericActivitiesToProcess.add(genericActivity);
+                                            } catch (Throwable ex) {
+                                                LOGGER.error(ex.getMessage(), ex);
+                                            }
+                                        }
+                                    } else if (dateCompleted.isAfter(endDate)) {
+                                        recordsAfterEndDate.incrementAndGet();
+                                    }
+                                }
+
+                            });
+
+                            LOGGER.debug(String.format(
+                                    "Finished processing HTTP call #%d for %s:%s", page + 1,
+                                    member.getCombinedBungieGlobalDisplayName(), character.getUID()));
+
+                            next = (results.size() < 250) || (recordsAfterEndDate.get() == results.size());
+                        } else {
+                            next = true;
+                        }
+                        in.close();
+                        conn.disconnect();
+                    } else {
+                        next = true;
+                    }
+                }
+
+                PGCR_COUNT.addAndGet(genericActivitiesToProcess.size());
+                genericActivitiesToProcess.forEach((activityWithSGCMembers) -> {
+                    try {
+                        LOGGER.debug(String.format(
+                                "Processing Activity %s for %s (%s)",
+                                activityWithSGCMembers.getUID(), member.getCombinedBungieGlobalDisplayName(),
+                                character.getUID()));
+
+                        getSGCMemberCarnageReport(member, activityWithSGCMembers, sgcClanMembersMap);
+                        if (activityWithSGCMembers.getMODE().equals(Mode.STRIKE)) {
+                            if (FireteamOps.getAllValidFireteamOpsHashes()
+                                    .contains(activityWithSGCMembers.getACTIVITYHASH())) {
+                                if (activityWithSGCMembers.isAllSGCActivity()) {
+                                    member.getClanWars2025().incrementFireteamOpsCount();
+                                }
+                            } else if (PinnacleOps.getAllValidPinnacleOpsHashes()
+                                    .contains(activityWithSGCMembers.getACTIVITYHASH())) {
+                                if (activityWithSGCMembers.isAllSGCActivity()) {
+                                    member.getClanWars2025().incrementPinnacleOpsCount();
+                                }
+                            }
+                        } else if (activityWithSGCMembers.getMODE().equals(Mode.CRUCIBLE)
+                                || activityWithSGCMembers.getMODE().equals(Mode.TRIALS_OF_OSIRIS)
+                                || activityWithSGCMembers.getMODE().equals(Mode.CONTROL)
+                                || activityWithSGCMembers.getMODE().equals(Mode.CONTROL_COMPETITIVE)
+                                || activityWithSGCMembers.getMODE().equals(Mode.SURVIVAL)
+                                || activityWithSGCMembers.getMODE().equals(Mode.CLASH_COMPETITIVE)) {
+                            if (activityWithSGCMembers.getOtherSGCMembers() >= 2) {
+                                member.getClanWars2025().incrementCrucibleOpsCount();
+                            }
+                        } else if (activityWithSGCMembers.getMODE().equals(Mode.STORY)) {
+                            if (MythicMissions.getAllValidMythicMissionsHashes()
+                                    .contains(activityWithSGCMembers.getACTIVITYHASH())) {
+                                if (activityWithSGCMembers.isAllSGCActivity()) {
+                                    member.getClanWars2025().incrementWeeklyMythicCount();
+                                }
+                            }
+                        } else if (activityWithSGCMembers.getMODE().equals(Mode.RAID)) {
+                            if (Raid.getAllValidRaidHashes().contains(activityWithSGCMembers.getACTIVITYHASH())) {
+                                if (activityWithSGCMembers.isAllSGCActivity()) {
+                                    member.getClanWars2025().incrementRaidCount();
+                                }
+                            }
+                        }
+
+                        if (activityWithSGCMembers.earnsPoints()) {
+                            character.addClearedActivitiesWithSGCMembers(activityWithSGCMembers);
+                        }
+                    } catch (Exception ex) {
+                        LOGGER.error(String.format(
+                                "Error Processing Activity %s for %s (%s)",
+                                activityWithSGCMembers.getUID(), member.getCombinedBungieGlobalDisplayName(),
+                                character.getUID()), ex);
+                    }
+                });
+
+                LOGGER.debug(
+                        "Finished Processing Cleared Activities for "
+                                + member.getCombinedBungieGlobalDisplayName());
+
+            } catch (Exception ex) {
+                LOGGER.error(
+                        "Error Processing Cleared Activities for "
+                                + member.getCombinedBungieGlobalDisplayName(),
+                        ex);
+            }
+        });
+
+        LOGGER.debug(String.format("PGCR Count for %s is %d", member.getCombinedBungieGlobalDisplayName(),
+                PGCR_COUNT.get()));
+        return PGCR_COUNT.get();
+
+    }
+
+    public static String getSGCWeeklyClanWars2025Report(LocalDate startDate, LocalDate endDate,
+            InteractionOriginalResponseUpdater interactionOriginalResponseUpdater, TextChannel textChannel,
+            User discordUser, List<String> filteredClanList)
+            throws IOException, InterruptedException {
+        try {
+            resourceLock.lock();
+            LOGGER.info("Starting SGC Activity Report");
+
+            AtomicLong TOTAL_PGCR_COUNT = new AtomicLong(0);
+            AtomicLong SCORED_PGCR_COUNT = new AtomicLong(0);
+            if (interactionOriginalResponseUpdater != null) {
+                interactionOriginalResponseUpdater.setContent(String
+                        .format("Building a SGC activity report from %s to %s\nThis will take a while.",
+                                startDate,
+                                endDate))
+                        .update().join();
+            }
+            List<Clan> clanList = initializeClanList();
+            HashMap<String, Member> sgcClanMembersMap = initializeClanMembersMap(clanList);
+
+            for (int i = 0; i < clanList.size(); i++) {
+                if (filteredClanList.contains(clanList.get(i).getClanId())) {
+                    Clan clan = clanList.get(i);
+
+                    List<Callable<Object>> tasks = new ArrayList<>();
+                    LOGGER.info("Starting to process " + clan.getCallsign());
+                    clan.getMembers().forEach((memberId, member) -> {
+                        tasks.add(() -> {
+
+                            if (member.hasNewBungieName()) {
+                                try {
+                                    LOGGER.debug("Starting to process " + member.getDisplayName());
+                                    TOTAL_PGCR_COUNT.addAndGet(
+                                            getMembersClearedClanWars2025Activities(member, startDate, endDate,
+                                                    sgcClanMembersMap, 0));
+
+                                    SCORED_PGCR_COUNT.addAndGet(member.getWeeklySGCActivity().get("COUNT"));
+                                    LOGGER.debug("Finished processing " + member.getDisplayName());
+                                } catch (Throwable ex) {
+                                    LOGGER.error("Error processing " + member.getDisplayName(), ex);
+                                }
+                            }
+                            return null;
+                        });
+                    });
+
+                    try {
+                        executorService.invokeAll(tasks);
+                        if (textChannel != null && discordUser != null) {
+                            sendClanSGCActivityMessage(startDate, endDate, clan, textChannel, discordUser);
+                        }
+                    } finally {
+
+                        LOGGER.info("Finished processing " + clan.getCallsign());
+                    }
+                }
+
+            }
+
+            LOGGER.info("Finished processing All Clans for SGC Activity Report");
+
+            String potwActivityReportAsCsv = getPlatformClanWars2025ReportsAsCsv(clanList,
+                    filteredClanList);
+            LOGGER.info("SGC Activity Report Complete");
+            return potwActivityReportAsCsv;
+        } finally {
+            resourceLock.unlock();
+        }
+    }
+
+    private static String getClanWars2025ReportCsvHeader() {
+        final StringBuilder csvPart = new StringBuilder();
+
+        // Base Clan Wars 2025
+        csvPart.append("\"Gamertag\",").append("\"BungieDisplayName\",").append("\"Clan\",")
+                .append("\"Fireteam Ops Completed w/Full SGC Fireteam\",")
+                .append("\"Pinnacle Ops Completed w/Full SGC Fireteam\",")
+                .append("\"Crucible Ops Completed w/2 other SGC Members\",")
+                .append("\"Weekly Mythic Completed w/Full SGC Fireteam\",")
+                .append("\"Full Raids Completed w/Full SGC Fireteam\",");
+
+        // New Line
+        return csvPart.append("\n").toString();
+    }
+
+    public static String getPlatformClanWars2025ReportsAsCsv(List<Clan> clanList,
+            List<String> filteredClanList) {
+        StringBuilder platformToReportBuilder = new StringBuilder();
+
+        platformToReportBuilder.append(getClanWars2025ReportCsvHeader());
+
+        clanList.forEach((clan) -> {
+            if (filteredClanList.contains(clan.getClanId())) {
+                platformToReportBuilder.append(getClanClanWars2025CsvPart(clan));
+            }
+        });
+
+        return platformToReportBuilder.toString();
+    }
+
+    private static String getClanClanWars2025CsvPart(Clan clan) {
+        final StringBuilder csvPart = new StringBuilder();
+        clan.getMembers()
+                .forEach((memberId, member) -> {
+                    if (member.hasNewBungieName()) {
+                        // Base CPOTW
+                        csvPart.append("\"").append(member.getDisplayName()).append("\",")
+                                .append("\"").append(member.getCombinedBungieGlobalDisplayName()).append("\",")
+                                .append("\"").append(clan.getCallsign()).append("\",")
+                                .append("\"").append(member.getClanWars2025().getFireteamOpsCount()).append("\",")
+                                .append("\"").append(member.getClanWars2025().getPinnacleOpsCount()).append("\",")
+                                .append("\"").append(member.getClanWars2025().getCrucibleOpsCount()).append("\",")
+                                .append("\"").append(member.getClanWars2025().getWeeklyMythicCount()).append("\",")
+                                .append("\"").append(member.getClanWars2025().getRaidCount()).append("\",");
+                        // New Line
+                        csvPart.append("\n");
+                    }
+                });
+
+        return csvPart.toString();
     }
 }

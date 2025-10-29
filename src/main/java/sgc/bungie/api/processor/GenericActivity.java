@@ -5,23 +5,24 @@ import java.util.ArrayList;
 import org.slf4j.Logger;
 
 import sgc.discord.bot.BotApplication;
-import sgc.types.Platform;
 
 public class GenericActivity {
     private static final Logger LOGGER = BotApplication.getLogger();
 
     private final String UID;
-    private final Platform memberClanPlatform;
+    private final String ACTIVITYHASH;
+
     private ArrayList<Clan> otherSGCClans = new ArrayList<>();
     private int otherSGCMembers = 0;
+
     private boolean allSGCActivity = false;
     private double team = 0.0;
     private final Mode MODE;
 
-    public GenericActivity(String uid, Mode mode, Platform memberClanPlatform) {
+    public GenericActivity(String uid, Mode mode, String ACTIVITYHASH) {
         UID = uid;
         MODE = mode;
-        this.memberClanPlatform = memberClanPlatform;
+        this.ACTIVITYHASH = ACTIVITYHASH;
     }
 
     public String getUID() {
@@ -55,22 +56,6 @@ public class GenericActivity {
         // One Point For Each Unique Clan, Other Than Your Own
         total += otherSGCClans.size();
 
-        // One Point For Each Unique Platform, Other Than Your Own
-        ArrayList<Platform> platforms = new ArrayList<>();
-        platforms.add(memberClanPlatform);
-        for (Clan clan : otherSGCClans) {
-            if (!platforms.contains(clan.getClanPlatform())) {
-                try {
-                    platforms.add(clan.getClanPlatform());
-                    total += 1;
-                } catch (Exception ex) {
-                    LOGGER.error(
-                            String.format("There was an error getting the Clan Platform for %s", clan.getCallsign()),
-                            ex);
-                }
-            }
-        }
-
         // One Point For A Full SGC Fireteam
         if (otherSGCMembers > 0 && allSGCActivity) {
             total += 1;
@@ -98,4 +83,11 @@ public class GenericActivity {
         return MODE;
     }
 
+    public int getOtherSGCMembers() {
+        return otherSGCMembers;
+    }
+
+    public String getACTIVITYHASH() {
+        return ACTIVITYHASH;
+    }
 }

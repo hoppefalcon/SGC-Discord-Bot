@@ -165,5 +165,4 @@ public class Character {
             potwCompletionsByDungeon.put(dungeon, false);
         });
     }
-
 }

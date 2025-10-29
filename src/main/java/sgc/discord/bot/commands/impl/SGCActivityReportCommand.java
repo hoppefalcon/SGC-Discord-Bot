@@ -16,7 +16,6 @@ import org.slf4j.Logger;
 import sgc.bungie.api.processor.RaidReportTool;
 import sgc.discord.bot.BotApplication;
 import sgc.discord.bot.commands.Command;
-import sgc.types.Platform;
 
 public class SGCActivityReportCommand implements Command {
 
@@ -67,7 +66,7 @@ public class SGCActivityReportCommand implements Command {
                                                                 .update();
                                         } else {
                                                 Instant start = Instant.now();
-                                                HashMap<Platform, String> sgcWeeklyActivityReport = RaidReportTool
+                                                String sgcWeeklyActivityReport = RaidReportTool
                                                                 .getSGCWeeklyActivityReport(startDate,
                                                                                 endDate,
                                                                                 interactionOriginalResponseUpdater,
@@ -107,42 +106,38 @@ public class SGCActivityReportCommand implements Command {
                                                                                         .getChannel().get()
                                                                                         .getIdAsString());
 
-                                                        sgcWeeklyActivityReport.forEach((platform, report) -> {
-                                                                new MessageBuilder()
-                                                                                .setContent(String.format(
-                                                                                                "%s Activity Report from %s to %s",
-                                                                                                platform,
-                                                                                                startDate.toString(),
-                                                                                                endDate.toString()))
-                                                                                .addEmbed(new EmbedBuilder()
-                                                                                                .setAuthor(slashCommandInteraction
-                                                                                                                .getUser())
-                                                                                                .setTitle(String.format(
-                                                                                                                "%s Activity Report from %s to %s",
-                                                                                                                platform,
-                                                                                                                startDate.toString(),
-                                                                                                                endDate.toString()))
-                                                                                                .setDescription(String
-                                                                                                                .format(
-                                                                                                                                "Completed in %02d:%02d:%02d",
-                                                                                                                                hours,
-                                                                                                                                minutes,
-                                                                                                                                seconds))
-                                                                                                .setFooter("#AreYouShrouded")
-                                                                                                .setThumbnail(getClass()
-                                                                                                                .getClassLoader()
-                                                                                                                .getResourceAsStream(
-                                                                                                                                "thumbnail.jpg"))
-                                                                                                .setColor(Color.ORANGE))
-                                                                                .addAttachment(report.getBytes(),
-                                                                                                String.format("%s_Activity_Report_%s_to_%s.csv",
-                                                                                                                platform,
-                                                                                                                startDate.toString(),
-                                                                                                                endDate.toString()))
-                                                                                .send(slashCommandInteraction
-                                                                                                .getChannel()
-                                                                                                .get());
-                                                        });
+                                                        new MessageBuilder()
+                                                                        .setContent(String.format(
+                                                                                        "SGC Activity Report from %s to %s",
+                                                                                        startDate.toString(),
+                                                                                        endDate.toString()))
+                                                                        .addEmbed(new EmbedBuilder()
+                                                                                        .setAuthor(slashCommandInteraction
+                                                                                                        .getUser())
+                                                                                        .setTitle(String.format(
+                                                                                                        "SGC Activity Report from %s to %s",
+                                                                                                        startDate.toString(),
+                                                                                                        endDate.toString()))
+                                                                                        .setDescription(String
+                                                                                                        .format(
+                                                                                                                        "Completed in %02d:%02d:%02d",
+                                                                                                                        hours,
+                                                                                                                        minutes,
+                                                                                                                        seconds))
+                                                                                        .setFooter("#AreYouShrouded")
+                                                                                        .setThumbnail(getClass()
+                                                                                                        .getClassLoader()
+                                                                                                        .getResourceAsStream(
+                                                                                                                        "thumbnail.jpg"))
+                                                                                        .setColor(Color.ORANGE))
+                                                                        .addAttachment(sgcWeeklyActivityReport
+                                                                                        .getBytes(),
+                                                                                        String.format("SGC_Activity_Report_%s_to_%s.csv",
+                                                                                                        startDate.toString(),
+                                                                                                        endDate.toString()))
+                                                                        .send(slashCommandInteraction
+                                                                                        .getChannel()
+                                                                                        .get());
 
                                                 }
                                         }

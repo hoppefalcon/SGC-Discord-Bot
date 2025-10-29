@@ -172,25 +172,11 @@ public class BotApplication {
 
 		RaidReportTool.initializeClanIdMap();
 
-		final SlashCommandOptionBuilder pcClanOption = new SlashCommandOptionBuilder().setName("Clan")
+		final SlashCommandOptionBuilder clanOption = new SlashCommandOptionBuilder().setName("Clan")
 				.setType(SlashCommandOptionType.STRING).setRequired(true).setDescription("Clan for Raid Report");
 
-		RaidReportTool.getPcClanIdMap().forEach((clanCallsign, clan) -> {
-			pcClanOption.addChoice(clanCallsign, clan);
-		});
-
-		final SlashCommandOptionBuilder xbClanOption = new SlashCommandOptionBuilder().setName("Clan")
-				.setType(SlashCommandOptionType.STRING).setRequired(true).setDescription("Clan for Raid Report");
-
-		RaidReportTool.getXbClanIdMap().forEach((clanCallsign, clan) -> {
-			xbClanOption.addChoice(clanCallsign, clan);
-		});
-
-		final SlashCommandOptionBuilder psClanOption = new SlashCommandOptionBuilder().setName("Clan")
-				.setType(SlashCommandOptionType.STRING).setRequired(true).setDescription("Clan for Raid Report");
-
-		RaidReportTool.getPsClanIdMap().forEach((clanCallsign, clan) -> {
-			psClanOption.addChoice(clanCallsign, clan);
+		RaidReportTool.getClanIdMap().forEach((clanCallsign, clan) -> {
+			clanOption.addChoice(clanCallsign, clan);
 		});
 
 		final SlashCommandOptionBuilder userWeeklyClearStartOption = new SlashCommandOptionBuilder()
@@ -255,16 +241,8 @@ public class BotApplication {
 				.addOption(bungieIdOption.build()));
 
 		commandList.add(new SlashCommandBuilder().setName("pc-clan-raid-report")
-				.setDescription("Pulls a full PC clan raid report.")
-				.addOption(pcClanOption.build()));
-
-		commandList.add(new SlashCommandBuilder().setName("xbox-clan-raid-report")
-				.setDescription("Pulls a full Xbox clan raid report.")
-				.addOption(xbClanOption.build()));
-
-		commandList.add(new SlashCommandBuilder().setName("psn-clan-raid-report")
-				.setDescription("Pulls a full Playstation clan raid report.")
-				.addOption(psClanOption.build()));
+				.setDescription("Pulls a full clan raid report.")
+				.addOption(clanOption.build()));
 
 		commandList.add(new SlashCommandBuilder().setName("user-weekly-raid-report").setDescription(
 				"Pulls the Weekly Raid Report of the user. (Requires full Bungie ID, Start Date, and End Date)")
@@ -304,18 +282,8 @@ public class BotApplication {
 				.addOption(daysOption.build()));
 
 		commandList.add(new SlashCommandBuilder().setName("pc-clan-iar")
-				.setDescription("Pulls a PC clan internal activity report.")
-				.addOption(pcClanOption.build())
-				.addOption(timeframe.build()));
-
-		commandList.add(new SlashCommandBuilder().setName("xbox-clan-iar")
-				.setDescription("Pulls a Xbox clan internal activity report.")
-				.addOption(xbClanOption.build())
-				.addOption(timeframe.build()));
-
-		commandList.add(new SlashCommandBuilder().setName("psn-clan-iar")
-				.setDescription("Pulls a Playstation clan internal activity report.")
-				.addOption(psClanOption.build())
+				.setDescription("Pulls a clan internal activity report.")
+				.addOption(clanOption.build())
 				.addOption(timeframe.build()));
 
 		commandList.add(new SlashCommandBuilder().setName("infographic")
@@ -353,5 +321,22 @@ public class BotApplication {
 		API.addSlashCommandCreateListener(slashCommandListener);
 
 		return API;
+	}
+
+	public static void sendErrorMessageDM(Exception ex) {
+		API.getUserById("188734559729221632").thenAccept(user -> {
+			// Open a private channel with the user
+			user.openPrivateChannel().thenAccept(privateChannel -> {
+				// Send the message to the private channel
+				privateChannel.sendMessage(
+						String.format("An Error Occured!\n```%s```", ex.toString()));
+			}).exceptionally(throwable -> {
+				System.err.println("Could not open private channel or send DM: " + throwable.getMessage());
+				return null;
+			});
+		}).exceptionally(e -> {
+			LOGGER.error(e.getMessage(), e);
+			return null;
+		});
 	}
 }

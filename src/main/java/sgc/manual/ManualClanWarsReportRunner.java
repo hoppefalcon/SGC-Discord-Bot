@@ -7,36 +7,41 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.YearMonth;
-
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import sgc.bungie.api.processor.RaidReportTool;
+import sgc.types.SGC_Clan;
 
-public class ManualSGCActivityReportRunner {
-        private static final Logger LOGGER = LoggerFactory.getLogger(ManualSGCActivityReportRunner.class);
+public class ManualClanWarsReportRunner {
+        private static final Logger LOGGER = LoggerFactory.getLogger(ManualClanWarsReportRunner.class);
+        private static List<String> filteredClanList = Arrays.asList(SGC_Clan.VII.Bungie_ID, SGC_Clan.VII.Bungie_ID);
+        // private static List<String> filteredClanList =
+        // Arrays.asList(SGC_Clan.SOL.Bungie_ID);
 
         public static void main(String[] args) throws InterruptedException, IOException {
+                LOGGER.info("SGC ManualClanWarsReportRunner Started");
 
-                int year = 2024;
-                // LocalDate startDate = YearMonth.of(year, 1).atDay(1);
-                // LocalDate endDate = YearMonth.of(year, 12).atEndOfMonth();
-                LocalDate startDate = YearMonth.of(year, 1).atDay(1);
-                LocalDate endDate = YearMonth.of(year, 12).atDay(31);
+                int year = 2025;
+                LocalDate startDate = YearMonth.of(year, 8).atDay(31);
+                LocalDate endDate = YearMonth.of(year, 9).atDay(6);
                 LOGGER.info(String.format("Starting %s to %s SGC Activity Report", startDate.toString(),
                                 endDate.toString()));
 
                 String potwActivityReportAsCsv = RaidReportTool
-                                .getSGCAnnualActivityReport(startDate,
+                                .getSGCWeeklyClanWars2025Report(startDate,
                                                 endDate,
                                                 null,
                                                 null,
-                                                null);
+                                                null, filteredClanList);
 
                 LOGGER.info(String.format("Finished %s to %s SGC Activity Report", startDate.toString(),
                                 endDate.toString()));
 
-                Path path = Paths.get("target", "SGC_Annual_CPOTW.csv");
+                Path path = Paths.get("target", "SGC_Weekly_Clan_Wars_2025.csv");
                 Files.write(path,
                                 potwActivityReportAsCsv.getBytes(StandardCharsets.UTF_8));
 

@@ -7,8 +7,6 @@ package sgc.bungie.api.processor;
 
 import java.util.HashMap;
 
-import sgc.types.Platform;
-
 /**
  * @author chris hoppe
  */
@@ -18,11 +16,9 @@ public class Clan {
     private HashMap<String, Member> members = new HashMap<>();
     private String name;
     private String callsign;
-    private final Platform clanPlatform;
 
-    public Clan(String clanId, Platform clanPlatform) {
+    public Clan(String clanId) {
         this.clanId = clanId;
-        this.clanPlatform = clanPlatform;
     }
 
     public void addMember(Member member) {
@@ -53,10 +49,6 @@ public class Clan {
 
     public void setCallsign(String callsign) {
         this.callsign = callsign;
-    }
-
-    public Platform getClanPlatform() {
-        return clanPlatform;
     }
 
     @Override

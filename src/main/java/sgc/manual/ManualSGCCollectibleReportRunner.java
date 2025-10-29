@@ -65,6 +65,7 @@ public class ManualSGCCollectibleReportRunner {
         collectibles.put("1763610692", "Whisper of the Worm");
         collectibles.put("360254771", "Outbreak Perfected");
         collectibles.put("1028725073", "Forerunner");
+        // collectibles.put("2053307670", "Timeline's Blade");
 
         for (int i = 0; i < clanList.size(); i++) {
             Clan clan = clanList.get(i);

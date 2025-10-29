@@ -24,6 +24,8 @@ public class Member {
     private final HashMap<String, Boolean> collectibles = new HashMap<>();
     private final HashMap<String, Integer> metrics = new HashMap<>();
 
+    private final ClanWars2025Result clanWars2025 = new ClanWars2025Result();
+
     public Member(String UID, String DisplayName, String MemberType, String bungieGlobalDisplayName,
             String bungieGlobalDisplayNameCode, Clan clan) {
         this.UID = UID;
@@ -274,5 +276,9 @@ public class Member {
         characters.forEach((characterId, character) -> {
             character.zeroOut();
         });
+    }
+
+    public ClanWars2025Result getClanWars2025() {
+        return clanWars2025;
     }
 }
