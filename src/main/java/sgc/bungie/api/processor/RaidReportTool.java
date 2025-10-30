@@ -762,7 +762,14 @@ public class RaidReportTool {
                         }
                     });
 
-                    LOGGER.info("Finished processing " + clan.getCallsign());
+                    try {
+                        if (textChannel != null && discordUser != null) {
+                            sendClanSGCActivityMessage(startDate, endDate, clan, textChannel, discordUser);
+                        }
+                    } finally {
+                        LOGGER.info("Finished processing " + clan.getCallsign());
+                    }
+
                     return null;
                 });
             });
