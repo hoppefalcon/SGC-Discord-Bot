@@ -772,10 +772,11 @@ public class RaidReportTool {
                                     / ((double) sgcClanMembersMap.size()))
                                     || PROCESSED_MEMBER_COUNT.get() == sgcClanMembersMap.size()) {
                                 interactionOriginalResponseUpdater.setContent(String
-                                        .format("Building a SGC activity report from %s to %s\nThis will take a while.\n %.2f%% Members Processed",
+                                        .format("Building a SGC activity report from %s to %s\nThis will take a while.\n %.0f%% Members Processed",
                                                 startDate,
                                                 endDate,
-                                                (PROCESSED_MEMBER_COUNT.get() / ((double) sgcClanMembersMap.size()))))
+                                                (PROCESSED_MEMBER_COUNT.get() / ((double) sgcClanMembersMap.size()))
+                                                        * 100))
                                         .update().join();
                                 STEP_COUNT.incrementAndGet();
                             }
