@@ -743,7 +743,7 @@ public class RaidReportTool {
 
             List<Clan> clanList = initializeClanList();
             HashMap<String, Member> sgcClanMembersMap = initializeClanMembersMap(clanList);
-
+            final ReentrantLock responseUpdateResourceLock = new ReentrantLock();
             List<Callable<Object>> tasks = new ArrayList<>();
             sgcClanMembersMap.forEach((memberId, member) -> {
                 tasks.add(() -> {
@@ -764,13 +764,20 @@ public class RaidReportTool {
                     LOGGER.info(String.format("%d / %d Members Processed", PROCESSED_MEMBER_COUNT.get(),
                             sgcClanMembersMap.size()));
                     if (interactionOriginalResponseUpdater != null) {
-                        interactionOriginalResponseUpdater.setContent(String
-                                .format("Building a SGC activity report from %s to %s\nThis will take a while.\n %d / %d Members Processed",
-                                        startDate,
-                                        endDate,
-                                        PROCESSED_MEMBER_COUNT.get(),
-                                        sgcClanMembersMap.size()))
-                                .update().join();
+                        try {
+                            responseUpdateResourceLock.lock();
+                            interactionOriginalResponseUpdater.setContent(String
+                                    .format("Building a SGC activity report from %s to %s\nThis will take a while.\n %d / %d Members Processed",
+                                            startDate,
+                                            endDate,
+                                            PROCESSED_MEMBER_COUNT.get(),
+                                            sgcClanMembersMap.size()))
+                                    .update().join();
+                        } catch (Exception ex) {
+                            LOGGER.error("Error updating Discord Response", ex);
+                        } finally {
+                            responseUpdateResourceLock.unlock();
+                        }
                     }
                     return null;
                 });

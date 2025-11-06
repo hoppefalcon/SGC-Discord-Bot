@@ -67,6 +67,7 @@ public enum Raid {
 
     public static List<Raid> getRaidsOrdered() {
         List<Raid> raids = new ArrayList<>();
+        raids.add(THE_DESERT_PERPETUAL_EPIC);
         raids.add(THE_DESERT_PERPETUAL);
         raids.add(SALVATIONS_EDGE);
         raids.add(CROTAS_END);
