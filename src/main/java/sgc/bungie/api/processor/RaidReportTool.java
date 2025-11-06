@@ -744,6 +744,8 @@ public class RaidReportTool {
             List<Clan> clanList = initializeClanList();
             HashMap<String, Member> sgcClanMembersMap = initializeClanMembersMap(clanList);
             final ReentrantLock responseUpdateResourceLock = new ReentrantLock();
+            final double stepCount = 100;
+            AtomicInteger STEP_COUNT = new AtomicInteger(0);
             List<Callable<Object>> tasks = new ArrayList<>();
             sgcClanMembersMap.forEach((memberId, member) -> {
                 tasks.add(() -> {
@@ -766,13 +768,17 @@ public class RaidReportTool {
                     if (interactionOriginalResponseUpdater != null) {
                         try {
                             responseUpdateResourceLock.lock();
-                            interactionOriginalResponseUpdater.setContent(String
-                                    .format("Building a SGC activity report from %s to %s\nThis will take a while.\n %d / %d Members Processed",
-                                            startDate,
-                                            endDate,
-                                            PROCESSED_MEMBER_COUNT.get(),
-                                            sgcClanMembersMap.size()))
-                                    .update().join();
+                            if ((STEP_COUNT.get() + 1 / stepCount) <= (PROCESSED_MEMBER_COUNT.get()
+                                    / ((double) sgcClanMembersMap.size()))
+                                    || PROCESSED_MEMBER_COUNT.get() == sgcClanMembersMap.size()) {
+                                interactionOriginalResponseUpdater.setContent(String
+                                        .format("Building a SGC activity report from %s to %s\nThis will take a while.\n %.2f%% Members Processed",
+                                                startDate,
+                                                endDate,
+                                                (PROCESSED_MEMBER_COUNT.get() / ((double) sgcClanMembersMap.size()))))
+                                        .update().join();
+                                STEP_COUNT.incrementAndGet();
+                            }
                         } catch (Exception ex) {
                             LOGGER.error("Error updating Discord Response", ex);
                         } finally {
