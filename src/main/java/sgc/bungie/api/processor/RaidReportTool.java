@@ -768,15 +768,7 @@ public class RaidReportTool {
                     if (interactionOriginalResponseUpdater != null) {
                         try {
                             responseUpdateResourceLock.lock();
-                            LOGGER.info(String.format("((%d / %f) <= (%d / %d)) --> (%f) <= (%f)",
-                                    STEP_COUNT.get() + 1,
-                                    stepCount,
-                                    PROCESSED_MEMBER_COUNT.get(),
-                                    sgcClanMembersMap.size(),
-                                    (STEP_COUNT.get() + 1 / stepCount),
-                                    (PROCESSED_MEMBER_COUNT.get()
-                                            / ((double) sgcClanMembersMap.size()))));
-                            if ((STEP_COUNT.get() + 1 / stepCount) <= (PROCESSED_MEMBER_COUNT.get()
+                            if (((STEP_COUNT.get() + 1) / stepCount) <= (PROCESSED_MEMBER_COUNT.get()
                                     / ((double) sgcClanMembersMap.size()))
                                     || PROCESSED_MEMBER_COUNT.get() == sgcClanMembersMap.size()) {
                                 String updateString = String
