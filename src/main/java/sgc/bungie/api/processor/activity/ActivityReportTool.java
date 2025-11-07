@@ -114,11 +114,11 @@ public class ActivityReportTool {
         StringBuilder sb = new StringBuilder();
 
         channels.parallelStream().forEach(channel -> {
-            if (channel.canYouSee()) {
-                Optional<TextChannel> textChannel = channel.asTextChannel();
+            try {
+                if (channel.canYouSee()) {
+                    Optional<TextChannel> textChannel = channel.asTextChannel();
 
-                if (textChannel.isPresent() && textChannel.get().canReadMessageHistory(API.getYourself())) {
-                    try {
+                    if (textChannel.isPresent() && textChannel.get().canReadMessageHistory(API.getYourself())) {
                         CompletableFuture<MessageSet> messagesWhile = textChannel.get()
                                 .getMessagesWhile(message -> message.getCreationTimestamp()
                                         .compareTo(Instant.now().plus(-14, ChronoUnit.DAYS)) > 0);
@@ -132,11 +132,11 @@ public class ActivityReportTool {
                                 }
                             }
                         });
-                    } catch (Exception e) {
-                        sb.append(channel.getIdAsString()).append("\n");
-                        LOGGER.error(e.getMessage(), e);
                     }
                 }
+            } catch (Exception e) {
+                sb.append(channel.getIdAsString()).append("\n");
+                LOGGER.error(e.getMessage(), e);
             }
         });
     }

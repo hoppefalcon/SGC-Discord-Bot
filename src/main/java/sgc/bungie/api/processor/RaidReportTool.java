@@ -768,7 +768,7 @@ public class RaidReportTool {
                     if (interactionOriginalResponseUpdater != null) {
                         try {
                             responseUpdateResourceLock.lock();
-                            LOGGER.info(String.format("((%f / %f) <= (%f / %f)) --> (%f) <= (%f)",
+                            LOGGER.info(String.format("((%d / %f) <= (%d / %d)) --> (%f) <= (%f)",
                                     STEP_COUNT.get() + 1,
                                     stepCount,
                                     PROCESSED_MEMBER_COUNT.get(),
