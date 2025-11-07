@@ -111,7 +111,6 @@ public class ActivityReportTool {
         }
 
         Set<Channel> channels = API.getChannels();
-        StringBuilder sb = new StringBuilder();
 
         channels.parallelStream().forEach(channel -> {
             try {
@@ -135,10 +134,10 @@ public class ActivityReportTool {
                     }
                 }
             } catch (Exception e) {
-                sb.append(channel.getIdAsString()).append("\n");
-                LOGGER.error(e.getMessage(), e);
+                LOGGER.error(String.format("Bot is missing access to ChannelID: %s", channel.getIdAsString()));
             }
         });
+
     }
 
     /**
