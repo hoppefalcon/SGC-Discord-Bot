@@ -768,15 +768,27 @@ public class RaidReportTool {
                     if (interactionOriginalResponseUpdater != null) {
                         try {
                             responseUpdateResourceLock.lock();
+                            LOGGER.info(String.format("((%f / %f) <= (%f / %f)) --> (%f) <= (%f)",
+                                    STEP_COUNT.get() + 1,
+                                    stepCount,
+                                    PROCESSED_MEMBER_COUNT.get(),
+                                    sgcClanMembersMap.size(),
+                                    (STEP_COUNT.get() + 1 / stepCount),
+                                    (PROCESSED_MEMBER_COUNT.get()
+                                            / ((double) sgcClanMembersMap.size()))));
                             if ((STEP_COUNT.get() + 1 / stepCount) <= (PROCESSED_MEMBER_COUNT.get()
                                     / ((double) sgcClanMembersMap.size()))
                                     || PROCESSED_MEMBER_COUNT.get() == sgcClanMembersMap.size()) {
+                                String updateString = String
+                                        .format("%.0f%% Members Processed",
+                                                (PROCESSED_MEMBER_COUNT.get() / ((double) sgcClanMembersMap.size()))
+                                                        * 100);
+                                LOGGER.info(String.format("Updating Discord Response: %s", updateString));
                                 interactionOriginalResponseUpdater.setContent(String
-                                        .format("Building a SGC activity report from %s to %s\nThis will take a while.\n %.0f%% Members Processed",
+                                        .format("Building a SGC activity report from %s to %s\nThis will take a while.\n %s",
                                                 startDate,
                                                 endDate,
-                                                (PROCESSED_MEMBER_COUNT.get() / ((double) sgcClanMembersMap.size()))
-                                                        * 100))
+                                                updateString))
                                         .update().join();
                                 STEP_COUNT.incrementAndGet();
                             }
