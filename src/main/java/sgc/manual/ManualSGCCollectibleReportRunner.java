@@ -23,7 +23,7 @@ import sgc.types.SGC_Clan;
 public class ManualSGCCollectibleReportRunner {
     private static final Logger LOGGER = LoggerFactory.getLogger(ManualSGCCollectibleReportRunner.class);
     private static ExecutorService executorService = Executors.newFixedThreadPool(15);
-    private static List<String> filteredClanList = Arrays.asList(SGC_Clan.VII.Bungie_ID);
+    private static List<String> filteredClanList = Arrays.asList(SGC_Clan.SENT.Bungie_ID);
 
     public static void main(String[] args) throws InterruptedException, IOException {
         List<Clan> clanList = RaidReportTool.initializeClanList();

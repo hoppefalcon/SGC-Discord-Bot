@@ -84,7 +84,8 @@ public enum Mode {
     ZONE_CONTROL("Zone Control", 89, 1.0),
     IRON_BANNER_RIFT("Iron Banner Rift", 90, 1.0),
     IRON_BANNER_ZONE_CONTROL("Iron Banner Zone Control", 91, 1.0),
-    RELIC("Relic", 92, 1.0);
+    RELIC("Relic", 92, 1.0),
+    LAWLESS_FRONTIER("Lawless Frontier", 93, 1.0);
 
     public final String name;
     private final int value;
