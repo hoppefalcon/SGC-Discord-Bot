@@ -20,7 +20,7 @@ public class ManualUserPOTWReportRunner {
                 // LocalDate endDate = YearMonth.of(year, 12).atEndOfMonth();
                 LocalDate startDate = YearMonth.of(year, 12).atDay(2);
                 LocalDate endDate = YearMonth.of(year, 12).atDay(8);
-                String userBungieId = "hoppefalcon#7599";
+                String userBungieId = "Riller#5914";
                 System.out.printf("%s CPOTW Score: %d", userBungieId,
                                 RaidReportTool.getUserCommunityActivityReport(userBungieId, startDate, endDate)
                                                 .getWeeklySGCActivity()

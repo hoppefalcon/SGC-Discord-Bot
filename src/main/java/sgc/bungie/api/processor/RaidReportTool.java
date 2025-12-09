@@ -1092,6 +1092,9 @@ public class RaidReportTool {
                                     int activityMode = result.getAsJsonObject().getAsJsonObject("activityDetails")
                                             .getAsJsonPrimitive("mode").getAsInt();
 
+                                    String instanceID = result.getAsJsonObject().getAsJsonObject("activityDetails")
+                                            .getAsJsonPrimitive("instanceId").getAsString();
+
                                     if (Mode.validModeValuesForCPOTW().contains(activityMode)) {
                                         String activityDateStr = result.getAsJsonObject().getAsJsonPrimitive("period")
                                                 .getAsString();
@@ -1274,7 +1277,8 @@ public class RaidReportTool {
                         } catch (NullPointerException ex) {
                         }
 
-                        if (activityWithSGCMembers.getTeam() == team) {
+                        if ((team == 0.0 && activityWithSGCMembers.getMODE() == Mode.LAWLESS_FRONTIER)
+                                || activityWithSGCMembers.getTeam() == team) {
                             if (sgcClanMembersMap.get(playerId) != null) {
                                 if (!sgcClanMembersMap.get(playerId).getClan().equals(member.getClan())) {
                                     activityWithSGCMembers.addOtherSGCClan(sgcClanMembersMap.get(playerId).getClan());
