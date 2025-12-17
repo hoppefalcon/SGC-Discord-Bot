@@ -28,7 +28,8 @@ public enum Dungeon {
             Arrays.asList("2716998124", "313828469", "1094262727", "4190119662", "2961030534", "124340010")),
     WARLORDS_RUIN("Warlord's Ruin", Arrays.asList("2004855007", "2534833093")),
     VESPERS_HOST("Vesper's Host", Arrays.asList("300092127", "1915770060", "3492566689", "4293676253")),
-    SUNDERED_DOCTRINE("Sundered Doctrine", Arrays.asList("247869137", "3521648250", "3834447244"));
+    SUNDERED_DOCTRINE("Sundered Doctrine", Arrays.asList("247869137", "3521648250", "3834447244")),
+    EQUILIBRIUM("Equilibrium", Arrays.asList("2727361621", "1754635208"));
 
     public final String name;
     private final List<String> validHashes;
