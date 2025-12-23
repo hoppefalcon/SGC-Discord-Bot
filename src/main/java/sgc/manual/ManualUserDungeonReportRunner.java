@@ -10,7 +10,7 @@ public class ManualUserDungeonReportRunner {
 
         public static void main(String[] args) throws Exception {
                 try {
-                        String userBungieId = "Lobo#9233";
+                        String userBungieId = "Hoppefalcon#7599";
                         String userWeeklyClears = RaidReportTool.getUserDungeonReport(userBungieId);
                         System.out.println(userWeeklyClears);
                 } catch (Exception e) {

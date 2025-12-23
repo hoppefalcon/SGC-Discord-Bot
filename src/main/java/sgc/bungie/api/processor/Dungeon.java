@@ -66,6 +66,7 @@ public enum Dungeon {
 
     public static List<Dungeon> getDungeonsOrdered() {
         List<Dungeon> dungeons = new ArrayList<>();
+        dungeons.add(EQUILIBRIUM);
         dungeons.add(SUNDERED_DOCTRINE);
         dungeons.add(VESPERS_HOST);
         dungeons.add(WARLORDS_RUIN);

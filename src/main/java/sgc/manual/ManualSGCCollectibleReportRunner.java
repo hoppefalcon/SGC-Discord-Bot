@@ -31,7 +31,7 @@ public class ManualSGCCollectibleReportRunner {
         LOGGER.info("Starting SGC Collectible Report");
 
         HashMap<String, String> collectibles = new HashMap<>();
-        // collectibles.put("2565108499", "Intergalactic Wisdom");
+        collectibles.put("670073691", "Dredgen's Descent");
         // collectibles.put("199171385", "One Thousand Voices");
         // collectibles.put("1988948484", "Divinity");
         // collectibles.put("753200559", "Eyes of Tomorrow");
