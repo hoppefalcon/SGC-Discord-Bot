@@ -18,9 +18,11 @@ public enum RedeemableCollectable {
     ARCHIVED(CollectableType.EMBLEM, "PTD-GKG-CVN", "1670619542"),
     BE_TRUE(CollectableType.EMBLEM, "ML3-FD4-ND9", "3215337910"),
     BULBUL_TARANG(CollectableType.EMBLEM, "A67-C7X-3GN", "3215337912"),
+    CONQUEROR_OF_INFINITY(CollectableType.EMBLEM, "VHT-6A7-3MM", "3015791435"),
     COUNTDOWN_TO_CONVERGENCE(CollectableType.EMBLEM, "PHV-6LF-9CP", "3399891685"),
     CRUSHED_GAMMA(CollectableType.EMBLEM, "D97-YCX-7JK", "1939502752"),
     CRYONAUTICS(CollectableType.EMBLEM, "RA9-XPH-6KJ", "4137754755"),
+    EVER_FORWARD(CollectableType.EMBLEM, "JXJ-HVA-RCX", "2006613212 "),
     END_OF_THE_RAINBOW(CollectableType.TRANSMAT_EFFECT, "R9J-79M-J6C", "1009936720"),
     FOLDING_SPACE(CollectableType.EMBLEM, "3J9-AMM-7MG", "1670619543"),
     FUTURE_IN_SHADOW(CollectableType.EMBLEM, "7LV-GTK-T7J", "4137754752"),
@@ -37,9 +39,11 @@ public enum RedeemableCollectable {
     MYOPIA(CollectableType.EMBLEM, "FMM-44A-RKP", "1670619540"),
     NEON_MIRAGE(CollectableType.EMBLEM, "YAA-37T-FCN", "1822059431"),
     OUT_THE_AIRLOCK(CollectableType.EMBLEM, "L3P-XXR-GJ4", "802420309"),
+    PRISMATIC_EXPANSE(CollectableType.SHADDER, "", ""),
     RAINBOW_CONNECTION(CollectableType.EMOTE, "TK7-D3P-FDF", "1063785104"),
     RISEN(CollectableType.EMBLEM, "THR-33A-YKC", "1687397126"),
     SCHRDINGERS_GUN(CollectableType.EMBLEM, "9LX-7YC-6TX", "1973057929"),
+    SECRET_SIGNAL(CollectableType.EMBLEM, "JGN-PX4-DFN", "2040168509"),
     SEQUENCE_FLOURISH(CollectableType.EMBLEM, "7D4-PKR-MD7", "3232115498"),
     SERAPHIMS_GAUNTLETS(CollectableType.EMBLEM, "XVX-DKJ-CVM", "2056946089"),
     SHADOWS_LIGHT(CollectableType.EMBLEM, "F99-KPX-NCF", "3399891683"),
@@ -48,9 +52,9 @@ public enum RedeemableCollectable {
     SUNFLOWER(CollectableType.EMBLEM, "JVG-VNT-GGG", "2006613205"),
     TANGLED_WEB(CollectableType.EMBLEM, "PKH-JL6-L4R", "3299225966"),
     THE_VISIONARY(CollectableType.EMBLEM, "XFV-KHP-N97", "930889102"),
-    VISIO_SPEI(CollectableType.EMBLEM, "993-H3H-M6K", "1822059430"),
     TIGRIS_FATI(CollectableType.EMBLEM, "6AJ-XFR-9ND", "802420307"),
-    CONQUEROR_OF_INFINITY(CollectableType.EMBLEM, "VHT-6A7-3MM", "3015791435");
+    VISIO_SPEI(CollectableType.EMBLEM, "993-H3H-M6K", "1822059430"),
+    YEAR_OF_THE_SNAKE(CollectableType.EMBLEM, "HG7-YRG-HHF", "2006950367");
 
     public static final String BungieRedeemURL = "https://www.bungie.net/7/en/codes/redeem?token=";
     private final String code;
