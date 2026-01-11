@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import sgc.bungie.api.processor.RaidReportTool;
 
-public class ManualUserPOTWReportRunner {
+public class ManualUserCPOTWReportRunner {
         private static final Logger LOGGER = LoggerFactory.getLogger(ManualSGCActivityReportRunner.class);
 
         public static void main(String[] args) throws InterruptedException, IOException, URISyntaxException {
@@ -21,8 +21,10 @@ public class ManualUserPOTWReportRunner {
                 LocalDate startDate = YearMonth.of(year, 1).atDay(6);
                 LocalDate endDate = YearMonth.of(year, 1).atDay(11);
                 String userBungieId = "RayOfEmber#2481";
-                System.out.printf("%s POTW Score: %d", userBungieId,
-                                RaidReportTool.getUserPOTWScore(userBungieId, startDate, endDate));
+                System.out.printf("%s CPOTW Score: %d", userBungieId,
+                                RaidReportTool.getUserCommunityActivityReport(userBungieId, startDate, endDate)
+                                                .getWeeklySGCActivity()
+                                                .get("SCORE"));
 
         }
 }

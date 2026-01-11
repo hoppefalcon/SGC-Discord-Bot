@@ -1588,7 +1588,11 @@ public class RaidReportTool {
             }
         }
         for (Dungeon dungeon : potwDungeonCompletions.keySet()) {
-            total += potwWeights.get(dungeon.name) * potwDungeonCompletions.get(dungeon);
+            try {
+                total += potwWeights.get(dungeon.name) * potwDungeonCompletions.get(dungeon);
+            } catch (Exception ex) {
+                LOGGER.error("Error processing the following mode: " + dungeon.name, ex);
+            }
         }
         return total;
     }
