@@ -52,6 +52,15 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import sgc.discord.infographics.GoogleDriveUtil;
+import sgc.types.BungieMembershipType;
+import sgc.types.DestinyClassType;
+import sgc.types.Dungeon;
+import sgc.types.FireteamOps;
+import sgc.types.Mode;
+import sgc.types.MythicMissions;
+import sgc.types.PinnacleOps;
+import sgc.types.Raid;
+import sgc.types.RedeemableCollectable;
 import sgc.types.SGC_Clan;
 
 /**
@@ -2963,5 +2972,118 @@ public class RaidReportTool {
                 });
 
         return csvPart.toString();
+    }
+
+    public static HashMap<BungieMembershipType, String> getMembersAltNames(String bungieId)
+            throws IOException, URISyntaxException, Exception {
+        return getMembersAltNames(getMemberInformation(bungieId));
+    }
+
+    public static HashMap<BungieMembershipType, String> getMembersAltNames(Member member)
+            throws IOException, URISyntaxException {
+        URL url = new URI(String.format(
+                "https://www.bungie.net/Platform/Destiny2/%s/Profile/%s/LinkedProfiles/?getAllMemberships=true",
+                member.getMemberType(), member.getUID())).toURL();
+
+        HashMap<BungieMembershipType, String> response = new HashMap<>();
+
+        HttpURLConnection conn = getBungieAPIResponse(url,
+                String.format("getMembersMetrics: %s", member.getCombinedBungieGlobalDisplayName()));
+
+        if (conn != null) {
+            try {
+                BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                String inputLine;
+                StringBuffer content = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    content.append(inputLine);
+                }
+                JsonArray profiles = JsonParser.parseString(content.toString()).getAsJsonObject()
+                        .getAsJsonObject("Response").getAsJsonArray("profiles");
+                JsonArray profilesWithErrors = JsonParser.parseString(content.toString()).getAsJsonObject()
+                        .getAsJsonObject("Response").getAsJsonArray("profilesWithErrors");
+                profiles.forEach(p -> {
+                    response.put(
+                            BungieMembershipType.getBungieMembershipType(
+                                    Integer.parseInt(p.getAsJsonObject().get("membershipType").getAsString())),
+                            p.getAsJsonObject().get("displayName").getAsString());
+                });
+                profilesWithErrors.forEach(p -> {
+                    response.put(
+                            BungieMembershipType.getBungieMembershipType(
+                                    Integer.parseInt(p.getAsJsonObject().getAsJsonObject("infoCard")
+                                            .get("membershipType").getAsString())),
+                            p.getAsJsonObject().getAsJsonObject("infoCard").get("displayName").getAsString());
+                });
+                in.close();
+            } catch (Exception ex) {
+                LOGGER.error("Error processing JSON result from "
+                        + url.toExternalForm(), ex);
+            }
+
+            conn.disconnect();
+        }
+        return response;
+    }
+
+    public static byte[] getClanMembersAltNamesCSVByteArray(Clan clan) throws Exception {
+        return getClanMembersAltNamesCSV(clan).getBytes();
+    }
+
+    public static String getClanMembersAltNamesCSV(Clan clan)
+            throws Exception {
+
+        final StringBuilder stringBuilder = new StringBuilder();
+        LOGGER.trace("Processing " + clan.getName());
+
+        List<Callable<Object>> tasks = new ArrayList<>();
+
+        clan.getMembers().forEach((memberId, member) -> {
+            tasks.add(() -> {
+
+                try {
+                    member.setAltNames();
+                } catch (Exception ex) {
+                    LOGGER.error("Error processing Clan members alt name list for " + clan.getName(), ex);
+                }
+                return member;
+            });
+        });
+
+        executorService.invokeAll(tasks);
+        HashMap<BungieMembershipType, Boolean> activeMembershipTypeList = new HashMap<>();
+
+        for (BungieMembershipType m : BungieMembershipType.values()) {
+            activeMembershipTypeList.put(m, false);
+        }
+
+        clan.getMembers().forEach((memberId, member) -> {
+            member.getAltNames().forEach((t, n) -> {
+                activeMembershipTypeList.put(t, true);
+            });
+        });
+
+        List<BungieMembershipType> orderedMembershipTypeList = BungieMembershipType.getOrderedList();
+        stringBuilder.append("Bungie ID, Primary Platform Name");
+        for (int i = 0; i < orderedMembershipTypeList.size(); i++) {
+            if (activeMembershipTypeList.get(orderedMembershipTypeList.get(i))) {
+                stringBuilder.append(", ").append(orderedMembershipTypeList.get(i).getName());
+            }
+        }
+        stringBuilder.append("\n");
+        clan.getMembers().forEach((memberId, member) -> {
+            stringBuilder.append(member.getCombinedBungieGlobalDisplayName()).append(", ")
+                    .append(member.getDisplayName());
+            for (int i = 0; i < orderedMembershipTypeList.size(); i++) {
+                if (activeMembershipTypeList.get(orderedMembershipTypeList.get(i))) {
+                    String name = member.getAltNames().get(orderedMembershipTypeList.get(i));
+                    stringBuilder.append(", ").append((name != null) ? name : "");
+                }
+            }
+            stringBuilder.append("\n");
+        });
+
+        LOGGER.trace("Finished Processing " + clan.getName());
+        return stringBuilder.toString();
     }
 }

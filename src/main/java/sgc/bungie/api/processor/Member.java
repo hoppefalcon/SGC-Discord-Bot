@@ -5,9 +5,17 @@
  */
 package sgc.bungie.api.processor;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import sgc.types.BungieMembershipType;
+import sgc.types.DestinyClassType;
+import sgc.types.Dungeon;
+import sgc.types.Mode;
+import sgc.types.Raid;
 
 /**
  * @author chris hoppe
@@ -23,6 +31,7 @@ public class Member {
     private final HashMap<String, Character> characters = new HashMap<>();
     private final HashMap<String, Boolean> collectibles = new HashMap<>();
     private final HashMap<String, Integer> metrics = new HashMap<>();
+    private final HashMap<BungieMembershipType, String> altNames = new HashMap<>();
 
     private final ClanWars2025Result clanWars2025 = new ClanWars2025Result();
 
@@ -280,5 +289,18 @@ public class Member {
 
     public ClanWars2025Result getClanWars2025() {
         return clanWars2025;
+    }
+
+    public HashMap<BungieMembershipType, String> getAltNames() {
+        return altNames;
+    }
+
+    public void setAltNames() {
+        try {
+            altNames.putAll(RaidReportTool.getMembersAltNames(this));
+        } catch (IOException | URISyntaxException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 }

@@ -8,6 +8,11 @@ package sgc.bungie.api.processor;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 
+import sgc.types.DestinyClassType;
+import sgc.types.Dungeon;
+import sgc.types.Mode;
+import sgc.types.Raid;
+
 /**
  * @author chris hoppe
  */

@@ -5,6 +5,8 @@
  */
 package sgc.bungie.api.processor;
 
+import sgc.types.Raid;
+
 /**
  * @author chris hoppe
  */

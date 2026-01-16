@@ -1,5 +1,7 @@
 package sgc.bungie.api.processor;
 
+import sgc.types.BungieMembershipType;
+
 public class RaidCarnageReportPlayer {
     private final String bungieGlobalDisplayName;
     private final String bungieGlobalDisplayNameCode;

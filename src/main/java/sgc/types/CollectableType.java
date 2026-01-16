@@ -1,4 +1,4 @@
-package sgc.bungie.api.processor;
+package sgc.types;
 
 public enum CollectableType {
     EMBLEM("Emblem"), TRANSMAT_EFFECT("Transmat Effect"), EMOTE("Emote"), SHADDER("Shadder");

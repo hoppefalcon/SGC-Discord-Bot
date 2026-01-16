@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import sgc.discord.bot.commands.impl.AllRedeemablesCommand;
 import sgc.discord.bot.commands.impl.BalancePrivateCrucibleCommand;
+import sgc.discord.bot.commands.impl.ClanAltNamesReportCommand;
 import sgc.discord.bot.commands.impl.ClanChatReportCommand;
 import sgc.discord.bot.commands.impl.ClanInternalActivityReportCommand;
 import sgc.discord.bot.commands.impl.ClanRaidReportCommand;
@@ -102,6 +103,11 @@ public class SlashCommandListenerImpl implements SlashCommandListener {
             case "gambit-options":
                 new PrivateGambitOptionGenerator().handle(slashCommandInteraction);
                 break;
+
+            case "clan-alt-names-report":
+                new ClanAltNamesReportCommand().handle(slashCommandInteraction);
+                break;
+
             default:
                 break;
         }

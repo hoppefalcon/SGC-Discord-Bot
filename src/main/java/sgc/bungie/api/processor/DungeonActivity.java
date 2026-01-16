@@ -5,6 +5,8 @@
  */
 package sgc.bungie.api.processor;
 
+import sgc.types.Dungeon;
+
 /**
  * @author chris hoppe
  */

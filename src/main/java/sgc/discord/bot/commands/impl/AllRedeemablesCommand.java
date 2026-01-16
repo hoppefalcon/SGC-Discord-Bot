@@ -8,8 +8,8 @@ import org.slf4j.Logger;
 
 import sgc.discord.bot.BotApplication;
 import sgc.discord.bot.commands.Command;
+import sgc.types.RedeemableCollectable;
 import sgc.bungie.api.processor.RaidReportTool;
-import sgc.bungie.api.processor.RedeemableCollectable;
 
 public class AllRedeemablesCommand implements Command {
 

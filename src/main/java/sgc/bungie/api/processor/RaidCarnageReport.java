@@ -4,6 +4,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import sgc.types.Raid;
+
 public class RaidCarnageReport {
     private final List<RaidCarnageReportPlayer> players = new ArrayList<>();
     private final Raid raid;

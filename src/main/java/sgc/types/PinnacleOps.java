@@ -1,4 +1,4 @@
-package sgc.bungie.api.processor;
+package sgc.types;
 
 import java.util.ArrayList;
 import java.util.Arrays;

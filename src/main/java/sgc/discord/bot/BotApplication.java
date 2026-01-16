@@ -316,6 +316,10 @@ public class BotApplication {
 		commandList.add(new SlashCommandBuilder().setName("gambit-options").setDescription(
 				"Generates a Random Map and Combatant for Private Gambit"));
 
+		commandList.add(new SlashCommandBuilder().setName("clan-alt-names-report")
+				.setDescription("Pulls a full clan alt names report.")
+				.addOption(clanOption.build()));
+
 		API.bulkOverwriteGlobalApplicationCommands(commandList).join();
 
 		API.addSlashCommandCreateListener(slashCommandListener);

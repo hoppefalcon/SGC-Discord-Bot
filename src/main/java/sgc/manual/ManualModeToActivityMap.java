@@ -12,8 +12,8 @@ import java.util.HashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import sgc.bungie.api.processor.Mode;
 import sgc.bungie.api.processor.RaidReportTool;
+import sgc.types.Mode;
 
 public class ManualModeToActivityMap {
         private static final Logger LOGGER = LoggerFactory.getLogger(ManualSGCActivityReportRunner.class);
