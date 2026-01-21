@@ -3064,20 +3064,20 @@ public class RaidReportTool {
         });
 
         List<BungieMembershipType> orderedMembershipTypeList = BungieMembershipType.getOrderedList();
-        stringBuilder.append("Bungie ID,Primary Platform Name");
+        stringBuilder.append("\"Bungie ID\",\"Primary Platform Name\"");
         for (int i = 0; i < orderedMembershipTypeList.size(); i++) {
             if (activeMembershipTypeList.get(orderedMembershipTypeList.get(i))) {
-                stringBuilder.append(",").append(orderedMembershipTypeList.get(i).getName());
+                stringBuilder.append(",\"").append(orderedMembershipTypeList.get(i).getName()).append("\"");
             }
         }
         stringBuilder.append("\n");
         clan.getMembers().forEach((memberId, member) -> {
-            stringBuilder.append(member.getCombinedBungieGlobalDisplayName()).append(",")
-                    .append(member.getDisplayName());
+            stringBuilder.append(member.getCombinedBungieGlobalDisplayName()).append(",\"")
+                    .append(member.getDisplayName()).append("\"");
             for (int i = 0; i < orderedMembershipTypeList.size(); i++) {
                 if (activeMembershipTypeList.get(orderedMembershipTypeList.get(i))) {
                     String name = member.getAltNames().get(orderedMembershipTypeList.get(i));
-                    stringBuilder.append(",").append((name != null) ? name : "");
+                    stringBuilder.append(",\"").append((name != null) ? name : "").append("\"");
                 }
             }
             stringBuilder.append("\n");
