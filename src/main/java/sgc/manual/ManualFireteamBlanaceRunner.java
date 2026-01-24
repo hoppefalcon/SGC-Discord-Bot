@@ -10,7 +10,7 @@ public class ManualFireteamBlanaceRunner {
 
         public static void main(String[] args) throws Exception {
                 try {
-                        String userBungieId = "hoppefalcon#7599";
+                        String userBungieId = "GamR-_-Grrrl#7960";
                         String fireteamBalance = RaidReportTool.getFireteamBalance(userBungieId);
                         System.out.println(fireteamBalance);
                 } catch (Exception e) {

@@ -2534,10 +2534,12 @@ public class RaidReportTool {
         return member;
     }
 
-    private static Double calculateMemberMmr(Member member) throws IOException, URISyntaxException {
-        Double memberSeasonalCrucibleKDA = getMemberSeasonalCrucibleKDA(member);
+    public static Double calculateMemberMmr(Member member) throws IOException, URISyntaxException {
+        HashMap<String, Double> membersSeasonalCrucibleStats = getMemberSeasonalCrucibleStats(member);
         Double memberCareerCrucibleWinLossRatio = null;
+        Double memberCareerCrucibleKD = null;
         Double memberCareerCrucibleKDA = null;
+        Double memberCareerCrucibleCombatRaiting = null;
 
         URL url = new URI(
                 String.format("https://www.bungie.net/Platform/Destiny2/%s/Account/%s/Stats/?groups=1",
@@ -2562,7 +2564,11 @@ public class RaidReportTool {
 
                 memberCareerCrucibleWinLossRatio = results.getAsJsonObject().getAsJsonObject("winLossRatio")
                         .getAsJsonObject("basic").get("value").getAsDouble();
+                memberCareerCrucibleKD = results.getAsJsonObject().getAsJsonObject("killsDeathsRatio")
+                        .getAsJsonObject("basic").get("value").getAsDouble();
                 memberCareerCrucibleKDA = results.getAsJsonObject().getAsJsonObject("killsDeathsAssists")
+                        .getAsJsonObject("basic").get("value").getAsDouble();
+                memberCareerCrucibleCombatRaiting = results.getAsJsonObject().getAsJsonObject("combatRating")
                         .getAsJsonObject("basic").get("value").getAsDouble();
 
                 in.close();
@@ -2570,19 +2576,38 @@ public class RaidReportTool {
 
             conn.disconnect();
         }
-        if (memberSeasonalCrucibleKDA != null && memberCareerCrucibleWinLossRatio != null
-                && memberCareerCrucibleKDA != null)
-            return ((memberSeasonalCrucibleKDA + memberCareerCrucibleKDA) / 2.0) * memberCareerCrucibleWinLossRatio;
-        else
-            return null;
-    }
-
-    private static Double getMemberSeasonalCrucibleKDA(Member member) throws IOException, URISyntaxException {
-        HashMap<String, Integer> membersMetrics = getMembersMetrics(member, Arrays.asList("871184140"));
-        if (membersMetrics.get("871184140") == null) {
+        try {
+            return ((membersSeasonalCrucibleStats.get("KDA") + memberCareerCrucibleKD + memberCareerCrucibleKDA) / 3.0)
+                    * ((membersSeasonalCrucibleStats.get("W/L") + memberCareerCrucibleWinLossRatio) / 2.0)
+                    * memberCareerCrucibleCombatRaiting;
+        } catch (Exception e) {
             return null;
         }
-        return membersMetrics.get("871184140") / 100.0;
+    }
+
+    private static HashMap<String, Double> getMemberSeasonalCrucibleStats(Member member)
+            throws IOException, URISyntaxException {
+        HashMap<String, Integer> membersMetrics = getMembersMetrics(member,
+                Arrays.asList("871184140", "1031068787", "2941499201"));
+        HashMap<String, Double> membersSeasonalCrucibleStats = new HashMap<>();
+        // Seasonal KDA
+        membersSeasonalCrucibleStats.put("KDA", null);
+        if (membersMetrics.get("871184140") != null) {
+            membersSeasonalCrucibleStats.put("KDA", membersMetrics.get("871184140") / 100.0);
+        }
+
+        // Seasonal average number of opponents defeated per match
+        membersSeasonalCrucibleStats.put("DEFEATED", null);
+        if (membersMetrics.get("1031068787") != null) {
+            membersSeasonalCrucibleStats.put("DEFEATED", membersMetrics.get("1031068787") / 100.0);
+        }
+
+        // Seasonal Win Rate
+        membersSeasonalCrucibleStats.put("W/L", null);
+        if (membersMetrics.get("2941499201") != null) {
+            membersSeasonalCrucibleStats.put("W/L", membersMetrics.get("2941499201") / 100.0);
+        }
+        return membersSeasonalCrucibleStats;
     }
 
     public static Pair<String, String> getRandomPrivateCrucibleOptions() {
