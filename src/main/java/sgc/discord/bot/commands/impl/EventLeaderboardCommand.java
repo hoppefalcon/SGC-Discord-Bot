@@ -22,7 +22,7 @@ public class EventLeaderboardCommand implements Command {
         System.gc();
 
         slashCommandInteraction.respondLater().thenAccept(interactionOriginalResponseUpdater -> {
-            interactionOriginalResponseUpdater.setContent("Building a redeemable list").update();
+            interactionOriginalResponseUpdater.setContent("Building Event Leaderboard").update();
 
             try {
                 String response = getZ2HLeaderboard();
@@ -64,7 +64,7 @@ public class EventLeaderboardCommand implements Command {
                 .stream()
                 .sorted((e1, e2) -> Double.compare(e2.getValue(), e1.getValue()))
                 .forEach(entry -> response
-                        .append(String.format("%s: %.2f%%\n", entry.getKey(), entry.getValue() * 100)));
+                        .append(String.format("%s: %.2f%%\n--------\n", entry.getKey(), entry.getValue() * 100)));
 
         return response.toString();
     }
