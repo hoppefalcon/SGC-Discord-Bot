@@ -4,18 +4,18 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-import sgc.types.Raid;
+import sgc.types.Dungeon;
 
-public class RaidCarnageReport {
+public class DungeonCarnageReport {
     private final List<CarnageReportPlayer> players = new ArrayList<>();
-    private final Raid raid;
+    private final Dungeon dungeon;
     private final LocalDate dateCompleted;
 
     /**
      * @param raid
      */
-    public RaidCarnageReport(Raid raid, LocalDate dateCompleted) {
-        this.raid = raid;
+    public DungeonCarnageReport(Dungeon dungeon, LocalDate dateCompleted) {
+        this.dungeon = dungeon;
         this.dateCompleted = dateCompleted;
     }
 
@@ -27,10 +27,10 @@ public class RaidCarnageReport {
     }
 
     /**
-     * @return the raid
+     * @return the dungeon
      */
-    public Raid getRaid() {
-        return raid;
+    public Dungeon getDungeon() {
+        return dungeon;
     }
 
     /**

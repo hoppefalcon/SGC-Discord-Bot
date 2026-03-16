@@ -10,6 +10,7 @@ import sgc.discord.bot.commands.impl.ClanAltNamesReportCommand;
 import sgc.discord.bot.commands.impl.ClanChatReportCommand;
 import sgc.discord.bot.commands.impl.ClanInternalActivityReportCommand;
 import sgc.discord.bot.commands.impl.ClanRaidReportCommand;
+import sgc.discord.bot.commands.impl.EventLeaderboardCommand;
 import sgc.discord.bot.commands.impl.InfographicCommand;
 import sgc.discord.bot.commands.impl.InformationMessageCommand;
 import sgc.discord.bot.commands.impl.NotRegisteredMembersCommand;
@@ -106,6 +107,10 @@ public class SlashCommandListenerImpl implements SlashCommandListener {
 
             case "clan-alt-names-report":
                 new ClanAltNamesReportCommand().handle(slashCommandInteraction);
+                break;
+
+            case "active-event-leaderboard":
+                new EventLeaderboardCommand().handle(slashCommandInteraction);
                 break;
 
             default:

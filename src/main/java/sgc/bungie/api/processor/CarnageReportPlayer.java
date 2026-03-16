@@ -2,7 +2,7 @@ package sgc.bungie.api.processor;
 
 import sgc.types.BungieMembershipType;
 
-public class RaidCarnageReportPlayer {
+public class CarnageReportPlayer {
     private final String bungieGlobalDisplayName;
     private final String bungieGlobalDisplayNameCode;
     private final BungieMembershipType membershipType;
@@ -30,7 +30,7 @@ public class RaidCarnageReportPlayer {
      * @param killsDeathsAssists
      * @param activityDurationSeconds
      */
-    public RaidCarnageReportPlayer(String bungieGlobalDisplayName, String bungieGlobalDisplayNameCode,
+    public CarnageReportPlayer(String bungieGlobalDisplayName, String bungieGlobalDisplayNameCode,
             int membershipType, String characterClass, boolean completed, double deaths, double assists, double kills,
             double opponentsDefeated, double efficiency, double killsDeathsAssists, double activityDurationSeconds) {
         this.bungieGlobalDisplayName = bungieGlobalDisplayName;

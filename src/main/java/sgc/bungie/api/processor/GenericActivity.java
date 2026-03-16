@@ -14,6 +14,7 @@ public class GenericActivity {
     private final String ACTIVITYHASH;
 
     private ArrayList<Clan> otherSGCClans = new ArrayList<>();
+    private boolean allSameClanActivity = true;
     private int otherSGCMembers = 0;
 
     private boolean allSGCActivity = false;
@@ -38,9 +39,14 @@ public class GenericActivity {
         this.allSGCActivity = allSGCActivity;
     }
 
+    public boolean isAllSameClanActivity() {
+        return allSameClanActivity;
+    }
+
     public void addOtherSGCClan(Clan clan) {
         if (!otherSGCClans.contains(clan)) {
             otherSGCClans.add(clan);
+            allSameClanActivity = false;
         }
     }
 
@@ -55,12 +61,20 @@ public class GenericActivity {
         total += otherSGCMembers;
 
         // One Point For Each Unique Clan, Other Than Your Own
-        total += otherSGCClans.size();
+        total += otherSGCClans.size() /** 2 */
+        ;
 
         // One Point For A Full SGC Fireteam
         if (otherSGCMembers > 0 && allSGCActivity) {
             total += 1;
         }
+
+        // One Point For A Full SGC Clan Activity
+        /*
+         * if (otherSGCMembers > 0 && allSGCActivity && allSameClanActivity) {
+         * total += 1;
+         * }
+         */
 
         // Multiplied By The Activity Weight
         total = (int) Math.ceil(total * MODE.getWeeklyActivityWeight());

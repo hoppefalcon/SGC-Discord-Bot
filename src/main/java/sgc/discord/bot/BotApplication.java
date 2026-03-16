@@ -320,6 +320,8 @@ public class BotApplication {
 				.setDescription("Pulls a full clan alt names report.")
 				.addOption(clanOption.build()));
 
+		commandList.add(new SlashCommandBuilder().setName("active-event-leaderboard").setDescription(
+				"Pulls the leaderboard for the SGC active event."));
 		API.bulkOverwriteGlobalApplicationCommands(commandList).join();
 
 		API.addSlashCommandCreateListener(slashCommandListener);

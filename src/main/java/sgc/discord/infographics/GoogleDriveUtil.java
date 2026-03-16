@@ -184,15 +184,9 @@ public class GoogleDriveUtil {
     public static Map<String, Integer> getPOTWWeights() {
         HashMap<String, Integer> weights = new HashMap<>();
         try {
-            final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
             final String spreadsheetId = "1EeIFBxfwDHjTrsZUFHKtNUglH7whdiLBTfupcOsqEF8";
             final String range = "Weighting Scale!A2:B";
-            Sheets service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getGoogleSheetsHttpRequestInitializer())
-                    .setApplicationName(APPLICATION_NAME)
-                    .build();
-            ValueRange response = service.spreadsheets().values()
-                    .get(spreadsheetId, range)
-                    .execute();
+            ValueRange response = getSheetData(spreadsheetId, range);
             List<List<Object>> values = response.getValues();
             for (List<Object> row : values) {
                 weights.put(((String) row.get(0)).replace(" [POTW]", ""),
@@ -253,15 +247,9 @@ public class GoogleDriveUtil {
     public static Map<String, String> getClanRoleIDs() {
         HashMap<String, String> clans = new HashMap<>();
         try {
-            final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
             final String spreadsheetId = "1bcW1yT-j_RxlQLGvHWOqisW-xFDPvRaOjR2cByIQHu8";
             final String range = "Clans!A2:B";
-            Sheets service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getGoogleSheetsHttpRequestInitializer())
-                    .setApplicationName(APPLICATION_NAME)
-                    .build();
-            ValueRange response = service.spreadsheets().values()
-                    .get(spreadsheetId, range)
-                    .execute();
+            ValueRange response = getSheetData(spreadsheetId, range);
             List<List<Object>> values = response.getValues();
             for (List<Object> row : values) {
                 clans.put((String) row.get(0),
@@ -276,15 +264,9 @@ public class GoogleDriveUtil {
     public static String getNotRegisteredRoleID() {
         String roleID = "";
         try {
-            final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
             final String spreadsheetId = "1bcW1yT-j_RxlQLGvHWOqisW-xFDPvRaOjR2cByIQHu8";
             final String range = "Misc!A2:B";
-            Sheets service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getGoogleSheetsHttpRequestInitializer())
-                    .setApplicationName(APPLICATION_NAME)
-                    .build();
-            ValueRange response = service.spreadsheets().values()
-                    .get(spreadsheetId, range)
-                    .execute();
+            ValueRange response = getSheetData(spreadsheetId, range);
             List<List<Object>> values = response.getValues();
             for (List<Object> row : values) {
                 if (((String) row.get(0)).equals("Not Registered")) {
@@ -300,15 +282,9 @@ public class GoogleDriveUtil {
     public static Map<String, Integer> getCrucubleMapWeights() {
         HashMap<String, Integer> weights = new HashMap<>();
         try {
-            final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
             final String spreadsheetId = "1vGH6LXObJBMigCbXAT86hpBF5hiZj-fJDzoXdBEGljg";
             final String range = "Maps!A2:B";
-            Sheets service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getGoogleSheetsHttpRequestInitializer())
-                    .setApplicationName(APPLICATION_NAME)
-                    .build();
-            ValueRange response = service.spreadsheets().values()
-                    .get(spreadsheetId, range)
-                    .execute();
+            ValueRange response = getSheetData(spreadsheetId, range);
             List<List<Object>> values = response.getValues();
             for (List<Object> row : values) {
                 weights.put((String) row.get(0),
@@ -323,15 +299,9 @@ public class GoogleDriveUtil {
     public static Map<String, Integer> getCrucubleModeWeights() {
         HashMap<String, Integer> weights = new HashMap<>();
         try {
-            final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
             final String spreadsheetId = "1vGH6LXObJBMigCbXAT86hpBF5hiZj-fJDzoXdBEGljg";
             final String range = "Modes!A2:B";
-            Sheets service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getGoogleSheetsHttpRequestInitializer())
-                    .setApplicationName(APPLICATION_NAME)
-                    .build();
-            ValueRange response = service.spreadsheets().values()
-                    .get(spreadsheetId, range)
-                    .execute();
+            ValueRange response = getSheetData(spreadsheetId, range);
             List<List<Object>> values = response.getValues();
             for (List<Object> row : values) {
                 weights.put((String) row.get(0),
@@ -346,15 +316,9 @@ public class GoogleDriveUtil {
     public static Map<String, Integer> getGambitMapWeights() {
         HashMap<String, Integer> weights = new HashMap<>();
         try {
-            final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
             final String spreadsheetId = "1WEKNB0kY5DmkuP4PDzQC3t3D17t9iPjn5tr1W_fD8v0";
             final String range = "Maps!A2:C";
-            Sheets service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getGoogleSheetsHttpRequestInitializer())
-                    .setApplicationName(APPLICATION_NAME)
-                    .build();
-            ValueRange response = service.spreadsheets().values()
-                    .get(spreadsheetId, range)
-                    .execute();
+            ValueRange response = getSheetData(spreadsheetId, range);
             List<List<Object>> values = response.getValues();
             for (List<Object> row : values) {
                 weights.put((String) row.get(0),
@@ -369,15 +333,9 @@ public class GoogleDriveUtil {
     public static Map<String, Integer> getGambitMapCombatantsWithWeights(String map) {
         HashMap<String, Integer> weights = new HashMap<>();
         try {
-            final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
             final String spreadsheetId = "1WEKNB0kY5DmkuP4PDzQC3t3D17t9iPjn5tr1W_fD8v0";
             final String range = "Maps!A2:C";
-            Sheets service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getGoogleSheetsHttpRequestInitializer())
-                    .setApplicationName(APPLICATION_NAME)
-                    .build();
-            ValueRange response = service.spreadsheets().values()
-                    .get(spreadsheetId, range)
-                    .execute();
+            ValueRange response = getSheetData(spreadsheetId, range);
             List<List<Object>> values = response.getValues();
             List<String> combatantUIDs = new ArrayList<>();
             for (List<Object> row : values) {
@@ -390,9 +348,7 @@ public class GoogleDriveUtil {
             }
             if (combatantUIDs != null) {
                 final String range2 = "Combatants!A2:C";
-                response = service.spreadsheets().values()
-                        .get(spreadsheetId, range2)
-                        .execute();
+                response = getSheetData(spreadsheetId, range2);
                 values = response.getValues();
 
                 for (List<Object> row : values) {
@@ -406,5 +362,21 @@ public class GoogleDriveUtil {
             LOGGER.error(e.getMessage(), e);
         }
         return weights;
+    }
+
+    public static ValueRange getSheetData(String spreadsheetId, String range) {
+        ValueRange response = null;
+        try {
+            final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
+            Sheets service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getGoogleSheetsHttpRequestInitializer())
+                    .setApplicationName(APPLICATION_NAME)
+                    .build();
+            response = service.spreadsheets().values()
+                    .get(spreadsheetId, range)
+                    .execute();
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+        return response;
     }
 }

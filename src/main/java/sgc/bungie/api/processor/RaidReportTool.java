@@ -696,7 +696,7 @@ public class RaidReportTool {
                 boolean completed = entry.getAsJsonObject().get("values").getAsJsonObject().get("completed")
                         .getAsJsonObject().get("basic").getAsJsonObject().get("value").getAsDouble() == 1.0;
 
-                tempRaidCarnageReport.getPlayers().add(new RaidCarnageReportPlayer(
+                tempRaidCarnageReport.getPlayers().add(new CarnageReportPlayer(
                         entry.getAsJsonObject().get("player").getAsJsonObject().get("destinyUserInfo").getAsJsonObject()
                                 .get("bungieGlobalDisplayName").getAsString(),
                         entry.getAsJsonObject().get("player").getAsJsonObject().get("destinyUserInfo").getAsJsonObject()
@@ -726,6 +726,71 @@ public class RaidReportTool {
             conn.disconnect();
         }
         return raidCarnageReport;
+
+    }
+
+    public static DungeonCarnageReport getDungeonCarnageReport(String carnageReportId)
+            throws IOException, URISyntaxException {
+        URL url = new URI(String.format("https://stats.bungie.net/Platform/Destiny2/Stats/PostGameCarnageReport/%s/",
+                carnageReportId)).toURL();
+
+        HttpURLConnection conn = getBungieAPIResponse(url,
+                String.format("getDungeonCarnageReport: %s", carnageReportId));
+        DungeonCarnageReport dungeonCarnageReport = null;
+
+        if (conn != null) {
+            BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            String inputLine;
+            StringBuffer content = new StringBuffer();
+            while ((inputLine = in.readLine()) != null) {
+                content.append(inputLine);
+            }
+
+            JsonObject response = JsonParser.parseString(content.toString()).getAsJsonObject()
+                    .getAsJsonObject("Response");
+            JsonObject activityDetails = response.getAsJsonObject("activityDetails");
+            JsonArray entries = response.get("entries").getAsJsonArray();
+
+            String dateCompletedStr = response.get("period").getAsString();
+            LocalDate dateCompleted = ZonedDateTime.parse(dateCompletedStr)
+                    .withZoneSameInstant(ZoneId.of("US/Eastern")).toLocalDate();
+
+            final DungeonCarnageReport tempDungeonCarnageReport = new DungeonCarnageReport(
+                    Dungeon.getDungeon(activityDetails.get("directorActivityHash").getAsString()), dateCompleted);
+            entries.forEach((entry) -> {
+                boolean completed = entry.getAsJsonObject().get("values").getAsJsonObject().get("completed")
+                        .getAsJsonObject().get("basic").getAsJsonObject().get("value").getAsDouble() == 1.0;
+
+                tempDungeonCarnageReport.getPlayers().add(new CarnageReportPlayer(
+                        entry.getAsJsonObject().get("player").getAsJsonObject().get("destinyUserInfo").getAsJsonObject()
+                                .get("bungieGlobalDisplayName").getAsString(),
+                        entry.getAsJsonObject().get("player").getAsJsonObject().get("destinyUserInfo").getAsJsonObject()
+                                .get("bungieGlobalDisplayNameCode").getAsString(),
+                        entry.getAsJsonObject().get("player").getAsJsonObject().get("destinyUserInfo").getAsJsonObject()
+                                .get("membershipType").getAsInt(),
+                        entry.getAsJsonObject().get("player").getAsJsonObject().get("characterClass").getAsString(),
+                        completed,
+                        entry.getAsJsonObject().get("values").getAsJsonObject().get("deaths").getAsJsonObject()
+                                .get("basic").getAsJsonObject().get("value").getAsDouble(),
+                        entry.getAsJsonObject().get("values").getAsJsonObject().get("assists").getAsJsonObject()
+                                .get("basic").getAsJsonObject().get("value").getAsDouble(),
+                        entry.getAsJsonObject().get("values").getAsJsonObject().get("kills").getAsJsonObject()
+                                .get("basic").getAsJsonObject().get("value").getAsDouble(),
+                        entry.getAsJsonObject().get("values").getAsJsonObject().get("opponentsDefeated")
+                                .getAsJsonObject().get("basic").getAsJsonObject().get("value").getAsDouble(),
+                        entry.getAsJsonObject().get("values").getAsJsonObject().get("efficiency").getAsJsonObject()
+                                .get("basic").getAsJsonObject().get("value").getAsDouble(),
+                        entry.getAsJsonObject().get("values").getAsJsonObject().get("killsDeathsAssists")
+                                .getAsJsonObject().get("basic").getAsJsonObject().get("value").getAsDouble(),
+                        entry.getAsJsonObject().get("values").getAsJsonObject().get("activityDurationSeconds")
+                                .getAsJsonObject().get("basic").getAsJsonObject().get("value").getAsDouble()));
+            });
+            in.close();
+            dungeonCarnageReport = tempDungeonCarnageReport;
+
+            conn.disconnect();
+        }
+        return dungeonCarnageReport;
 
     }
 
@@ -1261,6 +1326,7 @@ public class RaidReportTool {
                     .getAsJsonObject("Response");
             JsonArray entries = response.get("entries").getAsJsonArray();
             AtomicBoolean allSGCActivity = new AtomicBoolean(true);
+            AtomicBoolean allSameClanActivity = new AtomicBoolean(true);
             entries.forEach((entry) -> {
 
                 boolean completed = entry.getAsJsonObject().getAsJsonObject("values").getAsJsonObject("completed")
@@ -3110,5 +3176,12 @@ public class RaidReportTool {
 
         LOGGER.trace("Finished Processing " + clan.getName());
         return stringBuilder.toString();
+    }
+
+    public static void processSGCZeroToHeroReporting(String googleSheetID) {
+        final String spreadsheetId = "1O7e-gOh8v5QUOCCSUO9sDL5gGkK6luNSE2sbN8ZqpUY";
+        final String responseRange = "Form Responses 1!A2:E";
+        final String historyRange = "History!A1:A";
+        final HashMap<String, HashMap<String, Integer>> compiledData = new HashMap<>();
     }
 }

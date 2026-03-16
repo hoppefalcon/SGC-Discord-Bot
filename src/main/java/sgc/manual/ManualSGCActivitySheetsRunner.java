@@ -1,5 +1,6 @@
 package sgc.manual;
 
+import java.awt.Event;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -12,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import sgc.bungie.api.processor.activity.ActivityReportTool;
+import sgc.discord.bot.commands.impl.EventLeaderboardCommand;
 import sgc.discord.infographics.GoogleDriveUtil;
 
 public class ManualSGCActivitySheetsRunner {
