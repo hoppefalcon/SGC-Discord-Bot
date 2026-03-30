@@ -60,9 +60,8 @@ public class GenericActivity {
         // One Point For Every SGC Member
         total += otherSGCMembers;
 
-        // One Point For Each Unique Clan, Other Than Your Own
-        total += otherSGCClans.size() /** 2 */
-        ;
+        // One Point For Each Unique Clan, Other Than Your Own (Doubled)
+        total += otherSGCClans.size() * 2;
 
         // One Point For A Full SGC Fireteam
         if (otherSGCMembers > 0 && allSGCActivity) {
@@ -70,11 +69,9 @@ public class GenericActivity {
         }
 
         // One Point For A Full SGC Clan Activity
-        /*
-         * if (otherSGCMembers > 0 && allSGCActivity && allSameClanActivity) {
-         * total += 1;
-         * }
-         */
+        if (otherSGCMembers > 0 && allSGCActivity && allSameClanActivity) {
+            total += 1;
+        }
 
         // Multiplied By The Activity Weight
         total = (int) Math.ceil(total * MODE.getWeeklyActivityWeight());
