@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -3183,5 +3184,123 @@ public class RaidReportTool {
         final String responseRange = "Form Responses 1!A2:E";
         final String historyRange = "History!A1:A";
         final HashMap<String, HashMap<String, Integer>> compiledData = new HashMap<>();
+    }
+
+    public static HashMap<Member, Integer> getClearedActivitiesByMode(HashMap<String, Member> sgcClanMembersMap,
+            LocalDate startDate,
+            LocalDate endDate,
+            List<Integer> modes)
+            throws Exception {
+        LOGGER.info(String.format("Starting getClearedActivitiesByMode"));
+        HashMap<Member, Integer> response = new HashMap<>();
+
+        List<Callable<Object>> tasks = new ArrayList<>();
+        sgcClanMembersMap.forEach((id, member) -> {
+            tasks.add(() -> {
+                LOGGER.info(String.format("Processing: %s", member.getCombinedBungieGlobalDisplayName()));
+                try {
+                    getMembersActiveCharacters(member);
+                    AtomicInteger compCount = new AtomicInteger(0);
+                    AtomicInteger pageCount = new AtomicInteger(0);
+                    member.getCharacters().forEach((characteruid, character) -> {
+                        try {
+                            boolean next = false;
+
+                            for (int page = 0; !next; page++) {
+                                URL url = new URI(String.format(
+                                        "https://www.bungie.net/Platform/Destiny2/%s/Account/%s/Character/%s/Stats/Activities/?page=%d&mode=%d&count=250",
+                                        member.getMemberType(), member.getUID(), character.getUID(), page, 0))
+                                        .toURL();
+
+                                HttpURLConnection conn = getBungieAPIResponse(url, String.format(
+                                        "getMembersClearedActivities: %s <%d>",
+                                        member.getCombinedBungieGlobalDisplayName(),
+                                        page));
+
+                                if (conn != null) {
+                                    BufferedReader in = new BufferedReader(
+                                            new InputStreamReader(conn.getInputStream()));
+                                    String inputLine;
+                                    StringBuffer content = new StringBuffer();
+                                    while ((inputLine = in.readLine()) != null) {
+                                        content.append(inputLine);
+                                    }
+                                    JsonArray results = (JsonArray) JsonParser.parseString(content.toString())
+                                            .getAsJsonObject()
+                                            .getAsJsonObject("Response").get("activities");
+                                    if (results != null) {
+                                        AtomicInteger recordsAfterEndDate = new AtomicInteger(0);
+
+                                        results.forEach((result) -> {
+                                            int activityMode = result.getAsJsonObject()
+                                                    .getAsJsonObject("activityDetails")
+                                                    .getAsJsonPrimitive("mode").getAsInt();
+
+                                            if (modes.contains(activityMode)) {
+                                                String activityDateStr = result.getAsJsonObject()
+                                                        .getAsJsonPrimitive("period")
+                                                        .getAsString();
+                                                LocalDate dateCompleted = ZonedDateTime.parse(activityDateStr)
+                                                        .withZoneSameInstant(ZoneId.of("US/Eastern")).toLocalDate();
+                                                if ((dateCompleted.isAfter(startDate)
+                                                        && dateCompleted.isBefore(endDate))
+                                                        || dateCompleted.isEqual(startDate)
+                                                        || dateCompleted.isEqual(endDate)) {
+                                                    boolean completed = result.getAsJsonObject()
+                                                            .getAsJsonObject("values")
+                                                            .getAsJsonObject("completed")
+                                                            .getAsJsonObject("basic").getAsJsonPrimitive("value")
+                                                            .getAsDouble() == 1.0;
+                                                    if (completed) {
+                                                        compCount.incrementAndGet();
+                                                    }
+                                                } else if (dateCompleted.isAfter(endDate)) {
+                                                    recordsAfterEndDate.incrementAndGet();
+                                                }
+                                            }
+                                        });
+
+                                        LOGGER.debug(String.format(
+                                                "Finished processing HTTP call #%d for %s:%s", page + 1,
+                                                member.getCombinedBungieGlobalDisplayName(), character.getUID()));
+
+                                        next = (results.size() < 250)
+                                                || (recordsAfterEndDate.get() == results.size());
+                                    } else {
+                                        next = true;
+                                    }
+                                    in.close();
+                                    conn.disconnect();
+                                    pageCount.incrementAndGet();
+                                } else {
+                                    next = true;
+                                }
+                            }
+
+                        } catch (Exception ex) {
+                            LOGGER.error(
+                                    "Error Processing Cleared Activities for "
+                                            + member.getCombinedBungieGlobalDisplayName(),
+                                    ex);
+                        }
+                    });
+                    response.put(member, compCount.get());
+                    LOGGER.info(String.format("Processe %s (Pages: %d | Count: %d)",
+                            member.getCombinedBungieGlobalDisplayName(), pageCount.get(), compCount.get()));
+                } catch (Exception ex) {
+                    LOGGER.error(
+                            "Error Processing Cleared Activities for "
+                                    + member.getCombinedBungieGlobalDisplayName(),
+                            ex);
+                }
+                return member;
+            });
+        });
+
+        List<Future<Object>> invokeAll = executorService.invokeAll(tasks);
+        AtomicBoolean done = new AtomicBoolean(false);
+        while (!done.get())
+            invokeAll.forEach(f -> done.set(f.isDone()));
+        return response;
     }
 }

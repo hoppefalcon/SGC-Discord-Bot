@@ -30,7 +30,26 @@ public enum Raid {
     PANTHEON_NEZAREC_SUBLIME("The Pantheon: Nezarec Sublime", Arrays.asList("4169648182")),
     SALVATIONS_EDGE("Salvation's Edge", Arrays.asList("2192826039", "1541433876", "940375169", "4129614942")),
     THE_DESERT_PERPETUAL("The Desert Perpetual", Arrays.asList("1044919065", "3896382790")),
-    THE_DESERT_PERPETUAL_EPIC("The Desert Perpetual (Epic)", Arrays.asList("2586252122", "3817322389"));
+    THE_DESERT_PERPETUAL_EPIC("The Desert Perpetual (Epic)", Arrays.asList("2586252122", "3817322389")),
+    PANTHEON_CALUS_RESPLENDENT("Pantheon: Calus Resplendent: Customize",
+            Arrays.asList("1516551982")),
+    PANTHEON_MORGETH_SURPASSING("Pantheon: Morgeth Surpassing: Customize",
+            Arrays.asList("2530656885")),
+    PANTHEON_MORGETH_INSURRECTION_PRIME_REVOLUTIONARY("Pantheon: Insurrection Prime Revolutionary:Customize",
+            Arrays.asList("747671496")),
+    PANTHEON_FEATURED_MORGETH("Featured Encore: Morgeth: The Pantheon",
+            Arrays.asList("43862588")),
+    PANTHEON_FEATURED_WARPRIEST("Featured Encore: Warpriest: The Pantheon",
+            Arrays.asList("145874766", "4147455553")),
+    PANTHEON_FEATURED_INSURRECTION_PRIME("Featured Encore: Insurrection Prime:The Pantheon",
+            Arrays.asList("206811036")),
+    PANTHEON_FEATURED_CONSECRATED_MIND("Featured Encore: Consecrated Mind: The Pantheon", Arrays.asList("3975235718")),
+    PANTHEON_REPRISE_ARGOS("Featured Reprise: Argos: The Pantheon",
+            Arrays.asList("796488315")),
+    PANTHEON_REPRISE_CALUS("Featured Reprise: Calus: The Pantheon",
+            Arrays.asList("1566552947", "153253948")),
+    PANTHEON_REPRISE_GAHLRAN("Featured Reprise: Gahlran: The Pantheon",
+            Arrays.asList("1953549041"));
 
     public final String name;
     private final List<String> validHashes;
