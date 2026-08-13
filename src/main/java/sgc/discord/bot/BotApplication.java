@@ -55,7 +55,8 @@ public class BotApplication {
 
 	private static final String BOT_TOKEN = System.getenv("DISCORD_TOKEN");
 
-	private static final DiscordApi API = new DiscordApiBuilder().setToken(BOT_TOKEN).setAllIntents().login().join();
+	private static final DiscordApi API = new DiscordApiBuilder().setToken(BOT_TOKEN).setAllNonPrivilegedIntents()
+			.login().join();
 
 	public static Server SGC_SERVER = API.getServerById("100291727209807872").get();
 
