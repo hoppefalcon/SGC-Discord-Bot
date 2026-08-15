@@ -146,7 +146,7 @@ public class GoogleDriveUtil {
             List<Update> updates = new ArrayList<>();
 
             for (SGC_Clan clan : members.keySet()) {
-                final String range = String.format("%s!A2:F", clan);
+                final String range = String.format("%s!A2:Z", clan);
                 ranges.add(range);
 
                 ValueRange valueRange = new ValueRange();
