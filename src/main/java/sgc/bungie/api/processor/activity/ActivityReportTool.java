@@ -6,19 +6,16 @@ import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-
 import org.javacord.api.DiscordApi;
-import org.javacord.api.entity.channel.Channel;
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.MessageBuilder;
-import org.javacord.api.entity.message.MessageSet;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.permission.Role;
-import org.javacord.api.entity.user.User;
 import org.slf4j.Logger;
+
+import com.google.api.services.sheets.v4.model.ValueRange;
 
 import sgc.bungie.api.processor.RaidReportTool;
 import sgc.discord.bot.BotApplication;
@@ -30,8 +27,6 @@ public class ActivityReportTool {
     private static final Logger LOGGER = BotApplication.getLogger();
 
     private static DiscordApi API = null;
-
-    public static final HashMap<String, String> CLAN_ROLE_ID_MAP = initializeClanRoleDiscordIDMap();
 
     public static void setDiscordAPI(DiscordApi api) {
         API = api;
@@ -89,55 +84,23 @@ public class ActivityReportTool {
      *                values.
      */
     private static void getAllClansDiscordActivity(HashMap<SGC_Clan, ArrayList<SGC_Member>> members) {
-        HashMap<User, ArrayList<SGC_Member>> allUsers = new HashMap<>();
+        LOGGER.info("Processing the Discord Activity");
 
-        for (SGC_Clan clan : SGC_Clan.values()) {
-            LOGGER.info("Processing the Discord Activity for " + clan.name());
-            Optional<Role> roleById = API.getRoleById(clan.Discord_Role_ID);
+        ValueRange communityDiscordActivityData = GoogleDriveUtil.getCommunityDiscordActivityData();
+        List<List<Object>> values = communityDiscordActivityData.getValues();
 
-            if (roleById.isPresent()) {
-                Set<User> users = roleById.get().getUsers();
+        for (List<Object> row : values) {
+            SGC_Member sgcMember = new SGC_Member(SGC_Clan.getClanByName((String) row.get(0)));
+            sgcMember.setDiscordID((String) row.get(1));
+            sgcMember.setDiscordDisplayName((String) row.get(2));
+            sgcMember.setDiscordMessages7Days(Integer.parseInt((String) row.get(3)));
+            sgcMember.setDiscordActivity(sgcMember.getDiscordClanMessages7Days() > 0);
+            sgcMember.setDiscordVoice7Days(Double.parseDouble((String) row.get(4)));
+            sgcMember.setDiscordClanMessages7Days(Integer.parseInt((String) row.get(5)));
+            sgcMember.setDiscordClanVoice7Days(Double.parseDouble((String) row.get(6)));
 
-                users.forEach(user -> {
-                    SGC_Member sgcMember = new SGC_Member(clan);
-                    sgcMember.setDiscordDisplayName(user.getDisplayName(BotApplication.SGC_SERVER));
-                    sgcMember.getDiscordMessageCounts().put("TOTAL", 0);
-                    sgcMember.setDiscordUserName(user.getDiscriminatedName());
-                    members.get(clan).add(sgcMember);
-
-                    allUsers.computeIfAbsent(user, k -> new ArrayList<>()).add(sgcMember);
-                });
-            }
+            members.get(sgcMember.getClan()).add(sgcMember);
         }
-
-        Set<Channel> channels = API.getChannels();
-
-        channels.parallelStream().forEach(channel -> {
-            try {
-                if (channel.canYouSee()) {
-                    Optional<TextChannel> textChannel = channel.asTextChannel();
-
-                    if (textChannel.isPresent() && textChannel.get().canReadMessageHistory(API.getYourself())) {
-                        CompletableFuture<MessageSet> messagesWhile = textChannel.get()
-                                .getMessagesWhile(message -> message.getCreationTimestamp()
-                                        .compareTo(Instant.now().plus(-14, ChronoUnit.DAYS)) > 0);
-                        messagesWhile.join().forEach(message -> {
-                            Optional<User> userAuthor = message.getUserAuthor();
-                            if (userAuthor.isPresent() && allUsers.containsKey(userAuthor.get())) {
-                                for (SGC_Member member : allUsers.get(userAuthor.get())) {
-                                    member.getDiscordMessageCounts().put("TOTAL",
-                                            member.getDiscordMessageCounts().get("TOTAL") + 1);
-                                    member.setDiscordActivity(true);
-                                }
-                            }
-                        });
-                    }
-                }
-            } catch (Exception e) {
-                LOGGER.error(String.format("Bot is missing access to ChannelID: %s", channel.getIdAsString()));
-            }
-        });
-
     }
 
     /**
@@ -230,80 +193,6 @@ public class ActivityReportTool {
     }
 
     /**
-     * Retrieves the clan's Discord activity for a specific channel within a certain
-     * number of days.
-     *
-     * @param clan      The clan for which to retrieve the Discord activity.
-     * @param channelID The ID of the Discord channel.
-     * @param days      The number of days to consider for the activity.
-     * @return A string representing the clan's Discord activity.
-     * @throws Exception If an error occurs during the process.
-     */
-    public static String getClanDiscordActivityForForum(SGC_Clan clan, String channelID, int days) throws Exception {
-        HashMap<User, ArrayList<SGC_Member>> allUsers = new HashMap<>();
-
-        LOGGER.info("Processing the Discord Activity for " + clan.name());
-        Optional<Role> role = API.getRoleById(clan.Discord_Role_ID);
-        if (role.isEmpty()) {
-            throw new Exception("Role not found with ID: " + clan.Discord_Role_ID);
-        }
-        Set<User> users = role.get().getUsers();
-
-        users.forEach(user -> {
-            SGC_Member sgcMember = new SGC_Member(clan);
-            sgcMember.setDiscordDisplayName(user.getDisplayName(BotApplication.SGC_SERVER));
-            allUsers.computeIfAbsent(user, key -> new ArrayList<>()).add(sgcMember);
-        });
-
-        Optional<Channel> channel = API.getChannelById(channelID);
-        if (channel.isPresent()) {
-            API.getServerThreadChannels().forEach(thread -> {
-                if (thread.getParent().getIdAsString().equals(channelID)) {
-                    try {
-                        CompletableFuture<MessageSet> messagesWhile = thread.getMessagesWhile(message -> message
-                                .getCreationTimestamp().compareTo(Instant.now().plus(days * -1, ChronoUnit.DAYS)) > 0);
-                        messagesWhile.join().forEach(message -> {
-                            Optional<User> userAuthor = message.getUserAuthor();
-                            if (userAuthor.isPresent()) {
-                                ArrayList<SGC_Member> members = allUsers.get(userAuthor.get());
-                                if (members != null) {
-                                    for (SGC_Member member : members) {
-                                        HashMap<String, Integer> messageCounts = member.getDiscordMessageCounts();
-                                        messageCounts.put(channelID, messageCounts.getOrDefault(channelID, 0) + 1);
-                                    }
-                                }
-                            }
-                        });
-                    } catch (Exception e) {
-                        LOGGER.error(e.getMessage(), e);
-                    }
-                }
-            });
-
-            StringBuilder stringBuilder = new StringBuilder();
-
-            stringBuilder.append("\"Discord Name\",");
-            stringBuilder.append("\"").append(channel.get().asServerChannel().get().getName()).append("\",");
-            stringBuilder.append("\n");
-
-            allUsers.keySet().forEach(user -> {
-                stringBuilder.append("\"").append(allUsers.get(user).get(0).getDiscordDisplayName()).append("\",");
-                int count = 0;
-                for (SGC_Member member : allUsers.get(user)) {
-                    HashMap<String, Integer> messageCounts = member.getDiscordMessageCounts();
-                    count += messageCounts.getOrDefault(channelID, 0);
-                }
-                stringBuilder.append("\"").append(count).append("\",");
-                stringBuilder.append("\n");
-            });
-
-            return stringBuilder.toString();
-        } else {
-            throw new Exception("Channel not found with ID: " + channelID);
-        }
-    }
-
-    /**
      * Retrieves the name of the Discord role based on the role ID.
      *
      * @param discordRoleID The ID of the Discord role.
@@ -312,66 +201,6 @@ public class ActivityReportTool {
     public static String getDiscordRoleName(String discordRoleID) {
         Optional<Role> roleById = API.getRoleById(discordRoleID);
         return roleById.map(Role::getName).orElse(null);
-    }
-
-    /**
-     * Retrieves the members of the Discord role based on the role ID.
-     *
-     * @param discordRoleID The ID of the Discord role.
-     * @return A string containing the display names of the role members, separated
-     *         by newlines,
-     *         or null if the role is not found.
-     */
-    public static String getDiscordRoleMembers(String discordRoleID) {
-        ArrayList<User> users = getDiscordRoleMembersList(discordRoleID);
-        if (!users.isEmpty()) {
-            StringBuilder sb = new StringBuilder();
-            users.forEach(user -> {
-                sb.append(user.getDisplayName(BotApplication.SGC_SERVER)).append("\n");
-            });
-            return sb.toString();
-        } else {
-            return null;
-        }
-    }
-
-    private static ArrayList<User> getDiscordRoleMembersList(String discordRoleID) {
-        ArrayList<User> memberList = new ArrayList<>();
-        Optional<Role> roleById = API.getRoleById(discordRoleID);
-        if (roleById.isPresent()) {
-            Set<User> users = roleById.get().getUsers();
-            users.forEach(user -> {
-                memberList.add(user);
-            });
-        }
-        return memberList;
-    }
-
-    private static String crossreferenceRoleMemberLists(String discordRoleID1, String discordRoleID2) {
-        ArrayList<User> role1UserList = getDiscordRoleMembersList(discordRoleID1);
-        ArrayList<User> role2UserList = getDiscordRoleMembersList(discordRoleID2);
-
-        StringBuilder sb = new StringBuilder();
-
-        role1UserList.forEach(user -> {
-            if (role2UserList.contains(user)) {
-                String userString = String.format("%s (%s)",
-                        user.getDisplayName(BotApplication.SGC_SERVER),
-                        user.getMentionTag());
-
-                sb.append(userString).append("\n");
-            }
-        });
-
-        return sb.toString();
-    }
-
-    public static String getClanNonRegisteredMembers(String discordClanRoleID) {
-        return crossreferenceRoleMemberLists(discordClanRoleID, GoogleDriveUtil.getNotRegisteredRoleID());
-    }
-
-    private static HashMap<String, String> initializeClanRoleDiscordIDMap() {
-        return (HashMap<String, String>) GoogleDriveUtil.getClanRoleIDs();
     }
 
 }

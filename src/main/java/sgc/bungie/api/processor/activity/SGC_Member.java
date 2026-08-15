@@ -1,17 +1,19 @@
 package sgc.bungie.api.processor.activity;
 
-import java.util.HashMap;
-
 import sgc.types.SGC_Clan;
 
 public class SGC_Member {
     private final SGC_Clan clan;
     private String discordDisplayName = "";
-    private String discordUserName = "";
+    private String discordID = "";
     private String bungieDisplayName = "";
     private boolean discordActivity = false;
     private boolean gameActivity = false;
-    private HashMap<String, Integer> discordMessageCounts = new HashMap<>();
+    private boolean discordVoiceActivity = false;
+    private int discordMessages7Days = 0;
+    private double discordVoice7Days = 0.0;
+    private int discordClanMessages7Days = 0;
+    private double discordClanVoice7Days = 0.0;
 
     /**
      * Constructs an instance of SGC_Member with the specified clan.
@@ -54,17 +56,17 @@ public class SGC_Member {
      *
      * @return The Discord username of the member.
      */
-    public String getDiscordUserName() {
-        return discordUserName;
+    public String getDiscordID() {
+        return discordID;
     }
 
     /**
      * Sets the Discord username of the member.
      *
-     * @param discordUserName The Discord username to set.
+     * @param discordID The Discord username to set.
      */
-    public void setDiscordUserName(final String discordUserName) {
-        this.discordUserName = discordUserName;
+    public void setDiscordID(final String discordID) {
+        this.discordID = discordID;
     }
 
     /**
@@ -138,12 +140,44 @@ public class SGC_Member {
         return false;
     }
 
-    /**
-     * Returns the message counts for the member in Discord.
-     *
-     * @return The message counts for the member in Discord.
-     */
-    public HashMap<String, Integer> getDiscordMessageCounts() {
-        return discordMessageCounts;
+    public int getDiscordMessages7Days() {
+        return discordMessages7Days;
     }
+
+    public void setDiscordMessages7Days(int discordMessages7Days) {
+        this.discordMessages7Days = discordMessages7Days;
+    }
+
+    public double getDiscordVoice7Days() {
+        return discordVoice7Days;
+    }
+
+    public void setDiscordVoice7Days(double discordVoice7Days) {
+        this.discordVoice7Days = discordVoice7Days;
+    }
+
+    public int getDiscordClanMessages7Days() {
+        return discordClanMessages7Days;
+    }
+
+    public void setDiscordClanMessages7Days(int discordClanMessages7Days) {
+        this.discordClanMessages7Days = discordClanMessages7Days;
+    }
+
+    public double getDiscordClanVoice7Days() {
+        return discordClanVoice7Days;
+    }
+
+    public void setDiscordClanVoice7Days(double discordClanVoice7Days) {
+        this.discordClanVoice7Days = discordClanVoice7Days;
+    }
+
+    public boolean isDiscordVoiceActivity() {
+        return discordVoiceActivity;
+    }
+
+    public void setDiscordVoiceActivity(boolean discordVoiceActivity) {
+        this.discordVoiceActivity = discordVoiceActivity;
+    }
+
 }

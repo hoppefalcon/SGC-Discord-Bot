@@ -7,17 +7,14 @@ import org.springframework.stereotype.Component;
 import sgc.discord.bot.commands.impl.AllRedeemablesCommand;
 import sgc.discord.bot.commands.impl.BalancePrivateCrucibleCommand;
 import sgc.discord.bot.commands.impl.ClanAltNamesReportCommand;
-import sgc.discord.bot.commands.impl.ClanChatReportCommand;
 import sgc.discord.bot.commands.impl.ClanInternalActivityReportCommand;
 import sgc.discord.bot.commands.impl.ClanRaidReportCommand;
 import sgc.discord.bot.commands.impl.EventLeaderboardCommand;
 import sgc.discord.bot.commands.impl.InfographicCommand;
 import sgc.discord.bot.commands.impl.InformationMessageCommand;
-import sgc.discord.bot.commands.impl.NotRegisteredMembersCommand;
 import sgc.discord.bot.commands.impl.PrivateCrucibleOptionGenerator;
 import sgc.discord.bot.commands.impl.PrivateGambitOptionGenerator;
 import sgc.discord.bot.commands.impl.RaidCarnageReportCommand;
-import sgc.discord.bot.commands.impl.RoleMemberListCommand;
 import sgc.discord.bot.commands.impl.SGCActivityReportCommand;
 import sgc.discord.bot.commands.impl.UserCommunityActivityReportCommand;
 import sgc.discord.bot.commands.impl.UserPOTWActivityReportCommand;
@@ -61,14 +58,6 @@ public class SlashCommandListenerImpl implements SlashCommandListener {
                 new UserPOTWActivityReportCommand().handle(slashCommandInteraction);
                 break;
 
-            case "discord-role-member-list":
-                new RoleMemberListCommand().handle(slashCommandInteraction);
-                break;
-
-            case "discord-clan-chat-report":
-                new ClanChatReportCommand().handle(slashCommandInteraction);
-                break;
-
             case "clan-iar":
                 new ClanInternalActivityReportCommand().handle(slashCommandInteraction);
                 break;
@@ -87,10 +76,6 @@ public class SlashCommandListenerImpl implements SlashCommandListener {
 
             case "all-redeemables-list":
                 new AllRedeemablesCommand().handle(slashCommandInteraction);
-                break;
-
-            case "non-registered-members-list":
-                new NotRegisteredMembersCommand().handle(slashCommandInteraction);
                 break;
 
             case "balance-teams":

@@ -159,8 +159,12 @@ public class GoogleDriveUtil {
                     row.add(member.getBungieDisplayName());
                     row.add(member.isDiscordActivity());
                     row.add(member.isGameActivity());
-                    row.add(member.getDiscordMessageCounts().get("TOTAL"));
-                    row.add(member.getDiscordUserName());
+                    row.add(member.getDiscordMessages7Days());
+                    row.add(member.getDiscordID());
+                    row.add(member.isDiscordVoiceActivity());
+                    row.add(member.getDiscordVoice7Days());
+                    row.add(member.getDiscordClanMessages7Days());
+                    row.add(member.getDiscordClanVoice7Days());
                     values.add(row);
                 }
 
@@ -242,41 +246,6 @@ public class GoogleDriveUtil {
 
     public static void main(String[] args) throws IOException, GeneralSecurityException {
         getPOTWWeights();
-    }
-
-    public static Map<String, String> getClanRoleIDs() {
-        HashMap<String, String> clans = new HashMap<>();
-        try {
-            final String spreadsheetId = "1bcW1yT-j_RxlQLGvHWOqisW-xFDPvRaOjR2cByIQHu8";
-            final String range = "Clans!A2:B";
-            ValueRange response = getSheetData(spreadsheetId, range);
-            List<List<Object>> values = response.getValues();
-            for (List<Object> row : values) {
-                clans.put((String) row.get(0),
-                        (String) row.get(1));
-            }
-        } catch (Exception e) {
-            LOGGER.error(e.getMessage(), e);
-        }
-        return clans;
-    }
-
-    public static String getNotRegisteredRoleID() {
-        String roleID = "";
-        try {
-            final String spreadsheetId = "1bcW1yT-j_RxlQLGvHWOqisW-xFDPvRaOjR2cByIQHu8";
-            final String range = "Misc!A2:B";
-            ValueRange response = getSheetData(spreadsheetId, range);
-            List<List<Object>> values = response.getValues();
-            for (List<Object> row : values) {
-                if (((String) row.get(0)).equals("Not Registered")) {
-                    roleID = (String) row.get(1);
-                }
-            }
-        } catch (Exception e) {
-            LOGGER.error(e.getMessage(), e);
-        }
-        return roleID;
     }
 
     public static Map<String, Integer> getCrucubleMapWeights() {
@@ -378,5 +347,10 @@ public class GoogleDriveUtil {
             LOGGER.error(e.getMessage(), e);
         }
         return response;
+    }
+
+    public static ValueRange getCommunityDiscordActivityData() {
+        String spreadsheetId = "1R0RkQYKVWcy6DA71xNkoDU-XIc14UjXuD7M05H2VHPk";
+        return getSheetData(spreadsheetId, "Discord Clan Activity!A2:G");
     }
 }
