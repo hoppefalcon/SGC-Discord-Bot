@@ -94,8 +94,9 @@ public class ActivityReportTool {
             sgcMember.setDiscordID((String) row.get(1));
             sgcMember.setDiscordDisplayName((String) row.get(2));
             sgcMember.setDiscordMessages7Days(Integer.parseInt((String) row.get(3)));
-            sgcMember.setDiscordActivity(sgcMember.getDiscordClanMessages7Days() > 0);
+            sgcMember.setDiscordActivity(sgcMember.getDiscordMessages7Days() > 0);
             sgcMember.setDiscordVoice7Days(Double.parseDouble((String) row.get(4)));
+            sgcMember.setDiscordVoiceActivity(sgcMember.getDiscordVoice7Days() > 0);
             sgcMember.setDiscordClanMessages7Days(Integer.parseInt((String) row.get(5)));
             sgcMember.setDiscordClanVoice7Days(Double.parseDouble((String) row.get(6)));
 
