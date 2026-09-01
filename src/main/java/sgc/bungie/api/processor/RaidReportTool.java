@@ -248,7 +248,12 @@ public class RaidReportTool {
                         JsonObject userInfo = entry.getAsJsonObject().getAsJsonObject("destinyUserInfo");
                         String membershipType = userInfo.get("membershipType").getAsString();
                         String membershipId = userInfo.get("membershipId").getAsString();
-                        String displayName = userInfo.get("displayName").getAsString();
+                        String displayName = "";
+                        try {
+                            displayName = userInfo.get("displayName").getAsString();
+                        } catch (Exception e) {
+                            displayName = userInfo.get("bungieGlobalDisplayName").getAsString();
+                        }
 
                         try {
                             String bungieGlobalDisplayName = userInfo.get("bungieGlobalDisplayName").getAsString();
